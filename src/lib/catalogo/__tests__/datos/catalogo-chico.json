@@ -1,0 +1,760 @@
+{
+ "generado": "2026-11-14T19:43:24.539Z",
+ "cantidad": 12,
+ "sucursales": [
+  {
+   "id": 5,
+   "nombre": "Fontana"
+  },
+  {
+   "id": 1,
+   "nombre": "Distribuidora"
+  },
+  {
+   "id": 4,
+   "nombre": "Express 3"
+  },
+  {
+   "id": 2,
+   "nombre": "Express 1"
+  }
+ ],
+ "listas": [
+  {
+   "id": 3,
+   "nombre": "Minorista",
+   "modalidad": "Minorista",
+   "orden": 10
+  },
+  {
+   "id": 1,
+   "nombre": "Lista 1",
+   "modalidad": "Mayorista",
+   "orden": 40
+  },
+  {
+   "id": 23,
+   "nombre": "Promo",
+   "modalidad": "Minorista",
+   "orden": 40
+  }
+ ],
+ "marcas": [
+  {
+   "id": 66,
+   "nombre": "ARGENDIET",
+   "logo": "https://api.saboryaroma.com/api/tienda/imagenes/marca/66?v=1792064961499",
+   "productos": 18
+  },
+  {
+   "id": 34,
+   "nombre": "CHOCOLEIT",
+   "logo": "https://api.saboryaroma.com/api/tienda/imagenes/marca/34?v=1792074229783",
+   "productos": 3
+  },
+  {
+   "id": 407,
+   "nombre": "COFFIT",
+   "logo": "",
+   "productos": 4
+  },
+  {
+   "id": 302,
+   "nombre": "HIERBAS DEL OASIS",
+   "logo": "https://api.saboryaroma.com/api/tienda/imagenes/marca/302?v=1792074604215",
+   "productos": 32
+  },
+  {
+   "id": 191,
+   "nombre": "MAÃ‘ANITA",
+   "logo": "",
+   "productos": 2
+  },
+  {
+   "id": 126,
+   "nombre": "NATUZEN",
+   "logo": "https://api.saboryaroma.com/api/tienda/imagenes/marca/126?v=1792074823800",
+   "productos": 24
+  },
+  {
+   "id": 354,
+   "nombre": "OH YEAH",
+   "logo": "",
+   "productos": 10
+  },
+  {
+   "id": 357,
+   "nombre": "OLIOVITA",
+   "logo": "",
+   "productos": 11
+  },
+  {
+   "id": 429,
+   "nombre": "SUEROX",
+   "logo": "",
+   "productos": 5
+  }
+ ],
+ "productos": [
+  {
+   "id": 2398,
+   "nombre": "Acai en Polvo Oh Yeah x50g",
+   "descripcion": "Importado · ACAI EN POLVO OH YEAH X50G",
+   "codigo": "79880228",
+   "codigoBarras": "7798442440425",
+   "dun": "",
+   "marcaId": 354,
+   "marca": "OH YEAH",
+   "categoria": "Suplementos",
+   "subcategoria": "Superalimentos",
+   "etiquetas": [],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 10336,
+     "unidades": 1,
+     "precioFormato": 10336,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 1,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 137,
+   "nombre": "Aji Molido",
+   "descripcion": "Importado · AJI MOLIDO MADRE -SOLO STOCK-",
+   "codigo": "ZZZ1008",
+   "codigoBarras": "",
+   "dun": "",
+   "marcaId": null,
+   "marca": "",
+   "categoria": "Especias y Condimentos",
+   "subcategoria": "Especias Molidas",
+   "etiquetas": [],
+   "tipo": "granel",
+   "unidad": "kg",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/137?v=1791932083550",
+   "precios": [],
+   "stock": {
+    "1": 3.95,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": [
+    {
+     "id": 123,
+     "tamano": "1 kg",
+     "kg": 1,
+     "codigoBarras": "6850000000111",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 8705,
+       "unidades": 1,
+       "precioFormato": 8705,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      },
+      {
+       "listaId": 1,
+       "lista": "Lista 1",
+       "modalidad": "Mayorista",
+       "precio": 6810,
+       "unidades": 1,
+       "precioFormato": 6810,
+       "unidadesMinimas": 5,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": -1,
+      "2": 0,
+      "4": 0,
+      "5": 0
+     }
+    },
+    {
+     "id": 124,
+     "tamano": "500 g",
+     "kg": 0.5,
+     "codigoBarras": "64489965522",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 4736,
+       "unidades": 1,
+       "precioFormato": 4736,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 3,
+      "2": 0,
+      "4": 2,
+      "5": 1
+     }
+    },
+    {
+     "id": 125,
+     "tamano": "150 g",
+     "kg": 0.15,
+     "codigoBarras": "6850000000135",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 1574,
+       "unidades": 1,
+       "precioFormato": 1574,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 117,
+      "2": 10,
+      "4": 3,
+      "5": 25
+     }
+    }
+   ]
+  },
+  {
+   "id": 1976,
+   "nombre": "Yerba Mate Mañanita x1kg",
+   "descripcion": "Importado · YERBA MATE MAÑANITA X1KG",
+   "codigo": "ARC006",
+   "codigoBarras": "7790387015317",
+   "dun": "",
+   "marcaId": 191,
+   "marca": "MAÃ‘ANITA",
+   "categoria": "Yerba y Mate",
+   "subcategoria": "Yerba Tradicional",
+   "etiquetas": [],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/1976?v=1792755215731",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 7997,
+     "unidades": 1,
+     "precioFormato": 7997,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 0,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 2410,
+   "nombre": "Aceit Oliva E.v Org Oliovita x250cc",
+   "descripcion": "Importado · ACEIT OLIVA E.V ORG OLIOVITA X250CC",
+   "codigo": "4715",
+   "codigoBarras": "7798061190589",
+   "dun": "",
+   "marcaId": 357,
+   "marca": "OLIOVITA",
+   "categoria": "Aceites y Vinagres",
+   "subcategoria": "Aceite de Oliva",
+   "etiquetas": [
+    "ORGÁNICO"
+   ],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/2410?v=1792763591690",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 14822,
+     "unidades": 1,
+     "precioFormato": 14822,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 17,
+    "2": 2,
+    "4": 0,
+    "5": 6
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 543,
+   "nombre": "Agar Agar Argendiet x10g",
+   "descripcion": "Importado · AGAR AGAR ARGENDIET X10G",
+   "codigo": "600",
+   "codigoBarras": "7798146450300",
+   "dun": "",
+   "marcaId": 66,
+   "marca": "ARGENDIET",
+   "categoria": "Repostería",
+   "subcategoria": "Espesantes y Aditivos",
+   "etiquetas": [],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/543?v=1791495367436",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 2609,
+     "unidades": 1,
+     "precioFormato": 2609,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    },
+    {
+     "listaId": 1,
+     "lista": "Lista 1",
+     "modalidad": "Mayorista",
+     "precio": 2024,
+     "unidades": 12,
+     "precioFormato": 24288,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 0,
+    "2": 2,
+    "4": 0,
+    "5": 3
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 2811,
+   "nombre": "CHIPITAS COFFIT X1UN X40GRS",
+   "descripcion": "",
+   "codigo": "79880596",
+   "codigoBarras": "6516515",
+   "dun": "",
+   "marcaId": 407,
+   "marca": "COFFIT",
+   "categoria": "",
+   "subcategoria": "",
+   "etiquetas": [],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 900,
+     "unidades": 1,
+     "precioFormato": 900,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    },
+    {
+     "listaId": 23,
+     "lista": "Promo",
+     "modalidad": "Minorista",
+     "precio": 766.67,
+     "unidades": 3,
+     "precioFormato": 2300,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 0,
+    "2": 4,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 2990,
+   "nombre": "Bebida hidratante arandano pomelo suerox x630ml",
+   "descripcion": "",
+   "codigo": "79880774",
+   "codigoBarras": "7798140257431",
+   "dun": "",
+   "marcaId": 429,
+   "marca": "SUEROX",
+   "categoria": "Bebidas",
+   "subcategoria": "Bebidas vegetales",
+   "etiquetas": [
+    "SIN AZUCAR"
+   ],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/2990?v=1792847770081",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 3368,
+     "unidades": 1,
+     "precioFormato": 3368,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 5,
+    "2": 2,
+    "4": 3,
+    "5": 2
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 356,
+   "nombre": "Alfajor Blanco sin Azucar Chocoleit x50g",
+   "descripcion": "Importado · ALFAJOR BLANCO SIN AZUCAR CHOCOLEIT X50G",
+   "codigo": "1404",
+   "codigoBarras": "7798188630050",
+   "dun": "",
+   "marcaId": 34,
+   "marca": "CHOCOLEIT",
+   "categoria": "Golosinas y Chocolates",
+   "subcategoria": "Alfajores",
+   "etiquetas": [
+    "SIN AZÚCAR"
+   ],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/356?v=1791502663769",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 3152,
+     "unidades": 1,
+     "precioFormato": 3152,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    },
+    {
+     "listaId": 1,
+     "lista": "Lista 1",
+     "modalidad": "Mayorista",
+     "precio": 2521,
+     "unidades": 12,
+     "precioFormato": 30252,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 1,
+    "2": 5,
+    "4": 1,
+    "5": 0
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 1784,
+   "nombre": "Te de Boldo Oasis x25saq",
+   "descripcion": "Importado · TE DE BOLDO OASIS X25SAQ",
+   "codigo": "2856",
+   "codigoBarras": "7798067560058",
+   "dun": "",
+   "marcaId": 302,
+   "marca": "HIERBAS DEL OASIS",
+   "categoria": "Té e Infusiones",
+   "subcategoria": "Tisanas Funcionales",
+   "etiquetas": [],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "discontinuado",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/1784?v=1791927827690",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 2444,
+     "unidades": 1,
+     "precioFormato": 2444,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    },
+    {
+     "listaId": 1,
+     "lista": "Lista 1",
+     "modalidad": "Mayorista",
+     "precio": 1896,
+     "unidades": 1,
+     "precioFormato": 1896,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 0,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": []
+  },
+  {
+   "id": 179,
+   "nombre": "Durazno Mitades Grande Desh",
+   "descripcion": "Importado · DURAZNO MITADES GRANDE DESH MADRE -SOLO STOCK-",
+   "codigo": "ZZZ1612",
+   "codigoBarras": "",
+   "dun": "",
+   "marcaId": null,
+   "marca": "",
+   "categoria": "Frutos Secos y Semillas",
+   "subcategoria": "Frutas Deshidratadas",
+   "etiquetas": [],
+   "tipo": "granel",
+   "unidad": "kg",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/179?v=1792539972548",
+   "precios": [],
+   "stock": {
+    "1": 11.064,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": [
+    {
+     "id": 168,
+     "tamano": "200 g",
+     "kg": 0.2,
+     "codigoBarras": "6850000002399",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 4796,
+       "unidades": 1,
+       "precioFormato": 4796,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 15,
+      "2": 8,
+      "4": 5,
+      "5": 4
+     }
+    }
+   ]
+  },
+  {
+   "id": 63,
+   "nombre": "Chips de Banana Desh",
+   "descripcion": "Importado de Bavosi · CHIPS DE BANANA DESH MADRE -SOLO STOCK-",
+   "codigo": "ZZZ1472",
+   "codigoBarras": "",
+   "dun": "",
+   "marcaId": null,
+   "marca": "",
+   "categoria": "Frutos Secos y Semillas",
+   "subcategoria": "Frutas deshidratadas",
+   "etiquetas": [],
+   "tipo": "granel",
+   "unidad": "kg",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/63?v=1791932126502",
+   "precios": [],
+   "stock": {
+    "1": 9.516,
+    "2": 0,
+    "4": 0,
+    "5": 0
+   },
+   "presentaciones": [
+    {
+     "id": 50,
+     "tamano": "1 kg",
+     "kg": 1,
+     "codigoBarras": "6850000002429",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 20791,
+       "unidades": 1,
+       "precioFormato": 20791,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      },
+      {
+       "listaId": 1,
+       "lista": "Lista 1",
+       "modalidad": "Mayorista",
+       "precio": 16129,
+       "unidades": 1,
+       "precioFormato": 16129,
+       "unidadesMinimas": 5,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 0,
+      "2": 0,
+      "4": 0,
+      "5": 0
+     }
+    },
+    {
+     "id": 51,
+     "tamano": "250 g",
+     "kg": 0.25,
+     "codigoBarras": "6850000029860",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 5513,
+       "unidades": 1,
+       "precioFormato": 5513,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 50,
+      "2": 8,
+      "4": 4,
+      "5": 40
+     }
+    },
+    {
+     "id": 52,
+     "tamano": "90 g",
+     "kg": 0.09,
+     "codigoBarras": "6850000002436",
+     "precios": [
+      {
+       "listaId": 3,
+       "lista": "Minorista",
+       "modalidad": "Minorista",
+       "precio": 2325,
+       "unidades": 1,
+       "precioFormato": 2325,
+       "unidadesMinimas": 0,
+       "codigoBarras": ""
+      }
+     ],
+     "stock": {
+      "1": 13,
+      "2": 7,
+      "4": 3,
+      "5": 7
+     }
+    }
+   ]
+  },
+  {
+   "id": 2815,
+   "nombre": "PREMEZCLA PANAD Y RESPOST NATUZEN X450GRS",
+   "descripcion": "",
+   "codigo": "79880600",
+   "codigoBarras": "7798082000188",
+   "dun": "",
+   "marcaId": 126,
+   "marca": "NATUZEN",
+   "categoria": "Harinas y Premezclas",
+   "subcategoria": "Premezclas para Pan, Pizza y Tortas",
+   "etiquetas": [
+    "sin"
+   ],
+   "tipo": "entero",
+   "unidad": "u",
+   "estado": "activo",
+   "iva": 21,
+   "imagen": "https://api.saboryaroma.com/api/tienda/imagenes/producto/2815?v=1791645363908",
+   "precios": [
+    {
+     "listaId": 3,
+     "lista": "Minorista",
+     "modalidad": "Minorista",
+     "precio": 3532,
+     "unidades": 1,
+     "precioFormato": 3532,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    },
+    {
+     "listaId": 1,
+     "lista": "Lista 1",
+     "modalidad": "Mayorista",
+     "precio": 2583,
+     "unidades": 1,
+     "precioFormato": 2583,
+     "unidadesMinimas": 0,
+     "codigoBarras": ""
+    }
+   ],
+   "stock": {
+    "1": 6,
+    "2": 5,
+    "4": 8,
+    "5": 8
+   },
+   "presentaciones": []
+  }
+ ]
+}

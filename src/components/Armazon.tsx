@@ -12,9 +12,11 @@ const COOKIE_BARRA = 'sya_barra'
 // Barra lateral + barra superior.
 // En computadora la barra lateral se pliega y se recuerda (cookie).
 // En el celular es un cajón que se abre con el mismo botón y se cierra al navegar.
-export function Armazon({ plegadaInicial, contadores, children }: {
+export function Armazon({ plegadaInicial, contadores, avisos, children }: {
   plegadaInicial: boolean
   contadores?: Record<string, number>
+  // Franjas a todo el ancho debajo de la barra superior (avance de la sincronización, alertas)
+  avisos?: ReactNode
   children: ReactNode
 }) {
   const ruta = usePathname()
@@ -82,6 +84,7 @@ export function Armazon({ plegadaInicial, contadores, children }: {
             </button>
           </form>
         </header>
+        {avisos}
         {children}
       </div>
     </div>

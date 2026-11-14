@@ -152,6 +152,10 @@ Poner contador visible y corte automático al llegar al tope.
   Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
   se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.
   Las fotos subidas van al disco del VPS, en un volumen de Dokploy.
+- **Sincronización:** manual (botón), en segundo plano con `pg-boss`, una sola a la vez (índice único en la base).
+  Copia las fotos al servidor. Historial de cambios por 6 meses. Si el ERP devuelve menos de la mitad
+  de los productos, no aplica nada (protege de dar de baja medio catálogo por una respuesta cortada).
+- **Precio de granel en pantallas:** el propio por kilo si lo tiene; si no, el fraccionado de 1 kg.
 - **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
@@ -164,7 +168,12 @@ Poner contador visible y corte automático al llegar al tope.
   cada una con su precio, código de barras y stock. 6 granel no tienen fraccionados.
 - El mayorista a veces se vende por bulto: `unidades: 12` → `precio` es por unidad y `precioFormato` por bulto.
 - La lista Promo (23) tiene un solo producto. `descripcion` casi siempre repite el nombre en mayúsculas.
-- La API responde con `ETag`: se puede evitar reimportar si no cambió.
+- La API responde con `ETag` estable y contesta `304` a `If-None-Match`: si no cambió, no se reprocesa.
+  Se guarda como `v<VERSION_NORMALIZACION>:<etag>`; subir esa versión en `normalizar.ts` cuando cambien
+  las reglas de limpieza, así se reprocesa todo aunque el ERP no haya cambiado.
+- **El ERP limita los pedidos:** con ~1.200 fotos en un minuto empezó a responder `429`. La copia de fotos
+  va a 8 pedidos por segundo, y ante un 429 frena todo, espera (Retry-After o 20 s) y reintenta hasta 5 veces.
+- Fotos y logos copiados ocupan ~65 MB (2.045 fotos + 77 logos), en `MEDIA_DIR/erp/`.
 
 ## Decisiones pendientes (bloquean el arranque)
 

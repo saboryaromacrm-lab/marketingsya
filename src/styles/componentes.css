@@ -93,3 +93,81 @@
   display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: var(--radio);
   background: var(--aviso-rojo); color: var(--rojo); font-weight: 500;
 }
+
+/* Dos columnas: submenú + contenido */
+.dos-columnas { display: flex; gap: 24px; align-items: flex-start; }
+.columna-principal { flex: 1; min-width: 0; display: grid; gap: 16px; align-content: start; }
+.submenu {
+  width: 215px; flex: none; background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta); padding: 8px; display: grid; gap: 2px;
+}
+.submenu a { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border-radius: var(--radio); text-decoration: none; }
+.submenu a:hover { background: var(--superficie-sutil); }
+.submenu a.submenu-activo { background: var(--verde); color: #fff; font-weight: 600; }
+@media (max-width: 900px) {
+  .dos-columnas { flex-direction: column; align-items: stretch; }
+  .submenu { width: 100%; display: flex; overflow-x: auto; }
+  .submenu a { white-space: nowrap; }
+}
+
+/* Pestañas */
+.pestanas { display: flex; gap: 24px; border-bottom: 1px solid var(--borde); overflow-x: auto; }
+.pestanas a { padding: 0 2px 10px; color: var(--texto-suave); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.pestanas a.pestana-activa { color: var(--verde); font-weight: 600; border-bottom: 2px solid var(--naranja); margin-bottom: -1px; }
+
+/* Cifras del catálogo */
+.cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.cifra {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+  padding: 16px; display: grid; gap: 2px; color: var(--texto-suave);
+}
+.cifra b { font-size: 26px; font-weight: 600; color: var(--verde); line-height: 1.2; }
+.cifra .material-icons { color: var(--teal); margin-bottom: 6px; }
+
+/* Tabla: números, miniaturas, pie */
+.tabla th.num, .tabla td.num { text-align: right; white-space: nowrap; }
+.tabla-clic tbody tr { cursor: pointer; }
+.tabla-clic tbody tr:hover td { background: #fafcfa; }
+.fila-enlace { text-decoration: none; font-weight: 500; }
+.fila-enlace::after { content: ''; position: absolute; inset: 0; }
+.tabla-clic tr { position: relative; }
+.miniatura {
+  width: 40px; height: 40px; border: 1px solid var(--borde); border-radius: 6px; overflow: hidden;
+  display: grid; place-items: center; background: #fff; color: var(--texto-suave);
+}
+.miniatura img { width: 100%; height: 100%; object-fit: contain; }
+.miniatura-vacia { background: var(--superficie-sutil); }
+.nombre-producto { font-weight: 500; }
+.texto-chico { font-size: 12px; color: var(--texto-suave); }
+.lista-precios { display: grid; gap: 2px; white-space: nowrap; }
+.tabla-pie { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--borde); color: var(--texto-suave); }
+.tabla-pie-botones { display: flex; gap: 8px; }
+.btn[aria-disabled='true'] { opacity: .5; pointer-events: none; }
+.volver { display: inline-flex; align-items: center; gap: 4px; color: var(--texto-suave); text-decoration: none; margin-bottom: 6px; }
+.volver:hover { color: var(--texto); }
+.vacio-chico { padding: 24px 16px; }
+.texto-error { color: var(--rojo); font-size: 13px; font-weight: 500; align-self: center; }
+
+/* Chips por estado y tipo de cambio */
+.chip-ok, .chip-cambio-alta, .chip-cambio-reactivado { background: #dcefe3; color: var(--verde); }
+.chip-error, .chip-cambio-baja { background: var(--aviso-rojo); color: var(--rojo); }
+.chip-en_cola, .chip-corriendo, .chip-cambio-precio { background: var(--aviso-ambar); color: var(--ambar); }
+
+/* Avance de la sincronización */
+.progreso { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.progreso-numero { margin-left: auto; font-weight: 600; color: var(--verde); }
+.progreso-barra { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; }
+.progreso-barra div { height: 100%; background: var(--verde); transition: width .4s ease; }
+.girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce) { .girando { animation: none; } .progreso-barra div { transition: none; } }
+
+/* Toast: arriba a la derecha, sobre la barra superior */
+.toast {
+  position: fixed; top: 8px; right: 14px; z-index: 40; max-width: min(640px, calc(100vw - 28px));
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radio);
+  background: var(--ambar); color: #fff; font-weight: 500;
+}
+.toast a { color: #fff; font-weight: 600; white-space: nowrap; }
+.toast button { border: 0; background: none; color: #fff; cursor: pointer; padding: 0; display: grid; }
+.toast-error { background: var(--rojo); }

@@ -19,6 +19,13 @@ export const entorno = {
     if (s.length < 32) throw new Error('SESION_SECRETO tiene que tener al menos 32 caracteres.')
     return s
   },
+  // Carpeta donde se guardan fotos y piezas. En Dokploy es un volumen para que no se pierdan.
+  get mediaDir() {
+    return process.env.MEDIA_DIR || `${process.cwd()}/media`
+  },
+  get catalogoUrl() {
+    return process.env.CATALOGO_URL || 'https://api.saboryaroma.com/api/catalogo-externo'
+  },
   get sesionDias() {
     const n = Number(process.env.SESION_DIAS ?? 30)
     return Number.isFinite(n) && n > 0 ? n : 30

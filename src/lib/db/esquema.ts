@@ -1,4 +1,6 @@
-import { pgTable, bigserial, text, timestamp, boolean, index } from 'drizzle-orm/pg-core'
+import { pgTable, bigserial, text, timestamp, boolean, index, integer, jsonb, numeric, uniqueIndex, serial } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
 
 // Cada intento de ingreso queda registrado: sirve para frenar a quien prueba
 // contraseñas al azar y para que Lucas vea desde dónde se entró.
@@ -12,4 +14,123 @@ export const intentosIngreso = pgTable(
     creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('intentos_ingreso_ip_fecha').on(t.ip, t.creadoEn)],
+)
+
+// ---------------------------------------------------------------------------
+// Catálogo: copia del ERP. Se escribe solo desde la sincronización.
+// ---------------------------------------------------------------------------
+
+export const sucursales = pgTable('sucursales', {
+  id: integer('id').primaryKey(),
+  nombre: text('nombre').notNull(),
+})
+
+export const listas = pgTable('listas', {
+  id: integer('id').primaryKey(),
+  nombre: text('nombre').notNull(),
+  modalidad: text('modalidad').notNull(),
+  orden: integer('orden').notNull().default(0),
+})
+
+export const marcas = pgTable('marcas', {
+  id: integer('id').primaryKey(),
+  nombre: text('nombre').notNull(),
+  nombreErp: text('nombre_erp').notNull(),
+  logoErpUrl: text('logo_erp_url'),
+  logoErpVersion: text('logo_erp_version'),
+  // Ruta dentro de MEDIA_DIR del logo copiado a nuestro servidor
+  logoArchivo: text('logo_archivo'),
+  cantidadProductos: integer('cantidad_productos').notNull().default(0),
+  huella: text('huella').notNull(),
+  dadaDeBaja: boolean('dada_de_baja').notNull().default(false),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const productos = pgTable(
+  'productos',
+  {
+    id: integer('id').primaryKey(),
+    nombre: text('nombre').notNull(),
+    nombreErp: text('nombre_erp').notNull(),
+    nombreSugerido: text('nombre_sugerido').notNull(),
+    // Lo carga Lucas a mano; si está vacío, las piezas usan el sugerido.
+    nombrePiezas: text('nombre_piezas'),
+    marcaId: integer('marca_id').references(() => marcas.id),
+    categoria: text('categoria'),
+    subcategoria: text('subcategoria'),
+    etiquetas: text('etiquetas').array().notNull().default(sql`'{}'::text[]`),
+    tipo: text('tipo').notNull(),
+    estado: text('estado').notNull(),
+    codigo: text('codigo').notNull().default(''),
+    codigoBarras: text('codigo_barras').notNull().default(''),
+    // Precio minorista principal (en granel, el fraccionado de 1 kg): para ordenar y mostrar rápido.
+    precioMinorista: numeric('precio_minorista', { precision: 14, scale: 2, mode: 'number' }),
+    // Todo lo que vino del ERP ya normalizado: precios, fraccionados, descripción, etc.
+    erp: jsonb('erp').$type<ProductoNormalizado>().notNull(),
+    huella: text('huella').notNull(),
+    imagenErpVersion: text('imagen_erp_version'),
+    imagenArchivo: text('imagen_archivo'),
+    dadoDeBaja: boolean('dado_de_baja').notNull().default(false),
+    bajaEn: timestamp('baja_en', { withTimezone: true }),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('productos_marca').on(t.marcaId), index('productos_categoria').on(t.categoria, t.subcategoria)],
+)
+
+// ---------------------------------------------------------------------------
+// Sincronizaciones: una fila por cada vez que se apretó el botón.
+// ---------------------------------------------------------------------------
+
+export type EstadoSincronizacion = 'en_cola' | 'corriendo' | 'ok' | 'sin_cambios' | 'error'
+
+export type ResumenSincronizacion = {
+  productos: number
+  altas: number
+  bajas: number
+  reactivados: number
+  modificados: number
+  precios: number
+  fotos: number
+  fotosDescargadas: number
+  fotosConError: number
+  marcas: number
+  descartados: number
+}
+
+export const sincronizaciones = pgTable(
+  'sincronizaciones',
+  {
+    id: serial('id').primaryKey(),
+    estado: text('estado').$type<EstadoSincronizacion>().notNull(),
+    // Qué está haciendo y cuánto le falta (0 a 100), para la barra de avance
+    etapa: text('etapa'),
+    avance: integer('avance').notNull().default(0),
+    etag: text('etag'),
+    generadoErp: timestamp('generado_erp', { withTimezone: true }),
+    resumen: jsonb('resumen').$type<ResumenSincronizacion>(),
+    error: text('error'),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    iniciadaEn: timestamp('iniciada_en', { withTimezone: true }),
+    terminadaEn: timestamp('terminada_en', { withTimezone: true }),
+  },
+  // Nunca dos sincronizaciones a la vez: solo puede haber una fila en cola o corriendo.
+  (t) => [uniqueIndex('una_sincronizacion_activa').on(sql`(true)`).where(sql`${t.estado} in ('en_cola', 'corriendo')`)],
+)
+
+export const sincronizacionCambios = pgTable(
+  'sincronizacion_cambios',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    sincronizacionId: integer('sincronizacion_id').notNull().references(() => sincronizaciones.id, { onDelete: 'cascade' }),
+    entidad: text('entidad').$type<'producto' | 'marca'>().notNull(),
+    entidadId: integer('entidad_id').notNull(),
+    // Nombre al momento del cambio, para leer el historial aunque después cambie
+    nombre: text('nombre').notNull(),
+    tipo: text('tipo').notNull(),
+    antes: jsonb('antes'),
+    despues: jsonb('despues'),
+  },
+  (t) => [index('cambios_por_sincronizacion').on(t.sincronizacionId, t.tipo)],
 )
