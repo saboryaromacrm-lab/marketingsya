@@ -136,6 +136,36 @@ El Instagram tiene que estar como cuenta de **empresa**, no de creador.
 Tope de **30 USD por mes** entre la API de Claude y la IA de imágenes.
 Poner contador visible y corte automático al llegar al tope.
 
+## Decisiones tomadas (14/11/2026)
+
+- **Interfaz:** fuente Nunito Sans (vía `next/font`) e íconos Material Icons rellenos, como el ERP.
+  Solo modo claro, con vista para celular (la barra lateral pasa a ser un cajón).
+- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n».
+- **Precio en piezas:** Minorista (lista 3) por defecto, con opción de elegir otra lista.
+- **Sucursales:** la id 3 (Express 2) cerró; son solo las 4 del catálogo.
+- **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
+- **Imágenes:** quedan públicas solo las de `/media` (las necesita Meta); todo lo demás pide sesión.
+- **Recetas:** el contenido es mezcla: la IA propone a partir del catálogo y Lucas edita.
+- **Login:** una sola contraseña (hash scrypt en `CLAVE_HASH`), sesión de 30 días por dispositivo,
+  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP.
+- **Catálogo:** campo «nombre para piezas» editable con sugerencia automática; el nombre del ERP no se toca.
+  Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
+  se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.
+  Las fotos subidas van al disco del VPS, en un volumen de Dokploy.
+- **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
+
+## Lo que muestra el catálogo real (relevado el 14/11/2026)
+
+- 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
+- 139 productos sin foto; 13 sin precio minorista en ningún lado.
+- El único nombre mal codificado es la marca «MAÃ‘ANITA»: es doble codificación **cp1252**
+  (no latin1), así que el arreglo tiene que usar la tabla cp1252.
+- 246 productos a granel: el precio está en `presentaciones[]` (fraccionados de 1 kg, 500 g, 150 g),
+  cada una con su precio, código de barras y stock. 6 granel no tienen fraccionados.
+- El mayorista a veces se vende por bulto: `unidades: 12` → `precio` es por unidad y `precioFormato` por bulto.
+- La lista Promo (23) tiene un solo producto. `descripcion` casi siempre repite el nombre en mayúsculas.
+- La API responde con `ETag`: se puede evitar reimportar si no cambió.
+
 ## Decisiones pendientes (bloquean el arranque)
 
 - [ ] Paleta: ¿la del manual o la de los carruseles?

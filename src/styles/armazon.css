@@ -1,0 +1,70 @@
+/* Barra lateral fija + barra superior. Ver «Estructura» en DISENO.md. */
+.app { min-height: 100vh; }
+
+.barra {
+  position: fixed; inset: 0 auto 0 0; z-index: 30;
+  width: var(--ancho-barra); overflow-y: auto;
+  background: var(--sidebar); border-right: 1px solid #0a301c;
+  color: var(--sidebar-texto); padding-bottom: 24px;
+  transition: transform .2s ease;
+}
+.barra-marca {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 14px; color: #fff; font-weight: 600; font-size: 15px; white-space: nowrap;
+}
+.barra-rotulo {
+  font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--sidebar-texto); opacity: .75; padding: 16px 8px 8px;
+}
+.barra-item {
+  display: flex; align-items: center; gap: 12px;
+  margin: 2px 12px 2px 0; padding: 11px 8px; border-radius: 0 var(--radio) var(--radio) 0;
+  color: var(--sidebar-texto); text-decoration: none; font-weight: 500;
+}
+.barra-item:hover { color: #fff; }
+.barra-item-activo { background: var(--sidebar-activo); color: #fff; font-weight: 600; }
+.barra-item-prox { opacity: .5; cursor: default; }
+.barra-item-prox:hover { color: var(--sidebar-texto); }
+.barra-item small { margin-left: auto; font-size: 10px; letter-spacing: .04em; }
+.contador {
+  margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--rojo-badge); color: #fff; font-size: 12px; font-weight: 500;
+  display: grid; place-items: center;
+}
+
+.logo {
+  flex: none; border-radius: 50%; border: 1.5px solid currentColor;
+  display: grid; place-items: center; font-weight: 700; letter-spacing: .02em;
+}
+
+.principal { margin-left: var(--ancho-barra); min-width: 0; transition: margin-left .2s ease; }
+.app-plegada .barra { transform: translateX(-100%); }
+.app-plegada .principal { margin-left: 0; }
+
+.superior {
+  position: sticky; top: 0; z-index: 20;
+  height: 56px; background: var(--superficie); border-bottom: 1px solid var(--borde);
+  display: flex; align-items: center; gap: 12px; padding: 0 14px;
+}
+.superior-boton {
+  border: 0; background: none; color: var(--texto-suave); cursor: pointer;
+  width: 36px; height: 36px; border-radius: var(--radio); display: grid; place-items: center;
+}
+.superior-boton:hover { background: var(--superficie-sutil); }
+.buscador-global {
+  display: flex; align-items: center; gap: 8px; flex: 0 1 420px;
+  height: var(--alto-control); padding: 0 12px;
+  border: 1px solid var(--borde); border-radius: var(--radio); color: var(--texto-suave);
+}
+.buscador-global input { border: 0; outline: 0; background: none; width: 100%; }
+.superior-salir { margin-left: auto; }
+
+.velo { display: none; }
+
+@media (max-width: 900px) {
+  .barra { transform: translateX(-100%); box-shadow: none; }
+  .principal, .app-plegada .principal { margin-left: 0; }
+  .app-cajon .barra { transform: none; }
+  .app-cajon .velo { display: block; position: fixed; inset: 0; z-index: 25; background: rgb(12 59 34 / .35); }
+  .buscador-global { flex: 1; }
+}

@@ -1,0 +1,95 @@
+/* Componentes de DISENO.md. Sin sombras ni degradados: todo con bordes de 1 px. */
+
+.contenido { padding: 32px; display: grid; gap: 20px; align-content: start; }
+@media (max-width: 900px) { .contenido { padding: 16px; } }
+
+/* Cabecera */
+.miga { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--texto-suave); margin-bottom: 10px; }
+.miga-paso { display: inline-flex; align-items: center; gap: 4px; }
+.miga a { text-decoration: none; }
+.miga a:hover { color: var(--texto); }
+.miga b { color: var(--texto); font-weight: 500; }
+.cabecera-fila { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.cabecera-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .cabecera-fila { flex-direction: column; align-items: stretch; }
+  .cabecera-acciones > * { flex: 1; justify-content: center; }
+}
+
+/* Botones */
+.btn {
+  height: var(--alto-control); padding: 0 16px; border-radius: var(--radio);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 14px; font-weight: 500; white-space: nowrap; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--borde); background: var(--superficie); color: var(--texto);
+}
+.btn:hover:not(:disabled) { background: var(--superficie-sutil); }
+.btn-pri { background: var(--verde); border-color: var(--verde); color: #fff; }
+.btn-pri:hover:not(:disabled) { background: #14532d; }
+.btn-chico { height: 30px; font-size: 13px; padding: 0 10px; }
+.btn-ancho { width: 100%; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Tarjetas de aviso y franjas */
+.aviso {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px; border-radius: var(--radio-tarjeta);
+}
+.aviso b { font-weight: 600; }
+.aviso-verde { background: var(--aviso-verde); border: 1px solid var(--aviso-verde-borde); }
+.aviso-verde b { color: var(--teal); }
+.aviso-ambar { background: var(--aviso-ambar); border: 1px solid var(--aviso-ambar-borde); }
+.aviso-ambar b { color: var(--ambar); }
+@media (max-width: 900px) { .aviso { flex-direction: column; align-items: stretch; } }
+
+.franja { padding: 11px 18px; border-bottom: 1px solid var(--borde); }
+.franja b { font-weight: 600; }
+.franja-rojo { background: var(--aviso-rojo); color: var(--rojo); }
+.franja-neutro { background: var(--aviso-neutro); color: var(--texto); }
+
+/* Tarjeta, campos */
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); padding: 20px; display: grid; gap: 12px; }
+.campo { display: grid; gap: 6px; }
+.campo-rotulo { font-weight: 500; }
+.input {
+  height: var(--alto-control); padding: 0 12px; width: 100%;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+}
+.input:focus { outline: 2px solid var(--verde); outline-offset: -1px; }
+
+/* Tabla */
+.tabla-marco { border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); overflow-x: auto; background: var(--superficie); }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th {
+  background: var(--superficie-sutil); text-align: left; padding: 12px 16px;
+  font-size: 11px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-suave);
+  border-bottom: 1px solid var(--borde);
+}
+.tabla td { padding: 12px 16px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+.tabla tr:last-child td { border-bottom: 0; }
+.celda-corta { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Chips */
+.chip { display: inline-block; background: var(--chip); color: var(--texto); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 500; }
+.chip-rojo { background: var(--aviso-rojo); color: var(--rojo); }
+
+/* Estado vacío */
+.vacio {
+  display: grid; justify-items: center; gap: 8px; text-align: center; color: var(--texto-suave);
+  padding: 48px 16px; background: var(--superficie); border: 1px dashed var(--borde); border-radius: var(--radio-tarjeta);
+}
+.vacio b { color: var(--texto); font-weight: 600; }
+
+/* Ingreso */
+.ingreso { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--fondo); }
+.ingreso-tarjeta {
+  width: 100%; max-width: 380px; background: var(--superficie);
+  border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); padding: 28px; display: grid; gap: 24px;
+}
+.ingreso-marca { display: flex; align-items: center; gap: 14px; color: var(--sidebar); }
+.ingreso-titulo { font-size: 20px; font-weight: 600; color: var(--texto); }
+.ingreso-form { display: grid; gap: 16px; }
+.ingreso-error {
+  display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: var(--radio);
+  background: var(--aviso-rojo); color: var(--rojo); font-weight: 500;
+}

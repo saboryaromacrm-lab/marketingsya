@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font: 400 14px/1.45 var(--fuente), system-ui, sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+}
+a { color: inherit; }
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.material-icons { vertical-align: middle; line-height: 1; user-select: none; }
+.texto-suave { color: var(--texto-suave); }
+.titulo-pagina { font-size: 30px; font-weight: 600; line-height: 1.2; }
+.titulo-seccion { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+@media (max-width: 900px) {
+  .titulo-pagina { font-size: 24px; }
+  .ocultar-movil { display: none; }
+}
