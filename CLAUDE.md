@@ -48,10 +48,18 @@ Imágenes bajo `api.saboryaroma.com/api/tienda/imagenes/` con parámetro `?v=`. 
 - Solo productos **saludables** en las piezas: excluir gaseosas y golosinas comunes.
 - Marcas sin logo en el catálogo: La Serenísima, Arcor, Saint Gottard.
 
-## Marca
+## Diseño de la interfaz
+
+La plataforma tiene que verse como el ERP Sabor y Aroma. **Los tokens, componentes y medidas
+están en `DISENO.md`: leerlo antes de tocar cualquier pantalla.**
+
+Van dos paletas separadas: la **interfaz** usa los colores del ERP (`DISENO.md`) y las **piezas
+generadas** (carruseles, promos, placas) usan la paleta de marca del manual. No mezclarlas.
+
+## Marca (solo para las piezas generadas)
 
 **Hay un conflicto sin resolver entre el manual de identidad y los carruseles aprobados.**
-No escribir el sistema de diseño hasta que el cliente elija.
+No escribir el sistema de diseño de las piezas hasta que el cliente elija.
 
 | | Manual de identidad | Carruseles aprobados |
 | --- | --- | --- |
