@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Icono } from './Icono'
 import { Logo } from './Logo'
@@ -20,6 +20,18 @@ export function Armazon({ plegadaInicial, contadores, avisos, children }: {
   children: ReactNode
 }) {
   const ruta = usePathname()
+  const router = useRouter()
+
+  // Buscador de arriba: busca productos desde cualquier pantalla y lleva al catálogo
+  function buscar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const campo = e.currentTarget.elements.namedItem('q') as HTMLInputElement
+    const q = campo.value.trim()
+    if (!q) return
+    campo.value = ''
+    campo.blur()
+    router.push(`/catalogo?q=${encodeURIComponent(q)}`)
+  }
   const [plegada, setPlegada] = useState(plegadaInicial)
   const [cajonAbierto, setCajonAbierto] = useState(false)
 
@@ -73,10 +85,10 @@ export function Armazon({ plegadaInicial, contadores, avisos, children }: {
           <button className="superior-boton" onClick={alternar} aria-label="Mostrar u ocultar el menú">
             <Icono nombre="menu_open" tamano={22} />
           </button>
-          <label className="buscador-global">
+          <form className="buscador-global" role="search" onSubmit={buscar}>
             <Icono nombre="search" />
-            <input type="search" placeholder="Buscar..." aria-label="Buscar" disabled title="Se activa en el paso 3" />
-          </label>
+            <input type="search" name="q" placeholder="Buscar productos..." aria-label="Buscar productos" enterKeyHint="search" />
+          </form>
           <form action="/salir" method="post" className="superior-salir">
             <button className="btn btn-sec btn-chico" title="Cerrar sesión">
               <Icono nombre="logout" />

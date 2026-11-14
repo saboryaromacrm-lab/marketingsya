@@ -155,6 +155,11 @@ Poner contador visible y corte automático al llegar al tope.
 - **Sincronización:** manual (botón), en segundo plano con `pg-boss`, una sola a la vez (índice único en la base).
   Copia las fotos al servidor. Historial de cambios por 6 meses. Si el ERP devuelve menos de la mitad
   de los productos, no aplica nada (protege de dar de baja medio catálogo por una respuesta cortada).
+- **Búsqueda del catálogo:** columna `busqueda` (nombre, sugerido, marca, categoría, etiquetas y códigos,
+  en minúscula y sin tildes) con índice `pg_trgm`. Primero exacta (palabras de ≤3 letras, enteras);
+  si no hay nada, por parecido (`word_similarity` ≥ 0,4) y avisa. El orden suma similitud estricta,
+  si la palabra está en el nombre y si es la primera palabra del nombre (probado con el catálogo real).
+  Filtros en la dirección de la página (`/catalogo?q=…&marca=…`). 50 por página.
 - **Precio de granel en pantallas:** el propio por kilo si lo tiene; si no, el fraccionado de 1 kg.
 - **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
 

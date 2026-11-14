@@ -9,7 +9,7 @@ export class CatalogoInvalido extends Error {}
 
 // Subir este número cuando cambien las reglas de limpieza (etiquetas, nombres, codificación):
 // la próxima sincronización reprocesa todo aunque el ERP diga que no cambió nada.
-export const VERSION_NORMALIZACION = 1
+export const VERSION_NORMALIZACION = 3 // 2: búsqueda y precios por lista · 3: también en dados de baja
 
 const texto = (v: unknown) => (typeof v === 'string' ? arreglarCodificacion(v.trim().replace(/\s+/g, ' ')) : '')
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)

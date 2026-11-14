@@ -10,7 +10,7 @@ export async function resumenCatalogo() {
     select
       count(*) filter (where not dado_de_baja)::int as activos,
       count(*) filter (where not dado_de_baja and tipo = 'granel')::int as granel,
-      count(*) filter (where not dado_de_baja and erp->'imagen' = 'null'::jsonb)::int as sin_foto,
+      count(*) filter (where not dado_de_baja and imagen_archivo is null)::int as sin_foto,
       count(*) filter (where not dado_de_baja and precio_minorista is null)::int as sin_precio,
       count(*) filter (where dado_de_baja)::int as de_baja,
       (select count(*) from marcas where not dada_de_baja)::int as marcas,
@@ -21,6 +21,6 @@ export async function resumenCatalogo() {
 }
 
 export async function productosSinFoto(): Promise<number> {
-  const { rows } = await db.execute<{ n: number }>(sql`select count(*)::int as n from productos where not dado_de_baja and erp->'imagen' = 'null'::jsonb`)
+  const { rows } = await db.execute<{ n: number }>(sql`select count(*)::int as n from productos where not dado_de_baja and imagen_archivo is null`)
   return rows[0]?.n ?? 0
 }

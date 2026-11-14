@@ -52,11 +52,12 @@
 }
 .superior-boton:hover { background: var(--superficie-sutil); }
 .buscador-global {
-  display: flex; align-items: center; gap: 8px; flex: 0 1 420px;
+  display: flex; align-items: center; gap: 8px; flex: 0 1 420px; margin: 0;
   height: var(--alto-control); padding: 0 12px;
   border: 1px solid var(--borde); border-radius: var(--radio); color: var(--texto-suave);
 }
-.buscador-global input { border: 0; outline: 0; background: none; width: 100%; }
+.buscador-global input { border: 0; outline: 0; background: none; width: 100%; color: var(--texto); }
+.buscador-global:focus-within { outline: 2px solid var(--verde); outline-offset: -1px; }
 .superior-salir { margin-left: auto; }
 
 .velo { display: none; }

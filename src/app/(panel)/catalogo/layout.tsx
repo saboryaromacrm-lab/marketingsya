@@ -18,6 +18,7 @@ export default async function LayoutCatalogo({ children }: { children: ReactNode
         <Submenu
           items={[
             { texto: 'Productos', href: '/catalogo', icono: 'inventory_2', exacto: true },
+            { texto: 'Marcas', href: '/catalogo/marcas', icono: 'sell' },
             { texto: 'Sincronizaciones', href: '/catalogo/sincronizaciones', icono: 'history' },
           ]}
         />

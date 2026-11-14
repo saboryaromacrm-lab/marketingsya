@@ -2,6 +2,9 @@ import { pgTable, bigserial, text, timestamp, boolean, index, integer, jsonb, nu
 import { sql } from 'drizzle-orm'
 import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
 
+// Precio principal de un producto en cada lista (clave: id de lista). Ver precioDeLista().
+export type PreciosPorLista = Record<string, { precio: number; unidades: number; presentacion: string | null }>
+
 // Cada intento de ingreso queda registrado: sirve para frenar a quien prueba
 // contraseñas al azar y para que Lucas vea desde dónde se entró.
 export const intentosIngreso = pgTable(
@@ -67,6 +70,9 @@ export const productos = pgTable(
     // Precio minorista principal (en granel, el fraccionado de 1 kg): para ordenar y mostrar rápido.
     precioMinorista: numeric('precio_minorista', { precision: 14, scale: 2, mode: 'number' }),
     // Todo lo que vino del ERP ya normalizado: precios, fraccionados, descripción, etc.
+    preciosLista: jsonb('precios_lista').$type<PreciosPorLista>().notNull().default({}),
+    // Nombre, marca, categoría, etiquetas y códigos en minúscula y sin tildes. Ver busqueda.ts.
+    busqueda: text('busqueda').notNull().default(''),
     erp: jsonb('erp').$type<ProductoNormalizado>().notNull(),
     huella: text('huella').notNull(),
     imagenErpVersion: text('imagen_erp_version'),
@@ -76,7 +82,11 @@ export const productos = pgTable(
     creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
     actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('productos_marca').on(t.marcaId), index('productos_categoria').on(t.categoria, t.subcategoria)],
+  (t) => [
+    index('productos_marca').on(t.marcaId),
+    index('productos_categoria').on(t.categoria, t.subcategoria),
+    index('productos_busqueda').using('gin', sql`${t.busqueda} gin_trgm_ops`),
+  ],
 )
 
 // ---------------------------------------------------------------------------

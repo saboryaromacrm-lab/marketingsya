@@ -7,8 +7,9 @@ import { descargarCatalogo } from './api'
 import { compararProducto, huella, type Cambio } from './comparar'
 import { normalizarCatalogo, VERSION_NORMALIZACION } from './normalizar'
 import { LISTA_MINORISTA, precioDeLista } from './precios'
+import { textoDeBusqueda } from './busqueda'
 import type { MarcaNormalizada, ProductoNormalizado } from './tipos'
-import type { ResumenSincronizacion } from '@/lib/db/esquema'
+import type { PreciosPorLista, ResumenSincronizacion } from '@/lib/db/esquema'
 
 const { productos, marcas, listas, sucursales, sincronizaciones, sincronizacionCambios } = esquema
 
@@ -47,12 +48,30 @@ async function enParalelo<T>(items: T[], cantidad: number, fn: (item: T) => Prom
 // las maneja Lucas o el paso de fotos.
 const excluido = (columna: string) => sql.raw(`excluded."${columna}"`)
 
-function filaProducto(p: ProductoNormalizado, marcasValidas: Set<number>) {
+type Contexto = { marcasValidas: Set<number>; nombreMarca: Map<number, string>; idsListas: number[] }
+
+// Campos que se calculan a partir del ERP pero no forman parte de la huella:
+// si cambian las reglas (o el nombre de una marca), se recalculan sin contar como cambio del ERP.
+function derivados(p: ProductoNormalizado, ctx: Contexto) {
+  const preciosLista: PreciosPorLista = {}
+  for (const id of ctx.idsListas) {
+    const x = precioDeLista(p, id)
+    if (x) preciosLista[id] = { precio: x.precio, unidades: x.unidades, presentacion: x.presentacion }
+  }
   return {
+    nombreSugerido: p.nombreSugerido,
+    busqueda: textoDeBusqueda(p, p.marcaId ? (ctx.nombreMarca.get(p.marcaId) ?? null) : null),
+    preciosLista,
+  }
+}
+
+function filaProducto(p: ProductoNormalizado, ctx: Contexto) {
+  const { marcasValidas } = ctx
+  return {
+    ...derivados(p, ctx),
     id: p.id,
     nombre: p.nombre,
     nombreErp: p.nombreErp,
-    nombreSugerido: p.nombreSugerido,
     // Si el producto apunta a una marca que el ERP no listó, se guarda sin marca (el dato queda en erp).
     marcaId: p.marcaId && marcasValidas.has(p.marcaId) ? p.marcaId : null,
     categoria: p.categoria,
@@ -121,18 +140,26 @@ async function aplicarCatalogo(sincronizacionId: number, cat: ReturnType<typeof 
 
     // ---- Productos ----
     const guardados = new Map(
-      (await tx.select({ id: productos.id, nombre: productos.nombre, erp: productos.erp, huella: productos.huella, nombreSugerido: productos.nombreSugerido, dadoDeBaja: productos.dadoDeBaja }).from(productos)).map((p) => [p.id, p]),
+      (
+        await tx
+          .select({ id: productos.id, nombre: productos.nombre, erp: productos.erp, huella: productos.huella, nombreSugerido: productos.nombreSugerido, busqueda: productos.busqueda, preciosLista: productos.preciosLista, dadoDeBaja: productos.dadoDeBaja })
+          .from(productos)
+      ).map((p) => [p.id, p]),
     )
-    const marcasValidas = new Set(idsMarcas)
+    const ctx: Contexto = {
+      marcasValidas: new Set(idsMarcas),
+      nombreMarca: new Map(cat.marcas.map((m) => [m.id, m.nombre])),
+      idsListas: cat.listas.map((l) => l.id),
+    }
     const aGuardar: ReturnType<typeof filaProducto>[] = []
-    const soloSugerido: { id: number; nombreSugerido: string }[] = []
+    const soloDerivados: ({ id: number } & ReturnType<typeof derivados>)[] = []
 
     for (const p of cat.productos) {
       const antes = guardados.get(p.id)
       if (!antes) {
         resumen.altas++
         anotar('producto', p.id, p.nombre, { tipo: 'alta', antes: null, despues: { precio: precioDeLista(p, LISTA_MINORISTA)?.precio ?? null } })
-        aGuardar.push(filaProducto(p, marcasValidas))
+        aGuardar.push(filaProducto(p, ctx))
         continue
       }
       const reactivado = antes.dadoDeBaja
@@ -148,8 +175,12 @@ async function aplicarCatalogo(sincronizacionId: number, cat: ReturnType<typeof 
         if (lista.some((c) => c.tipo === 'foto')) resumen.fotos++
         for (const c of lista) anotar('producto', p.id, p.nombre, c)
       }
-      if (reactivado || distintos) aGuardar.push(filaProducto(p, marcasValidas))
-      else if (antes.nombreSugerido !== p.nombreSugerido) soloSugerido.push({ id: p.id, nombreSugerido: p.nombreSugerido })
+      if (reactivado || distintos) aGuardar.push(filaProducto(p, ctx))
+      else {
+        const d = derivados(p, ctx)
+        const igual = d.nombreSugerido === antes.nombreSugerido && d.busqueda === antes.busqueda && JSON.stringify(d.preciosLista) === JSON.stringify(antes.preciosLista)
+        if (!igual) soloDerivados.push({ id: p.id, ...d })
+      }
     }
 
     for (const tanda of enTandas(aGuardar, 200)) {
@@ -160,6 +191,7 @@ async function aplicarCatalogo(sincronizacionId: number, cat: ReturnType<typeof 
           target: productos.id,
           set: {
             nombre: excluido('nombre'), nombreErp: excluido('nombre_erp'), nombreSugerido: excluido('nombre_sugerido'),
+            busqueda: excluido('busqueda'), preciosLista: excluido('precios_lista'),
             marcaId: excluido('marca_id'), categoria: excluido('categoria'), subcategoria: excluido('subcategoria'),
             etiquetas: excluido('etiquetas'), tipo: excluido('tipo'), estado: excluido('estado'), codigo: excluido('codigo'),
             codigoBarras: excluido('codigo_barras'), precioMinorista: excluido('precio_minorista'), erp: excluido('erp'),
@@ -168,17 +200,26 @@ async function aplicarCatalogo(sincronizacionId: number, cat: ReturnType<typeof 
           },
         })
     }
-    // Mejoras en las reglas del nombre sugerido: se actualiza sin contarlo como cambio del ERP.
-    for (const p of soloSugerido) await tx.update(productos).set({ nombreSugerido: p.nombreSugerido }).where(eq(productos.id, p.id))
 
     // Bajas: estaban y ya no vienen. No se borran (pueden estar en piezas viejas).
     const idsNuevos = new Set(cat.productos.map((p) => p.id))
+    // Sus derivados también se mantienen al día, para poder buscarlos en «Dados de baja».
+    for (const antes of guardados.values()) {
+      if (idsNuevos.has(antes.id)) continue
+      const d = derivados(antes.erp, ctx)
+      if (d.busqueda !== antes.busqueda || d.nombreSugerido !== antes.nombreSugerido || JSON.stringify(d.preciosLista) !== JSON.stringify(antes.preciosLista)) {
+        soloDerivados.push({ id: antes.id, ...d })
+      }
+    }
     const deBaja = [...guardados.values()].filter((p) => !p.dadoDeBaja && !idsNuevos.has(p.id))
     if (deBaja.length) {
       await tx.update(productos).set({ dadoDeBaja: true, bajaEn: new Date(), actualizadoEn: new Date() }).where(inArray(productos.id, deBaja.map((p) => p.id)))
       for (const p of deBaja) anotar('producto', p.id, p.nombre, { tipo: 'baja', antes: null, despues: null })
       resumen.bajas = deBaja.length
     }
+
+    // Reglas nuevas o marca renombrada: se recalculan los derivados sin contarlo como cambio del ERP.
+    for (const { id, ...d } of soloDerivados) await tx.update(productos).set(d).where(eq(productos.id, id))
 
     for (const tanda of enTandas(cambios, 500)) await tx.insert(sincronizacionCambios).values(tanda)
   })

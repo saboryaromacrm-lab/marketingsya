@@ -15,6 +15,20 @@
       "when": 1794686638792,
       "tag": "0001_catalogo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794697688561,
+      "tag": "0002_extension_trigramas",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794697689714,
+      "tag": "0003_busqueda",
+      "breakpoints": true
     }
   ]
 }
