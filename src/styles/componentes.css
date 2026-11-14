@@ -245,3 +245,74 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .logo-marca img { width: 100%; height: 100%; object-fit: contain; }
 .logo-marca-vacio { background: var(--superficie-sutil); color: var(--texto-suave); font-weight: 700; font-size: 16px; }
+
+/* Exclusión de piezas */
+.chip-excluido { background: #ececec; color: #4b4b4b; }
+.fila-excluida .miniatura img { opacity: .55; }
+.accion-masiva { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.texto-ok { color: var(--verde); font-weight: 600; font-size: 13px; }
+
+/* Avisos en el celular: una sola línea (el dato y el botón) */
+@media (max-width: 600px) {
+  .aviso-detalle { display: none; }
+  .aviso { flex-wrap: nowrap; align-items: center; padding: 10px 12px; font-size: 13px; }
+  .aviso-accion { flex: none; }
+}
+
+/* Detalle de producto */
+.detalle { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .detalle { grid-template-columns: minmax(0, 1fr); } }
+.titulo-tarjeta { font-size: 16px; font-weight: 600; }
+.titulo-tarjeta:not(:first-child) { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--borde); }
+.foto-grande {
+  position: relative; aspect-ratio: 1; border: 1px solid var(--borde); border-radius: var(--radio);
+  background: #fff; display: grid; place-items: center; overflow: hidden;
+}
+.foto-grande img { width: 100%; height: 100%; object-fit: contain; }
+.foto-grande-vacia { background: var(--superficie-sutil); text-align: center; }
+.foto-subiendo {
+  position: absolute; inset: 0; background: rgb(255 255 255 / .9); display: grid; place-content: center;
+  justify-items: center; gap: 8px; color: var(--verde); font-weight: 600;
+}
+.progreso-barra-local { width: 180px; height: 6px; background: var(--borde); border-radius: 3px; overflow: hidden; }
+.progreso-barra-local div { height: 100%; background: var(--verde); transition: width .2s; }
+.foto-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.foto-opcion {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; cursor: pointer; text-align: left;
+  border: 1px solid var(--borde); border-radius: var(--radio); background: #fff; font-weight: 500;
+}
+.foto-opcion img { width: 40px; height: 40px; object-fit: contain; border-radius: 4px; }
+.foto-opcion small { display: block; font-weight: 400; color: var(--texto-suave); font-size: 12px; }
+.foto-opcion-activa { border-color: var(--verde); outline: 1px solid var(--verde); }
+.foto-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.solo-tactil { display: none; }
+/* Celulares y tablets (táctil o pantalla angosta): ahí «Sacar foto» abre la cámara */
+@media (pointer: coarse), (max-width: 900px) { .solo-tactil { display: inline-flex; } }
+.fila-campo { display: flex; gap: 8px; }
+.fila-campo .input { flex: 1; min-width: 0; }
+.enlace { border: 0; background: none; padding: 0; color: var(--teal); text-decoration: underline; cursor: pointer; font: inherit; }
+.datos { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.datos dt { color: var(--texto-suave); }
+.datos dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .datos { grid-template-columns: minmax(0, 1fr); gap: 2px; } .datos dd { margin-bottom: 8px; } }
+
+/* Interruptor */
+.interruptor { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.interruptor input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.interruptor-pista { flex: none; width: 40px; height: 22px; border-radius: 11px; background: #c9d2cb; position: relative; transition: background .15s; }
+.interruptor-pista::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.interruptor input:checked + .interruptor-pista { background: var(--verde); }
+.interruptor input:checked + .interruptor-pista::after { transform: translateX(18px); }
+.interruptor input:focus-visible + .interruptor-pista { outline: 2px solid var(--verde); outline-offset: 2px; }
+
+/* Fotos en lote */
+.zona-soltar {
+  display: grid; justify-items: center; gap: 10px; text-align: center; padding: 40px 16px;
+  background: var(--superficie); border: 2px dashed var(--borde); border-radius: var(--radio-tarjeta); color: var(--texto-suave);
+}
+.zona-soltar b { color: var(--texto); }
+.zona-soltar-activa { border-color: var(--verde); background: #f1f8f3; }
+.producto-destino { display: flex; align-items: center; gap: 10px; }
+.tabla-lote .celda-corta { max-width: 220px; }
+.celda-estado { min-width: 160px; }
+code { background: var(--superficie-sutil); border: 1px solid var(--borde); border-radius: 4px; padding: 0 4px; font-size: 13px; }

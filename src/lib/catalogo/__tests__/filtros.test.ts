@@ -32,7 +32,7 @@ describe('urlConFiltros', () => {
     expect(urlConFiltros(leerFiltros({}))).toBe('/catalogo')
   })
   it('ida y vuelta: lo que se escribe se vuelve a leer igual', () => {
-    const f = leerFiltros({ q: 'yerba', marca: '12', etiqueta: 'SIN TACC', foto: 'sin', lista: '1', orden: 'precio-desc', pagina: '3', pestana: 'granel' })
+    const f = leerFiltros({ q: 'yerba', marca: '12', etiqueta: 'SIN TACC', foto: 'sin', piezas: 'no', lista: '1', orden: 'precio-desc', pagina: '3', pestana: 'granel' })
     expect(leerFiltros(Object.fromEntries(new URL(urlConFiltros(f, { pagina: 3 }), 'http://x').searchParams))).toEqual(f)
   })
   it('cambiar un filtro vuelve a la página 1', () => {

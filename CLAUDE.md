@@ -160,6 +160,15 @@ Poner contador visible y corte automático al llegar al tope.
   si no hay nada, por parecido (`word_similarity` ≥ 0,4) y avisa. El orden suma similitud estricta,
   si la palabra está en el nombre y si es la primera palabra del nombre (probado con el catálogo real).
   Filtros en la dirección de la página (`/catalogo?q=…&marca=…`). 50 por página.
+- **Fotos propias:** una por producto, reemplazable. Se guardan dos WebP en `MEDIA_DIR/propias/productos/`:
+  la original (hasta 1600 px, girada según el celular) y una cuadrada de 1200×1200 con fondo blanco para las piezas.
+  Foto efectiva = propia cuadrada, si no la del ERP. Tope 20 MB; HEIC del iPhone se rechaza con explicación
+  (sharp no lo abre). Se suben por `POST /api/productos/[id]/foto` (las acciones de servidor cortan en 1 MB)
+  y `proxyClientMaxBodySize` está en 25 MB (por defecto Next corta en 10 MB sin avisar).
+- **Fotos en lote:** el nombre del archivo se busca como código de barras (del producto, fraccionados o DUN),
+  después código interno, después ID. Vista previa antes de subir; repetidas y ambiguas no se suben.
+- **«No usar en piezas»:** interruptor por producto y acción masiva sobre lo filtrado (solo con búsqueda exacta).
+  La sincronización nunca pisa foto propia, nombre para piezas ni exclusión.
 - **Precio de granel en pantallas:** el propio por kilo si lo tiene; si no, el fraccionado de 1 kg.
 - **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
 

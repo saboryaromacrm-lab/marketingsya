@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { Icono } from '@/components/Icono'
 import { Cabecera } from '@/components/Cabecera'
 import { Submenu } from '@/components/Submenu'
 import { BotonSincronizar } from '@/components/sincronizacion/BotonSincronizar'
@@ -12,7 +14,12 @@ export default async function LayoutCatalogo({ children }: { children: ReactNode
         titulo="Catálogo"
         subtitulo="Copia del catálogo del ERP para armar piezas. Se actualiza con el botón, no solo."
         miga={[{ texto: 'Catálogo' }]}
-        acciones={<BotonSincronizar activaInicial={!!activa} />}
+        acciones={
+          <>
+            <Link className="btn" href="/catalogo/fotos"><Icono nombre="add_photo_alternate" />Fotos en lote</Link>
+            <BotonSincronizar activaInicial={!!activa} />
+          </>
+        }
       />
       <div className="dos-columnas">
         <Submenu

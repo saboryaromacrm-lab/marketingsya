@@ -77,6 +77,13 @@ export const productos = pgTable(
     huella: text('huella').notNull(),
     imagenErpVersion: text('imagen_erp_version'),
     imagenArchivo: text('imagen_archivo'),
+    // Foto subida por Lucas: gana sobre la del ERP. Se guardan dos versiones:
+    // la original achicada (hasta 1600 px) y una cuadrada con fondo blanco para las piezas.
+    imagenPropiaArchivo: text('imagen_propia_archivo'),
+    imagenPropiaCuadrada: text('imagen_propia_cuadrada'),
+    imagenPropiaEn: timestamp('imagen_propia_en', { withTimezone: true }),
+    // Lucas lo saca de las piezas (gaseosas, golosinas comunes): el motor de carruseles lo saltea.
+    excluirDePiezas: boolean('excluir_de_piezas').notNull().default(false),
     dadoDeBaja: boolean('dado_de_baja').notNull().default(false),
     bajaEn: timestamp('baja_en', { withTimezone: true }),
     creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),

@@ -58,6 +58,16 @@ export async function descargarImagen(url: string, sinExtension: string): Promis
   return relativa
 }
 
+/** Guarda un archivo ya procesado (escribe a un temporal y renombra). */
+export async function guardarMedia(relativa: string, datos: Buffer) {
+  const destino = rutaSegura(relativa)
+  if (!destino) throw new Error('ruta inválida')
+  await mkdir(path.dirname(destino), { recursive: true })
+  const temporal = `${destino}.${process.pid}.tmp`
+  await writeFile(temporal, datos)
+  await rename(temporal, destino)
+}
+
 export async function borrarMedia(relativa: string | null | undefined) {
   if (!relativa) return
   const destino = rutaSegura(relativa)

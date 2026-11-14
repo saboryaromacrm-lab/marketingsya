@@ -11,7 +11,7 @@ export function Aviso({ tono, dato, children, accion }: {
   return (
     <div className={`aviso aviso-${tono}`}>
       <div>
-        <b>{dato}</b> {children}
+        <b>{dato}</b> {children && <span className="aviso-detalle">{children}</span>}
       </div>
       {accion && <div className="aviso-accion">{accion}</div>}
     </div>

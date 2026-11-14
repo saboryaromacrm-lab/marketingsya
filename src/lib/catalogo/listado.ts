@@ -3,6 +3,7 @@ import { and, asc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { palabrasDeBusqueda } from './busqueda'
 import { POR_PAGINA, type Filtros, type Pestana } from './filtros'
+import { fotoEfectiva } from './fotos-propias'
 
 const { productos, marcas, listas } = esquema
 
@@ -47,8 +48,9 @@ function condicionesDeFiltros(f: Filtros): (SQL | undefined)[] {
     f.subcategoria ? eq(productos.subcategoria, f.subcategoria) : undefined,
     f.marca === 'sin' ? isNull(productos.marcaId) : f.marca != null ? eq(productos.marcaId, f.marca) : undefined,
     f.etiqueta ? sql`${productos.etiquetas} @> array[${f.etiqueta}]::text[]` : undefined,
-    f.foto === 'con' ? isNotNull(productos.imagenArchivo) : f.foto === 'sin' ? isNull(productos.imagenArchivo) : undefined,
+    f.foto === 'con' ? sql`${fotoEfectiva} is not null` : f.foto === 'sin' ? sql`${fotoEfectiva} is null` : undefined,
     f.sinPrecio ? sql`${precioLista} is null` : undefined,
+    f.piezas === 'si' ? eq(productos.excluirDePiezas, false) : f.piezas === 'no' ? eq(productos.excluirDePiezas, true) : undefined,
   ]
 }
 
@@ -107,7 +109,9 @@ export async function buscarProductos(f: Filtros) {
       etiquetas: productos.etiquetas,
       tipo: productos.tipo,
       estado: productos.estado,
-      imagenArchivo: productos.imagenArchivo,
+      foto: fotoEfectiva,
+      fotoPropia: sql<boolean>`${productos.imagenPropiaCuadrada} is not null`,
+      excluirDePiezas: productos.excluirDePiezas,
       preciosLista: productos.preciosLista,
       dadoDeBaja: productos.dadoDeBaja,
       fraccionados: sql<number>`jsonb_array_length(${productos.erp} -> 'presentaciones')`,
@@ -120,6 +124,14 @@ export async function buscarProductos(f: Filtros) {
     .offset((pagina - 1) * POR_PAGINA)
 
   return { filas, conteos, total, pagina, paginas, aproximada }
+}
+
+/**
+ * Condición para aplicar una acción a «todos los filtrados». Solo con búsqueda exacta:
+ * nunca se aplica nada masivo sobre resultados «parecidos».
+ */
+export function condicionFiltrados(f: Filtros): SQL | undefined {
+  return and(condicionPestana(f.pestana), ...condicionesDeFiltros(f), ...palabrasDeBusqueda(f.q).map(coincideExacta))
 }
 
 /** Opciones de los selects, con cuántos productos activos tiene cada una. Todo sale de la base. */

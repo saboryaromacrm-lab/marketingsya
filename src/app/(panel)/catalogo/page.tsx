@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Aviso } from '@/components/Aviso'
 import { Icono } from '@/components/Icono'
 import { FiltrosCatalogo } from '@/components/catalogo/FiltrosCatalogo'
+import { AccionMasiva } from '@/components/catalogo/AccionMasiva'
 import { resumenCatalogo } from '@/lib/catalogo/consultas'
 import { leerFiltros, POR_PAGINA, urlConFiltros, type Filtros, type Pestana } from '@/lib/catalogo/filtros'
 import { ultimaSincronizacionBuena } from '@/lib/catalogo/iniciar'
@@ -60,6 +61,7 @@ function FiltrosActivos({ f, opciones }: { f: Filtros; opciones: OpcionesDeFiltr
   if (f.etiqueta) chips.push({ texto: f.etiqueta, sin: { etiqueta: null } })
   if (f.foto) chips.push({ texto: f.foto === 'con' ? 'Con foto' : 'Sin foto', sin: { foto: null } })
   if (f.sinPrecio) chips.push({ texto: 'Sin precio en la lista', sin: { sinPrecio: false } })
+  if (f.piezas) chips.push({ texto: f.piezas === 'si' ? 'Van en piezas' : 'No van en piezas', sin: { piezas: null } })
   if (!chips.length) return null
   return (
     <div className="filtros-activos">
@@ -68,7 +70,7 @@ function FiltrosActivos({ f, opciones }: { f: Filtros; opciones: OpcionesDeFiltr
           {c.texto} <Icono nombre="close" tamano={14} />
         </Link>
       ))}
-      {chips.length > 1 && <Link href={urlConFiltros(f, { q: '', categoria: null, subcategoria: null, marca: null, etiqueta: null, foto: null, sinPrecio: false })} scroll={false}>Limpiar todo</Link>}
+      {chips.length > 1 && <Link href={urlConFiltros(f, { q: '', categoria: null, subcategoria: null, marca: null, etiqueta: null, foto: null, sinPrecio: false, piezas: null })} scroll={false}>Limpiar todo</Link>}
     </div>
   )
 }
@@ -122,6 +124,10 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         ))}
       </nav>
 
+      {total > 0 && !aproximada && (f.q || f.categoria || f.marca != null || f.etiqueta || f.piezas) && (
+        <AccionMasiva consulta={new URLSearchParams(urlConFiltros(f).split('?')[1] ?? '').toString()} total={total} soloExcluidos={f.piezas === 'no'} />
+      )}
+
       {aproximada && total > 0 && (
         <Aviso tono="ambar" dato={`No hay nada con «${f.q}» escrito así.`}>Te mostramos los productos con nombres parecidos.</Aviso>
       )}
@@ -134,24 +140,26 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         </div>
       ) : (
         <div className="tabla-marco">
-          <table className="tabla tabla-productos">
+          <table className="tabla tabla-productos tabla-clic">
             <thead>
               <tr><th>Foto</th><th>Producto</th><th>Marca</th><th>Categoría</th><th className="num">Precio</th></tr>
             </thead>
             <tbody>
               {filas.map((p) => (
-                <tr key={p.id} className={p.dadoDeBaja ? 'fila-baja' : ''}>
+                <tr key={p.id} className={`${p.dadoDeBaja ? 'fila-baja' : ''} ${p.excluirDePiezas ? 'fila-excluida' : ''}`}>
                   <td className="celda-foto">
-                    <div className={`miniatura ${p.imagenArchivo ? '' : 'miniatura-vacia'}`}>
-                      {p.imagenArchivo ? <img src={urlMedia(p.imagenArchivo)} alt="" loading="lazy" /> : <Icono nombre="no_photography" />}
+                    <div className={`miniatura ${p.foto ? '' : 'miniatura-vacia'}`}>
+                      {p.foto ? <img src={urlMedia(p.foto)} alt="" loading="lazy" /> : <Icono nombre="no_photography" />}
                     </div>
                   </td>
                   <td className="celda-producto">
-                    <div className="nombre-producto">{p.nombre}</div>
+                    <Link href={`/catalogo/${p.id}`} className="nombre-producto fila-enlace">{p.nombre}</Link>
                     <div className="chips">
                       {p.tipo === 'granel' && <span className="chip">A GRANEL</span>}
                       {p.estado !== 'activo' && <span className="chip chip-cambio-precio">{p.estado.toUpperCase()}</span>}
                       {p.dadoDeBaja && <span className="chip chip-error">DADO DE BAJA</span>}
+                      {p.excluirDePiezas && <span className="chip chip-excluido">NO VA EN PIEZAS</span>}
+                      {p.fotoPropia && <span className="chip chip-cambio-alta">FOTO PROPIA</span>}
                       {p.etiquetas.slice(0, 3).map((e) => <span key={e} className="chip">{e}</span>)}
                     </div>
                     <div className="texto-chico">

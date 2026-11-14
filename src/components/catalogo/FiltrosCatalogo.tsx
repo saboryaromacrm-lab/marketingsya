@@ -81,6 +81,12 @@ export function FiltrosCatalogo({ filtros, opciones }: { filtros: Filtros; opcio
         <option value="sin">Sin foto</option>
       </select>
 
+      <select className="input" value={filtros.piezas ?? ''} onChange={(e) => ir({ piezas: (e.target.value || null) as Filtros['piezas'] })} aria-label="Uso en piezas">
+        <option value="">Van y no van en piezas</option>
+        <option value="si">Van en piezas</option>
+        <option value="no">No van en piezas</option>
+      </select>
+
       <select className="input" value={filtros.lista} onChange={(e) => ir({ lista: Number(e.target.value) })} aria-label="Lista de precios">
         {opciones.listas.map((l) => <option key={l.id} value={l.id}>Precio: {l.nombre === l.modalidad ? l.nombre : `${l.modalidad} (${l.nombre})`}</option>)}
       </select>
