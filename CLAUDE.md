@@ -136,13 +136,74 @@ El Instagram tiene que estar como cuenta de **empresa**, no de creador.
 Tope de **30 USD por mes** entre la API de Claude y la IA de imágenes.
 Poner contador visible y corte automático al llegar al tope.
 
+## Decisiones tomadas (14/11/2026)
+
+- **Interfaz:** fuente Nunito Sans (vía `next/font`) e íconos Material Icons rellenos, como el ERP.
+  Solo modo claro, con vista para celular (la barra lateral pasa a ser un cajón).
+- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n».
+- **Precio en piezas:** Minorista (lista 3) por defecto, con opción de elegir otra lista.
+- **Sucursales:** la id 3 (Express 2) cerró; son solo las 4 del catálogo.
+- **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
+- **Imágenes:** quedan públicas solo las de `/media` (las necesita Meta); todo lo demás pide sesión.
+- **Recetas:** el contenido es mezcla: la IA propone a partir del catálogo y Lucas edita.
+- **Login:** una sola contraseña (hash scrypt guardado en la tabla `ajustes`), sesión de 30 días por dispositivo,
+  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP. La primera vez se crea desde
+  la pantalla de ingreso con el `CODIGO_INSTALACION` (así nadie la crea antes que Lucas); se cambia en
+  Configuración; se recupera con `REINICIAR_CLAVE=si` + publicar. El secreto de sesión se genera solo.
+- **Catálogo:** campo «nombre para piezas» editable con sugerencia automática; el nombre del ERP no se toca.
+  Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
+  se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.
+  Las fotos subidas van al disco del VPS, en un volumen de Dokploy.
+- **Sincronización:** manual (botón), en segundo plano con `pg-boss`, una sola a la vez (índice único en la base).
+  Copia las fotos al servidor. Historial de cambios por 6 meses. Si el ERP devuelve menos de la mitad
+  de los productos, no aplica nada (protege de dar de baja medio catálogo por una respuesta cortada).
+- **Búsqueda del catálogo:** columna `busqueda` (nombre, sugerido, marca, categoría, etiquetas y códigos,
+  en minúscula y sin tildes) con índice `pg_trgm`. Primero exacta (palabras de ≤3 letras, enteras);
+  si no hay nada, por parecido (`word_similarity` ≥ 0,4) y avisa. El orden suma similitud estricta,
+  si la palabra está en el nombre y si es la primera palabra del nombre (probado con el catálogo real).
+  Filtros en la dirección de la página (`/catalogo?q=…&marca=…`). 50 por página.
+- **Fotos propias:** una por producto, reemplazable. Se guardan dos WebP en `MEDIA_DIR/propias/productos/`:
+  la original (hasta 1600 px, girada según el celular) y una cuadrada de 1200×1200 con fondo blanco para las piezas.
+  Foto efectiva = propia cuadrada, si no la del ERP. Tope 20 MB; HEIC del iPhone se rechaza con explicación
+  (sharp no lo abre). Se suben por `POST /api/productos/[id]/foto` (las acciones de servidor cortan en 1 MB)
+  y `proxyClientMaxBodySize` está en 25 MB (por defecto Next corta en 10 MB sin avisar).
+- **Fotos en lote:** el nombre del archivo se busca como código de barras (del producto, fraccionados o DUN),
+  después código interno, después ID. Vista previa antes de subir; repetidas y ambiguas no se suben.
+- **«No usar en piezas»:** interruptor por producto y acción masiva sobre lo filtrado (solo con búsqueda exacta).
+  La sincronización nunca pisa foto propia, nombre para piezas ni exclusión.
+- **Precio de granel en pantallas:** el propio por kilo si lo tiene; si no, el fraccionado de 1 kg.
+- **Instalación:** Dokploy, un solo Docker Compose (`docker-compose.yml`): `app` (1 GB), `db` PostgreSQL 16 propia
+  (512 MB) y `respaldo` (pg_dump diario 4 h de Formosa, 14 días, espera a que existan las tablas).
+  Migraciones al arrancar (`instrumentation.ts`). Imagen Debian slim por sharp. Guía: `docs/INSTALACION.md`.
+  Probado entero en Docker: instalación nueva, sincronización real (~6 min la primera), reinicio, recuperación
+  de contraseña y restauración de la copia. Uso medido: app ~110 MB, base ~55 MB.
+- **Logo:** se sube desde Configuración (PNG/SVG, hasta 512 px, sin recortar ni deformar).
+- **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
+
+## Lo que muestra el catálogo real (relevado el 14/11/2026)
+
+- 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
+- 139 productos sin foto; 13 sin precio minorista en ningún lado.
+- El único nombre mal codificado es la marca «MAÃ‘ANITA»: es doble codificación **cp1252**
+  (no latin1), así que el arreglo tiene que usar la tabla cp1252.
+- 246 productos a granel: el precio está en `presentaciones[]` (fraccionados de 1 kg, 500 g, 150 g),
+  cada una con su precio, código de barras y stock. 6 granel no tienen fraccionados.
+- El mayorista a veces se vende por bulto: `unidades: 12` → `precio` es por unidad y `precioFormato` por bulto.
+- La lista Promo (23) tiene un solo producto. `descripcion` casi siempre repite el nombre en mayúsculas.
+- La API responde con `ETag` estable y contesta `304` a `If-None-Match`: si no cambió, no se reprocesa.
+  Se guarda como `v<VERSION_NORMALIZACION>:<etag>`; subir esa versión en `normalizar.ts` cuando cambien
+  las reglas de limpieza, así se reprocesa todo aunque el ERP no haya cambiado.
+- **El ERP limita los pedidos:** con ~1.200 fotos en un minuto empezó a responder `429`. La copia de fotos
+  va a 8 pedidos por segundo, y ante un 429 frena todo, espera (Retry-After o 20 s) y reintenta hasta 5 veces.
+- Fotos y logos copiados ocupan ~65 MB (2.045 fotos + 77 logos), en `MEDIA_DIR/erp/`.
+
 ## Decisiones pendientes (bloquean el arranque)
 
 - [ ] Paleta: ¿la del manual o la de los carruseles?
 - [ ] Tipografías: ¿Fraunces y Nunito, o Utendo y Bluestars con sus archivos?
 - [ ] ¿El fucsia entra en la paleta? (el manual lo nombra pero muestra naranja)
 - [ ] Los 3 HTML de los carruseles, al repo
-- [ ] Backup: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive?
+- [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
 - [ ] ¿Dónde se administra el DNS: Hostinger, Cloudflare u otro?
 - [ ] ¿Qué servicio de IA de imágenes?
 - [ ] Credenciales de Meta: app ID, cuenta publicitaria, token

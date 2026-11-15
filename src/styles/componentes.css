@@ -1,0 +1,325 @@
+/* Componentes de DISENO.md. Sin sombras ni degradados: todo con bordes de 1 px. */
+
+.contenido { padding: 32px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: start; }
+@media (max-width: 900px) { .contenido { padding: 16px; } }
+
+/* Cabecera */
+.miga { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--texto-suave); margin-bottom: 10px; }
+.miga-paso { display: inline-flex; align-items: center; gap: 4px; }
+.miga a { text-decoration: none; }
+.miga a:hover { color: var(--texto); }
+.miga b { color: var(--texto); font-weight: 500; }
+.cabecera-fila { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.cabecera-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .cabecera-fila { flex-direction: column; align-items: stretch; }
+  .cabecera-acciones > * { flex: 1; justify-content: center; }
+}
+
+/* Botones */
+.btn {
+  height: var(--alto-control); padding: 0 16px; border-radius: var(--radio);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 14px; font-weight: 500; white-space: nowrap; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--borde); background: var(--superficie); color: var(--texto);
+}
+.btn:hover:not(:disabled) { background: var(--superficie-sutil); }
+.btn-pri { background: var(--verde); border-color: var(--verde); color: #fff; }
+.btn-pri:hover:not(:disabled) { background: #14532d; }
+.btn-chico { height: 30px; font-size: 13px; padding: 0 10px; }
+.btn-ancho { width: 100%; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Tarjetas de aviso y franjas */
+.aviso {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px; border-radius: var(--radio-tarjeta);
+}
+.aviso b { font-weight: 600; }
+.aviso-verde { background: var(--aviso-verde); border: 1px solid var(--aviso-verde-borde); }
+.aviso-verde b { color: var(--teal); }
+.aviso-ambar { background: var(--aviso-ambar); border: 1px solid var(--aviso-ambar-borde); }
+.aviso-ambar b { color: var(--ambar); }
+@media (max-width: 900px) {
+  .aviso { flex-wrap: wrap; gap: 8px 12px; padding: 12px 14px; }
+  .aviso-accion { margin-left: auto; }
+}
+
+.franja { padding: 11px 18px; border-bottom: 1px solid var(--borde); }
+.franja b { font-weight: 600; }
+.franja-rojo { background: var(--aviso-rojo); color: var(--rojo); }
+.franja-neutro { background: var(--aviso-neutro); color: var(--texto); }
+
+/* Tarjeta, campos */
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); padding: 20px; display: grid; gap: 12px; }
+.campo { display: grid; gap: 6px; }
+.campo-rotulo { font-weight: 500; }
+.input {
+  height: var(--alto-control); padding: 0 12px; width: 100%;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+}
+.input:focus { outline: 2px solid var(--verde); outline-offset: -1px; }
+
+/* Tabla */
+.tabla-marco { border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); overflow-x: auto; background: var(--superficie); }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th {
+  background: var(--superficie-sutil); text-align: left; padding: 12px 16px;
+  font-size: 11px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-suave);
+  border-bottom: 1px solid var(--borde);
+}
+.tabla td { padding: 12px 16px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+.tabla tr:last-child td { border-bottom: 0; }
+.celda-corta { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Chips */
+.chip { display: inline-block; background: var(--chip); color: var(--texto); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 500; }
+.chip-rojo { background: var(--aviso-rojo); color: var(--rojo); }
+
+/* Estado vacío */
+.vacio {
+  display: grid; justify-items: center; gap: 8px; text-align: center; color: var(--texto-suave);
+  padding: 48px 16px; background: var(--superficie); border: 1px dashed var(--borde); border-radius: var(--radio-tarjeta);
+}
+.vacio b { color: var(--texto); font-weight: 600; }
+
+/* Ingreso */
+.ingreso { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--fondo); }
+.ingreso-tarjeta {
+  width: 100%; max-width: 380px; background: var(--superficie);
+  border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); padding: 28px; display: grid; gap: 24px;
+}
+.ingreso-marca { display: flex; align-items: center; gap: 14px; color: var(--sidebar); }
+.ingreso-titulo { font-size: 20px; font-weight: 600; color: var(--texto); }
+.ingreso-form { display: grid; gap: 16px; }
+.ingreso-error {
+  display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: var(--radio);
+  background: var(--aviso-rojo); color: var(--rojo); font-weight: 500;
+}
+
+/* Dos columnas: submenú + contenido */
+.dos-columnas { display: flex; gap: 24px; align-items: flex-start; }
+.columna-principal { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; }
+.submenu {
+  width: 215px; flex: none; background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta); padding: 8px; display: grid; gap: 2px;
+}
+.submenu a { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border-radius: var(--radio); text-decoration: none; }
+.submenu a:hover { background: var(--superficie-sutil); }
+.submenu a.submenu-activo { background: var(--verde); color: #fff; font-weight: 600; }
+@media (max-width: 900px) {
+  .dos-columnas { flex-direction: column; align-items: stretch; }
+  .submenu { width: 100%; display: flex; flex-wrap: wrap; }
+  .submenu a { white-space: nowrap; }
+}
+
+/* Pestañas */
+.pestanas { display: flex; gap: 24px; border-bottom: 1px solid var(--borde); overflow-x: auto; }
+.pestanas a { padding: 0 2px 10px; color: var(--texto-suave); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.pestanas a.pestana-activa { color: var(--verde); font-weight: 600; border-bottom: 2px solid var(--naranja); margin-bottom: -1px; }
+
+/* Cifras del catálogo */
+.cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.cifra {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+  padding: 16px; display: grid; gap: 2px; color: var(--texto-suave);
+}
+.cifra b { font-size: 26px; font-weight: 600; color: var(--verde); line-height: 1.2; }
+.cifra .material-icons { color: var(--teal); margin-bottom: 6px; }
+
+/* Tabla: números, miniaturas, pie */
+.tabla th.num, .tabla td.num { text-align: right; white-space: nowrap; }
+.tabla-clic tbody tr { cursor: pointer; }
+.tabla-clic tbody tr:hover td { background: #fafcfa; }
+.fila-enlace { text-decoration: none; font-weight: 500; }
+.fila-enlace::after { content: ''; position: absolute; inset: 0; }
+.tabla-clic tr { position: relative; }
+.miniatura {
+  width: 40px; height: 40px; border: 1px solid var(--borde); border-radius: 6px; overflow: hidden;
+  display: grid; place-items: center; background: #fff; color: var(--texto-suave);
+}
+.miniatura img { width: 100%; height: 100%; object-fit: contain; }
+.miniatura-vacia { background: var(--superficie-sutil); }
+.nombre-producto { font-weight: 500; }
+.texto-chico { font-size: 12px; color: var(--texto-suave); }
+.lista-precios { display: grid; gap: 2px; white-space: nowrap; }
+.tabla-pie { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--borde); color: var(--texto-suave); }
+.tabla-pie-botones { display: flex; gap: 8px; }
+.btn[aria-disabled='true'] { opacity: .5; pointer-events: none; }
+.volver { display: inline-flex; align-items: center; gap: 4px; color: var(--texto-suave); text-decoration: none; margin-bottom: 6px; }
+.volver:hover { color: var(--texto); }
+.vacio-chico { padding: 24px 16px; }
+.texto-error { color: var(--rojo); font-size: 13px; font-weight: 500; align-self: center; }
+
+/* Chips por estado y tipo de cambio */
+.chip-ok, .chip-cambio-alta, .chip-cambio-reactivado { background: #dcefe3; color: var(--verde); }
+.chip-error, .chip-cambio-baja { background: var(--aviso-rojo); color: var(--rojo); }
+.chip-en_cola, .chip-corriendo, .chip-cambio-precio { background: var(--aviso-ambar); color: var(--ambar); }
+
+/* Avance de la sincronización */
+.progreso { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.progreso-numero { margin-left: auto; font-weight: 600; color: var(--verde); }
+.progreso-barra { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: transparent; }
+.progreso-barra div { height: 100%; background: var(--verde); transition: width .4s ease; }
+.girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce) { .girando { animation: none; } .progreso-barra div { transition: none; } }
+
+/* Toast: arriba a la derecha, sobre la barra superior */
+.toast {
+  position: fixed; top: 8px; right: 14px; z-index: 40; max-width: min(640px, calc(100vw - 28px));
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radio);
+  background: var(--ambar); color: #fff; font-weight: 500;
+}
+.toast a { color: #fff; font-weight: 600; white-space: nowrap; }
+.toast button { border: 0; background: none; color: #fff; cursor: pointer; padding: 0; display: grid; }
+.toast-error { background: var(--rojo); }
+
+/* Filtros: grilla que se acomoda sola; el buscador ocupa el doble */
+.filtros { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; transition: opacity .15s; }
+.filtros-cargando { opacity: .85; }
+.filtro-busqueda {
+  grid-column: span 2; display: flex; align-items: center; gap: 8px;
+  height: var(--alto-control); padding: 0 12px; background: var(--superficie);
+  border: 1px solid var(--borde); border-radius: var(--radio); color: var(--texto-suave);
+}
+.filtro-busqueda:focus-within { outline: 2px solid var(--verde); outline-offset: -1px; }
+.filtro-busqueda input { border: 0; outline: 0; background: none; width: 100%; color: var(--texto); }
+select.input { appearance: auto; cursor: pointer; }
+.filtros-marcas { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; }
+.filtros-marcas .filtro-busqueda { grid-column: auto; }
+.filtros-activos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: -4px; }
+.chip-filtro { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; padding: 4px 8px 4px 10px; }
+.chip-filtro:hover { background: #c7dedd; }
+@media (max-width: 900px) {
+  .filtros { grid-template-columns: 1fr 1fr; }
+  .filtro-busqueda { grid-column: 1 / -1; }
+  .filtros-marcas { grid-template-columns: 1fr; }
+}
+
+/* Tabla de productos */
+.tabla-productos td { height: 89px; padding-top: 8px; padding-bottom: 8px; }
+.celda-foto { width: 72px; }
+.celda-producto { min-width: 260px; }
+.celda-categoria { max-width: 200px; }
+.celda-precio { width: 1%; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+.chips:empty { display: none; }
+.precio { font-weight: 600; font-size: 15px; }
+.falta { color: var(--ambar); font-weight: 600; font-size: 13px; }
+.fila-baja td { opacity: .65; }
+.pagina-actual { align-self: center; padding: 0 4px; }
+@media (max-width: 900px) {
+  .tabla-productos thead { display: none; }
+  .tabla-productos, .tabla-productos tbody, .tabla-productos tr, .tabla-productos td { display: block; }
+  .tabla-marco:has(.tabla-productos) { border: 0; background: none; overflow: visible; }
+  .tabla-productos tr {
+    display: grid; grid-template-columns: 64px 1fr auto; gap: 2px 12px; align-items: start;
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+    padding: 12px; margin-bottom: 10px;
+  }
+  .tabla-productos td { height: auto; padding: 0; border: 0; }
+  .tabla-productos .celda-foto { grid-row: span 3; width: auto; }
+  .tabla-productos .miniatura { width: 64px; height: 64px; }
+  .tabla-productos .celda-producto { grid-column: 2 / 4; min-width: 0; }
+  .tabla-productos .celda-marca { grid-column: 2 / 3; font-size: 13px; color: var(--texto-suave); }
+  .tabla-productos .celda-categoria { display: none; }
+  .tabla-productos .celda-precio { grid-column: 3 / 4; grid-row: 2 / 4; width: auto; }
+  .tabla-marco:has(.tabla-productos) .tabla-pie {
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+    flex-direction: column; align-items: stretch; text-align: center;
+  }
+  .tabla-pie-botones { justify-content: space-between; }
+}
+
+/* Marcas */
+.grilla-marcas { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.tarjeta-marca {
+  display: flex; align-items: center; gap: 12px; padding: 12px; text-decoration: none;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-tarjeta);
+}
+.tarjeta-marca:hover { background: #fafcfa; border-color: #c9d7cb; }
+.logo-marca {
+  width: 56px; height: 56px; flex: none; border: 1px solid var(--borde); border-radius: var(--radio);
+  display: grid; place-items: center; overflow: hidden; background: #fff;
+}
+.logo-marca img { width: 100%; height: 100%; object-fit: contain; }
+.logo-marca-vacio { background: var(--superficie-sutil); color: var(--texto-suave); font-weight: 700; font-size: 16px; }
+
+/* Exclusión de piezas */
+.chip-excluido { background: #ececec; color: #4b4b4b; }
+.fila-excluida .miniatura img { opacity: .55; }
+.accion-masiva { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.texto-ok { color: var(--verde); font-weight: 600; font-size: 13px; }
+
+/* Avisos en el celular: una sola línea (el dato y el botón) */
+@media (max-width: 600px) {
+  .aviso-detalle { display: none; }
+  .aviso { flex-wrap: nowrap; align-items: center; padding: 10px 12px; font-size: 13px; }
+  .aviso-accion { flex: none; }
+}
+
+/* Detalle de producto */
+.detalle { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .detalle { grid-template-columns: minmax(0, 1fr); } }
+.titulo-tarjeta { font-size: 16px; font-weight: 600; }
+.titulo-tarjeta:not(:first-child) { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--borde); }
+.foto-grande {
+  position: relative; aspect-ratio: 1; border: 1px solid var(--borde); border-radius: var(--radio);
+  background: #fff; display: grid; place-items: center; overflow: hidden;
+}
+.foto-grande img { width: 100%; height: 100%; object-fit: contain; }
+.foto-grande-vacia { background: var(--superficie-sutil); text-align: center; }
+.foto-subiendo {
+  position: absolute; inset: 0; background: rgb(255 255 255 / .9); display: grid; place-content: center;
+  justify-items: center; gap: 8px; color: var(--verde); font-weight: 600;
+}
+.progreso-barra-local { width: 180px; height: 6px; background: var(--borde); border-radius: 3px; overflow: hidden; }
+.progreso-barra-local div { height: 100%; background: var(--verde); transition: width .2s; }
+.foto-opciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.foto-opcion {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; cursor: pointer; text-align: left;
+  border: 1px solid var(--borde); border-radius: var(--radio); background: #fff; font-weight: 500;
+}
+.foto-opcion img { width: 40px; height: 40px; object-fit: contain; border-radius: 4px; }
+.foto-opcion small { display: block; font-weight: 400; color: var(--texto-suave); font-size: 12px; }
+.foto-opcion-activa { border-color: var(--verde); outline: 1px solid var(--verde); }
+.foto-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.solo-tactil { display: none; }
+/* Celulares y tablets (táctil o pantalla angosta): ahí «Sacar foto» abre la cámara */
+@media (pointer: coarse), (max-width: 900px) { .solo-tactil { display: inline-flex; } }
+.fila-campo { display: flex; gap: 8px; }
+.fila-campo .input { flex: 1; min-width: 0; }
+.enlace { border: 0; background: none; padding: 0; color: var(--teal); text-decoration: underline; cursor: pointer; font: inherit; }
+.datos { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.datos dt { color: var(--texto-suave); }
+.datos dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .datos { grid-template-columns: minmax(0, 1fr); gap: 2px; } .datos dd { margin-bottom: 8px; } }
+
+/* Interruptor */
+.interruptor { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.interruptor input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.interruptor-pista { flex: none; width: 40px; height: 22px; border-radius: 11px; background: #c9d2cb; position: relative; transition: background .15s; }
+.interruptor-pista::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.interruptor input:checked + .interruptor-pista { background: var(--verde); }
+.interruptor input:checked + .interruptor-pista::after { transform: translateX(18px); }
+.interruptor input:focus-visible + .interruptor-pista { outline: 2px solid var(--verde); outline-offset: 2px; }
+
+/* Fotos en lote */
+.zona-soltar {
+  display: grid; justify-items: center; gap: 10px; text-align: center; padding: 40px 16px;
+  background: var(--superficie); border: 2px dashed var(--borde); border-radius: var(--radio-tarjeta); color: var(--texto-suave);
+}
+.zona-soltar b { color: var(--texto); }
+.zona-soltar-activa { border-color: var(--verde); background: #f1f8f3; }
+.producto-destino { display: flex; align-items: center; gap: 10px; }
+.tabla-lote .celda-corta { max-width: 220px; }
+.celda-estado { min-width: 160px; }
+code { background: var(--superficie-sutil); border: 1px solid var(--borde); border-radius: 4px; padding: 0 4px; font-size: 13px; }
+
+/* Configuración */
+.form-columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end; }
+.form-pie { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.fila-logo { display: flex; gap: 20px; align-items: center; }
+.logo-muestra { padding: 12px; background: var(--sidebar); border-radius: var(--radio-tarjeta); color: #fff; display: grid; place-items: center; }
+@media (max-width: 600px) { .fila-logo { flex-direction: column; align-items: flex-start; } }

@@ -1,0 +1,34 @@
+/* Paleta de la INTERFAZ (la del ERP, medida en DISENO.md).
+   No usar en las piezas generadas: esas tienen su propia paleta de marca. */
+:root {
+  --sidebar: #0c3b22;
+  --sidebar-activo: #155232;
+  --sidebar-texto: #a9c6b3;
+  --sidebar-rotulo: #287873;
+  --verde: #166534;
+  --teal: #0f766e;
+  --naranja: #ea580c;
+  --ambar: #b45309;
+  --rojo: #b91c1c;
+  --rojo-badge: #dc2626;
+  --fondo: #f3f6f3;
+  --superficie: #ffffff;
+  --superficie-sutil: #f7faf7;
+  --borde: #dde6de;
+  --texto: #16211a;
+  --texto-suave: #56655c;
+  --aviso-verde: #d7e6e2;
+  --aviso-ambar: #ebe2d6;
+  --aviso-rojo: #fef2f2;
+  --aviso-neutro: #e7f1f0;
+  --chip: #d8e9e8;
+
+  /* Bordes de las tarjetas de aviso: mismo tono que el fondo, más saturado */
+  --aviso-verde-borde: #b5d3cb;
+  --aviso-ambar-borde: #dcc9b0;
+
+  --radio: 8px;
+  --radio-tarjeta: 12px;
+  --ancho-barra: 245px;
+  --alto-control: 40px;
+}
