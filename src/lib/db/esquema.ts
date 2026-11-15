@@ -162,3 +162,26 @@ export const ajustes = pgTable('ajustes', {
   valor: text('valor').notNull(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// ---------------------------------------------------------------------------
+// Exportaciones: cada vez que se pasan placas a JPEG (un carrusel, o la prueba del motor).
+// ---------------------------------------------------------------------------
+
+export type EstadoExportacion = 'en_cola' | 'corriendo' | 'ok' | 'error'
+
+export const exportaciones = pgTable('exportaciones', {
+  id: serial('id').primaryKey(),
+  // «prueba» (diagnóstico del motor) o «carrusel»
+  tipo: text('tipo').notNull(),
+  referenciaId: integer('referencia_id'),
+  // Direcciones de las placas a renderizar (rutas /render/...), en orden
+  placas: jsonb('placas').$type<string[]>().notNull(),
+  estado: text('estado').$type<EstadoExportacion>().notNull(),
+  avance: integer('avance').notNull().default(0),
+  // JPEG resultantes y el .zip, como rutas dentro de MEDIA_DIR
+  archivos: jsonb('archivos').$type<string[]>().notNull().default([]),
+  zip: text('zip'),
+  error: text('error'),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  terminadoEn: timestamp('terminado_en', { withTimezone: true }),
+})

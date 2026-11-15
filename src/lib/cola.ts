@@ -6,6 +6,7 @@ import { entorno } from '@/lib/entorno'
 // Sirve para lo que tarda: sincronizar, renderizar piezas, publicar.
 
 export const COLA_SINCRONIZAR = 'sincronizar-catalogo'
+export const COLA_RENDER = 'renderizar-piezas'
 
 const global = globalThis as unknown as { cola?: Promise<PgBoss> }
 
@@ -17,6 +18,9 @@ async function crear(): Promise<PgBoss> {
   // 20 minutos de margen: la primera vez copia más de 2.000 fotos.
   if (!(await boss.getQueue(COLA_SINCRONIZAR))) {
     await boss.createQueue(COLA_SINCRONIZAR, { retryLimit: 0, expireInSeconds: 20 * 60 })
+  }
+  if (!(await boss.getQueue(COLA_RENDER))) {
+    await boss.createQueue(COLA_RENDER, { retryLimit: 0, expireInSeconds: 10 * 60 })
   }
   return boss
 }

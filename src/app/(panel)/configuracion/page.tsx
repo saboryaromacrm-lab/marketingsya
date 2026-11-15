@@ -7,6 +7,7 @@ import { LARGO_MINIMO_CLAVE } from '@/lib/auth/clave-guardada'
 import { urlMedia } from '@/lib/media'
 import { CambiarClave } from './CambiarClave'
 import { SubirLogo } from './SubirLogo'
+import { ProbarMotor } from './ProbarMotor'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +24,10 @@ export default async function Configuracion() {
       <section className="tarjeta">
         <h2 className="titulo-seccion">Logo</h2>
         <SubirLogo actual={logo ? urlMedia(logo) : null} />
+      </section>
+      <section className="tarjeta">
+        <h2 className="titulo-seccion">Motor de piezas</h2>
+        <ProbarMotor />
       </section>
       <section className="tarjeta">
         <h2 className="titulo-seccion">Contraseña</h2>

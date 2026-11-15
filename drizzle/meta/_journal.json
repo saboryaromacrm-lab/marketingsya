@@ -43,6 +43,13 @@
       "when": 1794700350835,
       "tag": "0005_ajustes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794780376353,
+      "tag": "0006_exportaciones",
+      "breakpoints": true
     }
   ]
 }
