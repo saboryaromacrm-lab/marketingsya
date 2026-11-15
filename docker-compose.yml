@@ -1,0 +1,95 @@
+# Plataforma de marketing · Sabor y Aroma — para Dokploy (tipo «Docker Compose»).
+# Variables que se cargan en Dokploy, pestaña «Environment» (ver docs/INSTALACION.md):
+#   DB_CLAVE            contraseña de la base (solo letras y números, 24 o más)
+#   CODIGO_INSTALACION  código que pide la pantalla de primera vez para crear la contraseña
+#   REINICIAR_CLAVE     «si» solo para recuperar la contraseña; si no, dejarla vacía
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://marketing:${DB_CLAVE:?Falta DB_CLAVE en Environment}@db:5432/marketing
+      CODIGO_INSTALACION: ${CODIGO_INSTALACION:-}
+      REINICIAR_CLAVE: ${REINICIAR_CLAVE:-}
+      SESION_DIAS: ${SESION_DIAS:-30}
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    # Comparte servidor con el ERP: tope de memoria (en la etapa 2 sube para el navegador que arma las piezas)
+    mem_limit: 1g
+    networks:
+      - default
+      - dokploy-network
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: marketing
+      POSTGRES_PASSWORD: ${DB_CLAVE:?Falta DB_CLAVE en Environment}
+      POSTGRES_DB: marketing
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketing -d marketing"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+    shm_size: 128mb
+
+  # Copia diaria de la base a las 4 de la mañana (hora de Formosa). Guarda los últimos 14 días.
+  respaldo:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: marketing
+      PGPASSWORD: ${DB_CLAVE:?Falta DB_CLAVE en Environment}
+      PGDATABASE: marketing
+      DIAS_A_GUARDAR: "14"
+      HORA_DEL_RESPALDO: "4"
+    volumes:
+      - respaldos:/respaldos
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 128m
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "[respaldo] copia diaria a las $${HORA_DEL_RESPALDO} h de Formosa, se guardan $${DIAS_A_GUARDAR} días"
+        while true; do
+          ahora=$$(( $$(date +%s) - 10800 ))
+          hoy=$$(date -u -d "@$$ahora" +%Y-%m-%d)
+          hora=$$(date -u -d "@$$ahora" +%H | sed 's/^0//')
+          archivo="/respaldos/marketing-$$hoy.dump"
+          # En la primera instalación, esperar a que la app cree las tablas (si no, se copia una base vacía)
+          lista=$$(psql -tAc "select to_regclass('public.productos') is not null" 2>/dev/null)
+          if [ "$$lista" != "t" ]; then
+            echo "[respaldo] la base todavía no tiene tablas, reintento en 30 minutos"
+          elif [ ! -f "$$archivo" ] && [ "$${hora:-0}" -ge "$$HORA_DEL_RESPALDO" ]; then
+            if pg_dump -Fc -f "$$archivo.parcial"; then
+              mv "$$archivo.parcial" "$$archivo"
+              echo "[respaldo] listo: $$archivo ($$(du -h "$$archivo" | cut -f1))"
+            else
+              echo "[respaldo] ERROR: no se pudo copiar la base"
+            fi
+            find /respaldos -name 'marketing-*.dump*' -mtime +$$DIAS_A_GUARDAR -delete
+          fi
+          sleep 1800
+        done
+
+volumes:
+  media:
+  pgdata:
+  respaldos:
+
+networks:
+  dokploy-network:
+    external: true

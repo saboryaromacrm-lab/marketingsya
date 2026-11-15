@@ -316,3 +316,10 @@ select.input { appearance: auto; cursor: pointer; }
 .tabla-lote .celda-corta { max-width: 220px; }
 .celda-estado { min-width: 160px; }
 code { background: var(--superficie-sutil); border: 1px solid var(--borde); border-radius: 4px; padding: 0 4px; font-size: 13px; }
+
+/* Configuración */
+.form-columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end; }
+.form-pie { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.fila-logo { display: flex; gap: 20px; align-items: center; }
+.logo-muestra { padding: 12px; background: var(--sidebar); border-radius: var(--radio-tarjeta); color: #fff; display: grid; place-items: center; }
+@media (max-width: 600px) { .fila-logo { flex-direction: column; align-items: flex-start; } }

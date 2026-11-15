@@ -11,11 +11,17 @@ export const entorno = {
   get databaseUrl() {
     return requerida('DATABASE_URL', 'Ejemplo: postgres://usuario:clave@host:5432/marketing')
   },
-  get claveHash() {
-    return requerida('CLAVE_HASH', 'Generala con: npm run clave -- "tu-contraseña"')
+  // Opcional, solo para desarrollo: si no se creó la contraseña desde la pantalla, se acepta este hash.
+  get claveHashEntorno() {
+    return process.env.CLAVE_HASH || null
   },
+  // Código que pide la pantalla de primera vez para crear la contraseña (lo escribe Lucas en Dokploy).
+  get codigoInstalacion() {
+    return process.env.CODIGO_INSTALACION || null
+  },
+  // Si viene vacío, se genera solo al arrancar y se guarda en la base (ver instrumentation.ts).
   get sesionSecreto() {
-    const s = requerida('SESION_SECRETO', 'Generalo con: openssl rand -hex 32')
+    const s = requerida('SESION_SECRETO', 'Se genera solo al arrancar el servidor; si ves esto, el arranque falló.')
     if (s.length < 32) throw new Error('SESION_SECRETO tiene que tener al menos 32 caracteres.')
     return s
   },

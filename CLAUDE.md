@@ -146,8 +146,10 @@ Poner contador visible y corte automático al llegar al tope.
 - **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
 - **Imágenes:** quedan públicas solo las de `/media` (las necesita Meta); todo lo demás pide sesión.
 - **Recetas:** el contenido es mezcla: la IA propone a partir del catálogo y Lucas edita.
-- **Login:** una sola contraseña (hash scrypt en `CLAVE_HASH`), sesión de 30 días por dispositivo,
-  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP.
+- **Login:** una sola contraseña (hash scrypt guardado en la tabla `ajustes`), sesión de 30 días por dispositivo,
+  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP. La primera vez se crea desde
+  la pantalla de ingreso con el `CODIGO_INSTALACION` (así nadie la crea antes que Lucas); se cambia en
+  Configuración; se recupera con `REINICIAR_CLAVE=si` + publicar. El secreto de sesión se genera solo.
 - **Catálogo:** campo «nombre para piezas» editable con sugerencia automática; el nombre del ERP no se toca.
   Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
   se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.
@@ -170,6 +172,12 @@ Poner contador visible y corte automático al llegar al tope.
 - **«No usar en piezas»:** interruptor por producto y acción masiva sobre lo filtrado (solo con búsqueda exacta).
   La sincronización nunca pisa foto propia, nombre para piezas ni exclusión.
 - **Precio de granel en pantallas:** el propio por kilo si lo tiene; si no, el fraccionado de 1 kg.
+- **Instalación:** Dokploy, un solo Docker Compose (`docker-compose.yml`): `app` (1 GB), `db` PostgreSQL 16 propia
+  (512 MB) y `respaldo` (pg_dump diario 4 h de Formosa, 14 días, espera a que existan las tablas).
+  Migraciones al arrancar (`instrumentation.ts`). Imagen Debian slim por sharp. Guía: `docs/INSTALACION.md`.
+  Probado entero en Docker: instalación nueva, sincronización real (~6 min la primera), reinicio, recuperación
+  de contraseña y restauración de la copia. Uso medido: app ~110 MB, base ~55 MB.
+- **Logo:** se sube desde Configuración (PNG/SVG, hasta 512 px, sin recortar ni deformar).
 - **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
@@ -195,7 +203,7 @@ Poner contador visible y corte automático al llegar al tope.
 - [ ] Tipografías: ¿Fraunces y Nunito, o Utendo y Bluestars con sus archivos?
 - [ ] ¿El fucsia entra en la paleta? (el manual lo nombra pero muestra naranja)
 - [ ] Los 3 HTML de los carruseles, al repo
-- [ ] Backup: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive?
+- [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
 - [ ] ¿Dónde se administra el DNS: Hostinger, Cloudflare u otro?
 - [ ] ¿Qué servicio de IA de imágenes?
 - [ ] Credenciales de Meta: app ID, cuenta publicitaria, token

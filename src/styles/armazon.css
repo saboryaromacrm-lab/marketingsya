@@ -37,6 +37,9 @@
   display: grid; place-items: center; font-weight: 700; letter-spacing: .02em;
 }
 
+/* El logo subido no se recorta ni se deforma (reglas del manual de marca) */
+.logo-imagen { object-fit: contain; border: 0; background: #fff; }
+
 .principal { margin-left: var(--ancho-barra); min-width: 0; transition: margin-left .2s ease; }
 .app-plegada .barra { transform: translateX(-100%); }
 .app-plegada .principal { margin-left: 0; }

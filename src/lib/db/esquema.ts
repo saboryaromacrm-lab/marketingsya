@@ -151,3 +151,14 @@ export const sincronizacionCambios = pgTable(
   },
   (t) => [index('cambios_por_sincronizacion').on(t.sincronizacionId, t.tipo)],
 )
+
+// ---------------------------------------------------------------------------
+// Ajustes guardados en la base (contraseña, secreto de sesión, logo).
+// Así Lucas no tiene que tocar variables de entorno para lo de todos los días.
+// ---------------------------------------------------------------------------
+
+export const ajustes = pgTable('ajustes', {
+  clave: text('clave').primaryKey(),
+  valor: text('valor').notNull(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+})

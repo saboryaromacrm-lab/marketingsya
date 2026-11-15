@@ -1,0 +1,12 @@
+node_modules
+.next
+media
+.env
+.env.*
+!.env.example
+.git
+*.tsbuildinfo
+next-env.d.ts
+Dockerfile
+docker-compose.yml
+docs
