@@ -16,7 +16,7 @@ export default async function PaginaIngreso({ searchParams }: { searchParams: Pr
     <main className="ingreso">
       <div className="ingreso-tarjeta">
         <div className="ingreso-marca">
-          <Logo tamano={56} src={logo ? urlMedia(logo) : null} />
+          <Logo tamano={72} src={logo ? urlMedia(logo) : '/marca/circular-verde.svg'} />
           <div>
             <h1 className="ingreso-titulo">Plataforma de marketing</h1>
             <p className="texto-suave">Sabor y Aroma</p>

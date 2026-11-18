@@ -27,6 +27,8 @@ ENV NODE_ENV=production \
 COPY --from=compilacion --chown=node:node /app/.next/standalone ./
 COPY --from=compilacion --chown=node:node /app/.next/static ./.next/static
 COPY --from=compilacion --chown=node:node /app/drizzle ./drizzle
+# Archivos públicos: logos de la marca y fuentes de las piezas (la salida standalone no los incluye sola)
+COPY --from=compilacion --chown=node:node /app/public ./public
 # Chromium sin pantalla para pasar las placas a JPEG, con las librerías y fuentes del sistema que necesita.
 # Se instala con el mismo playwright-core que usa la app, así la versión siempre coincide.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright

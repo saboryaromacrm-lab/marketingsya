@@ -9,7 +9,7 @@ export const MENU: SeccionMenu[] = [
     items: [
       { texto: 'Catálogo', href: '/catalogo', icono: 'inventory_2' },
       { texto: 'Carruseles', href: '/carruseles', icono: 'view_carousel', etapa: 2 },
-      { texto: 'Promos', href: '/promos', icono: 'sell', etapa: 3 },
+      { texto: 'Promos', href: '/promos', icono: 'sell' },
       { texto: 'Asesor IA', href: '/asesor', icono: 'auto_awesome', etapa: 4 },
       { texto: 'Publicaciones', href: '/publicaciones', icono: 'send', etapa: 5 },
       { texto: 'Pautas', href: '/pautas', icono: 'campaign', etapa: 6 },

@@ -3,6 +3,8 @@ import { Aviso } from '@/components/Aviso'
 import { Icono } from '@/components/Icono'
 import { FiltrosCatalogo } from '@/components/catalogo/FiltrosCatalogo'
 import { AccionMasiva } from '@/components/catalogo/AccionMasiva'
+import { CasillaPagina, CasillaProducto, SeleccionCatalogo } from '@/components/catalogo/Seleccion'
+import { productosElegidos } from '@/lib/seleccion'
 import { resumenCatalogo } from '@/lib/catalogo/consultas'
 import { leerFiltros, POR_PAGINA, urlConFiltros, type Filtros, type Pestana } from '@/lib/catalogo/filtros'
 import { ultimaSincronizacionBuena } from '@/lib/catalogo/iniciar'
@@ -77,7 +79,7 @@ function FiltrosActivos({ f, opciones }: { f: Filtros; opciones: OpcionesDeFiltr
 
 export default async function Catalogo({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const f = leerFiltros(await searchParams)
-  const [r, ultima, opciones, resultado] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), opcionesDeFiltros(), buscarProductos(f)])
+  const [r, ultima, opciones, resultado, elegidos] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), opcionesDeFiltros(), buscarProductos(f), productosElegidos()])
 
   if (!ultima || r.activos + r.deBaja === 0) {
     return (
@@ -92,9 +94,13 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   const { filas, conteos, total, pagina, paginas, aproximada } = resultado
   const desde = (pagina - 1) * POR_PAGINA + 1
   const hasta = Math.min(pagina * POR_PAGINA, total)
+  // Por qué no se puede elegir para una promo (null = se puede)
+  const motivo = (p: FilaProducto) =>
+    p.dadoDeBaja ? 'Está dado de baja' : p.excluirDePiezas ? 'Está marcado «no va en piezas»' : !p.foto ? 'No tiene foto: subile una para usarlo' : null
+  const elegiblesPagina = filas.filter((p) => !motivo(p)).map((p) => p.id)
 
   return (
-    <>
+    <SeleccionCatalogo elegidos={elegidos}>
       <div>
         <h2 className="titulo-seccion">Productos</h2>
         <p className="texto-suave">
@@ -142,11 +148,12 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         <div className="tabla-marco">
           <table className="tabla tabla-productos tabla-clic">
             <thead>
-              <tr><th>Foto</th><th>Producto</th><th>Marca</th><th>Categoría</th><th className="num">Precio</th></tr>
+              <tr><th className="celda-casilla"><CasillaPagina ids={elegiblesPagina} /></th><th>Foto</th><th>Producto</th><th>Marca</th><th>Categoría</th><th className="num">Precio</th></tr>
             </thead>
             <tbody>
               {filas.map((p) => (
                 <tr key={p.id} className={`${p.dadoDeBaja ? 'fila-baja' : ''} ${p.excluirDePiezas ? 'fila-excluida' : ''}`}>
+                  <td className="celda-casilla"><CasillaProducto id={p.id} nombre={p.nombre} motivo={motivo(p)} /></td>
                   <td className="celda-foto">
                     <div className={`miniatura ${p.foto ? '' : 'miniatura-vacia'}`}>
                       {p.foto ? <img src={urlMedia(p.foto)} alt="" loading="lazy" /> : <Icono nombre="no_photography" />}
@@ -189,6 +196,6 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
           </div>
         </div>
       )}
-    </>
+    </SeleccionCatalogo>
   )
 }

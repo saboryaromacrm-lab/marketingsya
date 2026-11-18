@@ -185,3 +185,58 @@ export const exportaciones = pgTable('exportaciones', {
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   terminadoEn: timestamp('terminado_en', { withTimezone: true }),
 })
+
+// ---------------------------------------------------------------------------
+// Selección del catálogo: los productos marcados con las casillas (sirve para armar promos y carruseles).
+// Se guarda en la base: no se pierde al cambiar de página, filtrar o pasar de la computadora al celular.
+// ---------------------------------------------------------------------------
+
+export const seleccion = pgTable('seleccion', {
+  productoId: integer('producto_id').primaryKey().references(() => productos.id, { onDelete: 'cascade' }),
+  agregadoEn: timestamp('agregado_en', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
+// Promos (flyer de promociones). Solo diseñan: nunca tocan precios en el ERP.
+// ---------------------------------------------------------------------------
+
+export type FormatosPromo = { historia: boolean; feed: boolean; uno: boolean }
+export type DisenoPromo = '1' | '2'
+
+export const promos = pgTable('promos', {
+  id: serial('id').primaryKey(),
+  titulo: text('titulo').notNull().default('PROMOCIONES'),
+  desde: text('desde').notNull(), // AAAA-MM-DD (fecha de Formosa)
+  hasta: text('hasta').notNull(),
+  listaId: integer('lista_id').notNull().default(3),
+  diseno: text('diseno').$type<DisenoPromo>().notNull().default('1'),
+  formatos: jsonb('formatos').$type<FormatosPromo>().notNull().default({ historia: true, feed: true, uno: false }),
+  // Última exportación (para descargar de nuevo desde el historial)
+  exportacionId: integer('exportacion_id'),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type TipoFila = 'producto' | 'variantes' | 'grupo'
+// Un producto dentro de una fila. Nombre y tamaño cortos opcionales (si no, se calculan solos);
+// presentación: para granel, qué fraccionado se muestra (null = el precio por kilo o el de 1 kg).
+export type ItemFila = { id: number; nombre?: string | null; tam?: string | null; presentacion?: string | null }
+
+export const promoFilas = pgTable(
+  'promo_filas',
+  {
+    id: serial('id').primaryKey(),
+    promoId: integer('promo_id').notNull().references(() => promos.id, { onDelete: 'cascade' }),
+    orden: integer('orden').notNull(),
+    tipo: text('tipo').$type<TipoFila>().notNull(),
+    // Título de la fila (grupos y variantes; en un producto, reemplaza al nombre para piezas)
+    titulo: text('titulo'),
+    descuento: numeric('descuento', { precision: 5, scale: 2, mode: 'number' }),
+    cantidadMinima: integer('cantidad_minima'),
+    // Promos que vienen del ERP (lista Promo): precio por unidad fijo, en lugar de un %
+    precioFijo: numeric('precio_fijo', { precision: 14, scale: 2, mode: 'number' }),
+    origen: text('origen').$type<'manual' | 'erp'>().notNull().default('manual'),
+    productos: jsonb('productos').$type<ItemFila[]>().notNull(),
+  },
+  (t) => [index('promo_filas_promo').on(t.promoId, t.orden)],
+)
