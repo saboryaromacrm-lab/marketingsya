@@ -196,6 +196,23 @@ Poner contador visible y corte automático al llegar al tope.
   - Render: Chromium sin pantalla (`playwright-core`) dentro de la imagen; tope de memoria de `app` a ~2 GB.
   - Faltan: los 3 HTML de los carruseles y el logo oficial en archivo.
 
+- **Etapa 3 (promos), adelantada el 18/11/2026.** Flyer igual al de referencia que pasó Lucas, con su marca:
+  - Formatos: historia/WhatsApp 1080×1920, feed 1080×1350 y «uno por producto» 1080×1350. Si no entra, se parte
+    solo en varias placas con la misma cabeza (los grupos largos, por líneas de 4, con «(sigue)»).
+  - Dos diseños: 1 logo verde en círculo con aro naranja; 2 cinta verde a todo el ancho con logo blanco y logo
+    horizontal en el pie. Cada promo nueva alterna; se elige o «Sorprendeme». Logos en `public/marca/` (vectores).
+  - Reglas: «X6 -15%» = llevando 6 o más, 15 % c/u; «-10%» = sin mínimo. Precio promo = lista elegida − %, con
+    centavos («$ 6.797,45»). Tachado «antes» solo en «uno por producto». **Solo diseña: nunca toca el ERP.**
+  - Las promos de la lista **Promo del ERP** se suman solas (precio fijo del ERP, sin descuento editable).
+  - Filas: producto, variantes (un precio, varios sabores) o grupo (columnas con precio cada uno). Lucas las arma
+    juntando y separando; títulos sugeridos y editables; nombres cortos automáticos y editables.
+  - Elegir productos: casillas en el catálogo (tabla `seleccion`, no se pierde al cambiar de página) y barra fija
+    abajo con «Armar promo». Sin foto, dado de baja o «no va en piezas» no se pueden elegir.
+  - Editor con guardado automático, vista previa en vivo (la misma página que exporta el motor) y .zip con
+    `historia-1.jpg`, `feed-1.jpg`, `uno-1.jpg`… La placa declara su tamaño con `<meta name="pieza-tamano">`.
+  - Historial en `/promos` con estado vigente / por empezar / vencida, duplicar y descargar el último .zip.
+  - Con pocos productos, el aire que sobra se reparte entre filas (hasta 56 px) y el resto arriba y abajo.
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.

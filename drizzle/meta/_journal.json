@@ -50,6 +50,13 @@
       "when": 1794780376353,
       "tag": "0006_exportaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795026052972,
+      "tag": "0007_promos",
+      "breakpoints": true
     }
   ]
 }

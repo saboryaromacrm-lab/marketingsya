@@ -13,7 +13,7 @@ const { exportaciones } = esquema
 const base = () => `http://127.0.0.1:${process.env.PORT || 3000}`
 
 /** Crea la exportación y la pone en la cola. Devuelve su id. */
-export async function encolarExportacion(tipo: 'prueba' | 'carrusel', placas: string[], referenciaId: number | null = null) {
+export async function encolarExportacion(tipo: 'prueba' | 'carrusel' | 'promo', placas: string[], referenciaId: number | null = null) {
   const [{ id }] = await db.insert(exportaciones).values({ tipo, referenciaId, placas, estado: 'en_cola' }).returning({ id: exportaciones.id })
   try {
     await (await cola()).send(COLA_RENDER, { id })
@@ -40,7 +40,12 @@ export async function ejecutarExportacion(id: number) {
       alAvanzar: (n) => void db.update(exportaciones).set({ avance: 5 + Math.round((n / urls.length) * 85) }).where(eq(exportaciones.id, id)),
     })
     const carpeta = `piezas/${id}`
-    const nombres = jpegs.map((_, i) => `placa-${i + 1}.jpg`)
+    // «historia-1.jpg», «feed-2.jpg»… si la placa dice su formato; si no, «placa-3.jpg»
+    const nombres = exp.placas.map((ruta, i) => {
+      const q = new URL(ruta, base()).searchParams
+      const f = q.get('formato')?.replace(/[^a-z]/g, '')
+      return f ? `${f}-${q.get('pagina')?.replace(/\D/g, '') || i + 1}.jpg` : `placa-${i + 1}.jpg`
+    })
     for (let i = 0; i < jpegs.length; i++) await guardarMedia(`${carpeta}/${nombres[i]}`, jpegs[i])
     const zip = `${carpeta}/${exp.tipo}-${id}.zip`
     await guardarMedia(zip, armarZip(jpegs.map((datos, i) => ({ nombre: nombres[i], datos }))))

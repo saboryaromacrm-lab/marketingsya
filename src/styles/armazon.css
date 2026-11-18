@@ -38,7 +38,7 @@
 }
 
 /* El logo subido no se recorta ni se deforma (reglas del manual de marca) */
-.logo-imagen { object-fit: contain; border: 0; background: #fff; }
+.logo-imagen { object-fit: contain; border: 0; border-radius: 0; background: none; }
 
 .principal { margin-left: var(--ancho-barra); min-width: 0; transition: margin-left .2s ease; }
 .app-plegada .barra { transform: translateX(-100%); }

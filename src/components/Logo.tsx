@@ -1,4 +1,4 @@
-// Logo circular. Se sube desde Configuración; mientras no haya uno, muestra las iniciales.
+// Logo circular. Por defecto, los de la marca (public/marca); se puede cambiar desde Configuración.
 export function Logo({ tamano = 40, src }: { tamano?: number; src?: string | null }) {
   if (src) {
     return <img className="logo logo-imagen" src={src} alt="Sabor y Aroma" width={tamano} height={tamano} />

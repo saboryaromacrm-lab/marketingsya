@@ -15,7 +15,8 @@ export default async function LayoutPanel({ children }: { children: ReactNode })
   return (
     <Armazon
       plegadaInicial={plegada}
-      logo={logo ? urlMedia(logo) : null}
+      // Por defecto, el logo circular blanco de la marca (queda bien sobre el verde de la barra)
+      logo={logo ? urlMedia(logo) : '/marca/circular-blanco.svg'}
       contadores={{ '/catalogo': sinFoto }}
       avisos={<MonitorSincronizacion inicial={activa && { id: activa.id, estado: activa.estado, etapa: activa.etapa, avance: activa.avance, resumen: activa.resumen, error: activa.error }} />}
     >

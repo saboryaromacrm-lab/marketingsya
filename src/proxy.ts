@@ -20,5 +20,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!ingresar|api/salud|media|_next/static|_next/image|favicon.ico|icono.png).*)'],
+  // Públicos: fotos y piezas (/media, Meta las necesita), logos (/marca) y fuentes (/fuentes) que usan las placas.
+  matcher: ['/((?!ingresar|api/salud|media|marca|fuentes|_next/static|_next/image|favicon.ico|icono.png).*)'],
 }
