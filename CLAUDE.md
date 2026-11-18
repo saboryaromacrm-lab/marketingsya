@@ -200,7 +200,7 @@ Poner contador visible y corte automático al llegar al tope.
   - Formatos: historia/WhatsApp 1080×1920, feed 1080×1350 y «uno por producto» 1080×1350. Si no entra, se parte
     solo en varias placas con la misma cabeza (los grupos largos, por líneas de 4, con «(sigue)»).
   - Dos diseños: 1 logo verde en círculo con aro naranja; 2 cinta verde a todo el ancho con logo blanco y logo
-    horizontal en el pie. Cada promo nueva alterna; se elige o «Sorprendeme». Logos en `public/marca/` (vectores).
+    horizontal en el pie. Cada promo nueva alterna; se elige con su miniatura. Logos en `public/marca/` (vectores).
   - Reglas: «X6 -15%» = llevando 6 o más, 15 % c/u; «-10%» = sin mínimo. Precio promo = lista elegida − %, con
     centavos («$ 6.797,45»). Tachado «antes» solo en «uno por producto». **Solo diseña: nunca toca el ERP.**
   - Las promos de la lista **Promo del ERP** se suman solas (precio fijo del ERP, sin descuento editable).
@@ -211,7 +211,17 @@ Poner contador visible y corte automático al llegar al tope.
   - Editor con guardado automático, vista previa en vivo (la misma página que exporta el motor) y .zip con
     `historia-1.jpg`, `feed-1.jpg`, `uno-1.jpg`… La placa declara su tamaño con `<meta name="pieza-tamano">`.
   - Historial en `/promos` con estado vigente / por empezar / vencida, duplicar y descargar el último .zip.
-  - Con pocos productos, el aire que sobra se reparte entre filas (hasta 56 px) y el resto arriba y abajo.
+  - **Revisión del 18/11/2026 (pedida por Lucas):**
+    - Precio con su unidad: «c/u»; granel **por kilo** de entrada («el kg») o la medida del fraccionado («x250 g»).
+    - Variantes con precios distintos: el más bajo con «desde». Grupos: cada producto con su precio.
+    - Promos del ERP por cantidad: un solo precio, «3 × $ 2.300» (etiqueta «PROMO»). Sin foto **no se suman**:
+      el editor avisa con enlace para subirla.
+    - Sin «,00» cuando el precio es entero; los centavos solo cuando existen.
+    - Título hasta 24 letras: se achica solo. Nombres sin «…»: la letra baja hasta entrar; la medida en su renglón.
+    - Con pocos productos las filas crecen (hasta ×1,5) y el resto se reparte; las placas se parten parejas.
+    - Nunca se exporta con productos sin foto ni sin formatos (cuadro «Para exportar falta» / «Antes de exportar»).
+    - Buscador dentro del editor para sumar productos (solo los que tienen foto y van en piezas).
+    - «Sorprendeme» se sacó: dos diseños con miniatura y cada promo nueva alterna sola.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 

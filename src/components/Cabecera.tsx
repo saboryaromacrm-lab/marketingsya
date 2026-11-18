@@ -4,7 +4,7 @@ import { Icono } from './Icono'
 
 // Miga de pan + título + subtítulo, con las acciones a la derecha del título.
 export function Cabecera({ titulo, subtitulo, miga, acciones }: {
-  titulo: string
+  titulo: ReactNode
   subtitulo?: string
   miga?: { texto: string; href?: string }[]
   acciones?: ReactNode

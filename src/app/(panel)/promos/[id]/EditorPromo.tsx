@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from 'react'
+import Link from 'next/link'
 import { Cabecera } from '@/components/Cabecera'
 import { Icono } from '@/components/Icono'
-import { nombresCortos, pesosPromo, precioPromo, textoOferta, tituloComun } from '@/lib/promos/calculo'
+import { nombresCortos, pesosPromo, precioPromo, textoOferta, textoPrecioErp, tituloComun } from '@/lib/promos/calculo'
 import { estadoPromo, textoVigencia } from '@/lib/promos/fechas'
-import type { DatosEditor, FilaEditor, InfoProducto } from '@/lib/promos/editor'
-import { borrarPromo, duplicarPromo, exportarPromo, filasParaSumar, guardarPromo } from '../acciones'
+import type { BaseProducto, DatosEditor, FilaEditor, InfoProducto } from '@/lib/promos/editor'
+import { borrarPromo, buscarParaPromo, duplicarPromo, exportarPromo, filasParaSumar, guardarPromo, infoParaSumar, type ResultadoBusqueda } from '../acciones'
 
 type PlacaVista = { formato: 'historia' | 'feed' | 'uno'; pagina: number; paginas: number; ruta: string }
 type Exportacion = { id: number; estado: string; zip: string | null } | null
@@ -19,6 +20,7 @@ type Props = {
   exportacionInicial: Exportacion
   elegidos: number
   erpFaltantes: number
+  erpSinFoto: { id: number; nombre: string }[]
 }
 
 const FORMATOS = [
@@ -28,6 +30,7 @@ const FORMATOS = [
 ] as const
 const NOMBRE_FORMATO = { historia: 'Historia', feed: 'Feed', uno: 'Producto' }
 const TIPO = { producto: 'PRODUCTO', variantes: 'VARIANTES', grupo: 'GRUPO' }
+const ESTADO = { vigente: { texto: 'VIGENTE', clase: 'chip-ok' }, 'por-empezar': { texto: 'POR EMPEZAR', clase: 'chip-en_cola' }, vencida: { texto: 'VENCIDA', clase: 'chip-excluido' } }
 
 // '' → null (sin valor); algo que no es número → undefined (no se toma el cambio)
 const numeroONull = (v: string) => {
@@ -35,8 +38,37 @@ const numeroONull = (v: string) => {
   const n = Number(v.replace(',', '.'))
   return Number.isFinite(n) && n >= 0 ? n : undefined
 }
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
+const fechaCorta = (f: string) => `${f.slice(8, 10)}/${f.slice(5, 7)}`
 
-export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes }: Props) {
+const baseDe = (info: Record<number, InfoProducto>, id: number, listaId: number, presentacion?: string | null): BaseProducto =>
+  info[id]?.bases[String(listaId)]?.[presentacion ?? ''] ?? null
+
+// ---------------------------------------------------------------------------
+// Revisión antes de exportar: lo que impide exportar y lo que conviene mirar
+// ---------------------------------------------------------------------------
+type Revision = { bloquean: ReactNode[]; avisos: ReactNode[] }
+
+function revisar(d: DatosEditor, info: Record<number, InfoProducto>, erpSinFoto: Props['erpSinFoto'], nombreLista: string): Revision {
+  const bloquean: ReactNode[] = []
+  const avisos: ReactNode[] = []
+  if (d.filas.length && !d.formatos.historia && !d.formatos.feed && !d.formatos.uno) bloquean.push('Elegí al menos un formato.')
+  const sinFoto = d.filas.flatMap((f) => f.productos).filter((p) => info[p.id] && !info[p.id].foto)
+  for (const p of sinFoto) bloquean.push(<>«{info[p.id].nombre}» no tiene foto: sacalo de la promo o <Link href={`/catalogo/${p.id}`} target="_blank">subile una</Link>.</>)
+  for (const p of erpSinFoto) avisos.push(<>«{p.nombre}» (promo del ERP) no se sumó porque no tiene foto. <Link href={`/catalogo/${p.id}`} target="_blank">Subir foto</Link></>)
+  for (const f of d.filas) {
+    const sinPrecio = f.productos.filter((p) => f.precioFijo == null && !baseDe(info, p.id, d.listaId, p.presentacion))
+    for (const p of sinPrecio) avisos.push(<>«{info[p.id]?.nombre ?? 'Producto'}» no tiene precio {nombreLista}: sale «Consultar».</>)
+    if (f.tipo === 'variantes') {
+      const precios = new Set(f.productos.map((p) => precioPromo(baseDe(info, p.id, d.listaId, p.presentacion)?.precio ?? null, f)).filter((x) => x != null))
+      if (precios.size > 1) avisos.push(<>«{f.titulo || tituloComun(f.productos.map((p) => info[p.id]?.nombre ?? ''))}»: los sabores tienen distinto precio; sale el más bajo con «desde».</>)
+    }
+  }
+  if (d.filas.length && estadoPromo(d.desde, d.hasta) === 'vencida') avisos.push(`La vigencia ya terminó (${fechaCorta(d.hasta)}): cambiá las fechas si la vas a usar de nuevo.`)
+  return { bloquean, avisos }
+}
+
+export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes, erpSinFoto }: Props) {
   const [datos, setDatos] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
   const [placas, setPlacas] = useState(placasIniciales)
@@ -48,7 +80,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const [sumando, empezarSumar] = useTransition()
   const [yendo, empezarIr] = useTransition()
 
-  // ---------- guardado automático (cada cambio, 0,7 s después de dejar de tipear) ----------
+  // ---------- guardado automático (0,7 s después del último cambio) ----------
   const ultimo = useRef(inicial)
   const guardadoRef = useRef(inicial)
   const enCurso = useRef<Promise<void> | null>(null)
@@ -71,7 +103,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
     return () => clearTimeout(t)
   }, [datos, guardar])
 
-  /** Antes de exportar o salir: que lo último esté guardado. */
+  /** Antes de exportar o duplicar: que lo último esté guardado. */
   async function guardarYa() {
     await enCurso.current
     if (ultimo.current !== guardadoRef.current) await guardar()
@@ -108,9 +140,20 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const cambiarItem = (i: number, pid: number, parcial: { nombre?: string | null; tam?: string | null; presentacion?: string | null }) =>
     setFilas((fs) => fs.map((f, k) => (k === i ? { ...f, productos: f.productos.map((p) => (p.id === pid ? { ...p, ...parcial } : p)) } : f)))
 
+  const presentes = new Set(datos.filas.flatMap((f) => f.productos.map((p) => p.id)))
+
+  /** Suma productos del buscador: cada uno en su fila, con 10 % de entrada. */
+  async function sumarProductos(ids: number[]) {
+    const nuevos = ids.filter((x) => !presentes.has(x))
+    if (!nuevos.length) return
+    const extra = await infoParaSumar(nuevos)
+    setInfo((x) => ({ ...x, ...extra }))
+    setFilas((fs) => [...fs, ...nuevos.filter((x) => extra[x]).map((x): FilaEditor => ({ tipo: 'producto', titulo: null, descuento: 10, cantidadMinima: null, precioFijo: null, origen: 'manual', productos: [{ id: x }] }))])
+  }
+
   function sumar(origen: 'seleccion' | 'erp') {
     empezarSumar(async () => {
-      const r = await filasParaSumar(origen, datos.filas.flatMap((f) => f.productos.map((p) => p.id)))
+      const r = await filasParaSumar(origen, [...presentes])
       setInfo((x) => ({ ...x, ...r.info }))
       setFilas((fs) => [...fs, ...r.filas])
       if (origen === 'seleccion') setQuedanElegidos(0)
@@ -123,21 +166,25 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const [sobre, setSobre] = useState<number | null>(null)
 
   const placa = placas[Math.min(elegida, placas.length - 1)]
-  const totalProductos = datos.filas.reduce((n, f) => n + f.productos.length, 0)
-  const estadoVig = estadoPromo(datos.desde, datos.hasta)
+  const totalProductos = presentes.size
+  const estadoVig = ESTADO[estadoPromo(datos.desde, datos.hasta)]
   const lista = listas.find((l) => l.id === datos.listaId)
+  const nombreLista = (lista?.nombre ?? '').toLowerCase()
+  const rev = revisar(datos, info, erpSinFoto, nombreLista)
+  const titulo = datos.titulo || 'PROMOCIONES'
+  const vigencia = textoVigencia(datos.desde, datos.hasta).toLowerCase()
 
   return (
     <div className="contenido">
       <Cabecera
-        titulo={`${datos.titulo || 'PROMOCIONES'} · ${textoVigencia(datos.desde, datos.hasta).toLowerCase()}`}
-        subtitulo={`${datos.filas.length} ${datos.filas.length === 1 ? 'fila' : 'filas'} · ${totalProductos} ${totalProductos === 1 ? 'producto' : 'productos'} · ${estadoVig === 'vigente' ? 'vigente' : estadoVig === 'vencida' ? 'vencida' : 'por empezar'} · solo diseño: no cambia precios en el ERP`}
-        miga={[{ texto: 'Promos', href: '/promos' }, { texto: `N.º ${id}` }]}
+        titulo={<>{titulo} <span className={`chip chip-titulo ${estadoVig.clase}`}>{estadoVig.texto}</span></>}
+        subtitulo={`${vigencia.charAt(0).toUpperCase()}${vigencia.slice(1)} · ${totalProductos ? `${plural(totalProductos, 'producto', 'productos')} en ${plural(datos.filas.length, 'fila', 'filas')}` : 'sin productos todavía'} · solo diseño: no cambia precios en el ERP`}
+        miga={[{ texto: 'Promos', href: '/promos' }, { texto: `${titulo} · ${vigencia}` }]}
         acciones={
           <>
             <EstadoGuardado estado={estado} />
             <button className="btn" disabled={yendo} onClick={() => empezarIr(async () => { await guardarYa(); await duplicarPromo(id) })}><Icono nombre="content_copy" />Duplicar</button>
-            <Exportar id={id} inicial={exportacionInicial} antes={guardarYa} hayPlacas={placas.length > 0} />
+            <Exportar id={id} inicial={exportacionInicial} antes={guardarYa} habilitado={placas.length > 0 && !rev.bloquean.length} motivo={!totalProductos ? 'Sumá productos primero' : rev.bloquean.length ? 'Revisá lo que falta (a la derecha)' : ''} />
           </>
         }
       />
@@ -146,14 +193,15 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
         {/* ---------- ajustes ---------- */}
         <section className="tarjeta editor-ajustes" aria-label="Ajustes de la promo">
           <label className="campo">
-            <span className="campo-rotulo">Título</span>
+            <span className="rotulo-columna">Título</span>
             <input className="input" value={datos.titulo} maxLength={24} onChange={(e) => cambiar({ titulo: e.target.value.toUpperCase() })} placeholder="PROMOCIONES" />
+            <span className="texto-chico">Hasta 24 letras: si es largo, se achica solo para entrar.</span>
           </label>
           <div className="campo">
             <span className="rotulo-columna">Vigencia</span>
             <div className="fila-fechas">
-              <input className="input" type="date" aria-label="Desde" value={datos.desde} onChange={(e) => e.target.value && cambiar({ desde: e.target.value })} />
-              <input className="input" type="date" aria-label="Hasta" value={datos.hasta} min={datos.desde} onChange={(e) => e.target.value && cambiar({ hasta: e.target.value })} />
+              <input className="input" type="date" aria-label="Desde" value={datos.desde} onChange={(e) => e.target.value && cambiar({ desde: e.target.value, hasta: e.target.value > datos.hasta ? e.target.value : datos.hasta })} />
+              <input className="input" type="date" aria-label="Hasta" value={datos.hasta} min={datos.desde} onChange={(e) => e.target.value && e.target.value >= datos.desde && cambiar({ hasta: e.target.value })} />
             </div>
           </div>
           <div className="campo">
@@ -168,10 +216,13 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
           </div>
           <div className="campo">
             <span className="rotulo-columna">Diseño</span>
-            <div className="opciones-diseno">
-              <button className={`btn btn-chico ${datos.diseno === '1' ? 'btn-pri' : ''}`} aria-pressed={datos.diseno === '1'} onClick={() => cambiar({ diseno: '1' })}>1 · Logo en círculo</button>
-              <button className={`btn btn-chico ${datos.diseno === '2' ? 'btn-pri' : ''}`} aria-pressed={datos.diseno === '2'} onClick={() => cambiar({ diseno: '2' })}>2 · Cinta verde</button>
-              <button className="btn btn-chico" onClick={() => cambiar({ diseno: datos.diseno === '1' ? '2' : '1' })} title="Cambia al otro diseño"><Icono nombre="casino" tamano={16} />Sorprendeme</button>
+            <div className="opciones-diseno" role="radiogroup" aria-label="Diseño">
+              {(['1', '2'] as const).map((n) => (
+                <button key={n} role="radio" aria-checked={datos.diseno === n} className={`opcion-diseno ${datos.diseno === n ? 'opcion-diseno-activa' : ''}`} onClick={() => cambiar({ diseno: n })}>
+                  <img src={`/interfaz/promo-diseno-${n}.jpg`} alt="" />
+                  <span>{n === '1' ? '1 · Logo en círculo' : '2 · Cinta verde'}</span>
+                </button>
+              ))}
             </div>
           </div>
           <label className="campo">
@@ -180,36 +231,52 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               {listas.map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
             </select>
           </label>
-          <p className="texto-chico">El precio promo sale del precio {lista?.nombre.toLowerCase() ?? ''} menos el descuento, con centavos. Contacto en todas las placas: tiendaonline.saboryaroma.com · WhatsApp 370 462-1563 · @saboryaroma__</p>
+          <p className="texto-chico">Contacto en todas las placas: tiendaonline.saboryaroma.com · WhatsApp 370 462-1563 · @saboryaroma__</p>
           <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar esta promo? No se puede deshacer.')) empezarIr(() => borrarPromo(id)) }}>Borrar promo</button>
         </section>
 
         {/* ---------- vista previa ---------- */}
-        <section className="editor-vista" aria-label="Vista previa">
-          {placa ? (
-            <>
-              <VistaPlaca ruta={`${placa.ruta}&v=${version}`} formato={placa.formato} />
-              <div className="tira-placas" role="tablist">
-                {placas.map((p, i) => (
-                  <button key={p.ruta} role="tab" aria-selected={p === placa} className={`tira-placa ${p === placa ? 'tira-placa-activa' : ''}`} onClick={() => setElegida(i)}>
-                    <MiniPlaca ruta={`${p.ruta}&v=${version}`} formato={p.formato} />
-                    <span>{NOMBRE_FORMATO[p.formato]}{p.paginas > 1 ? ` ${p.pagina}/${p.paginas}` : ''}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="vacio vacio-chico">
-              <Icono nombre="image_not_supported" tamano={32} />
-              <p><b>No hay placas para mostrar.</b></p>
-              <p>{datos.filas.length ? 'Elegí al menos un formato.' : 'Sumá productos desde el catálogo.'}</p>
+        {placa ? (
+          <section className="editor-vista" aria-label="Vista previa">
+            <VistaPlaca ruta={`${placa.ruta}&v=${version}`} formato={placa.formato} />
+            <div className="tira-placas" role="tablist" aria-label="Placas">
+              {placas.map((p, i) => (
+                <button key={p.ruta} role="tab" aria-selected={p === placa} className={`tira-placa ${p === placa ? 'tira-placa-activa' : ''}`} onClick={() => setElegida(i)}>
+                  <MiniPlaca ruta={`${p.ruta}&v=${version}`} formato={p.formato} />
+                  <span>{NOMBRE_FORMATO[p.formato]}{p.paginas > 1 ? ` ${p.pagina}/${p.paginas}` : ''}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="editor-vacio">
+            <Icono nombre={datos.filas.length ? 'image_not_supported' : 'add_shopping_cart'} tamano={44} />
+            {datos.filas.length ? (
+              <><b>Elegí al menos un formato</b><span>Historias, feed o uno por producto, en la columna de la izquierda.</span></>
+            ) : (
+              <><b>Sumá productos para armar la promo</b><span>Buscalos acá al lado o elegilos con las casillas del <Link href="/catalogo">catálogo</Link>.<br />Las promos de la lista Promo del ERP se suman solas si tienen foto.</span></>
+            )}
+          </section>
+        )}
+
+        {/* ---------- productos ---------- */}
+        <section className="editor-filas" aria-label="Productos de la promo">
+          <Buscador listaId={datos.listaId} presentes={presentes} alSumar={sumarProductos} enfocar={!datos.filas.length} />
+          {(quedanElegidos > 0 || quedanErp > 0) && (
+            <div className="sumar-filas">
+              {quedanElegidos > 0 && <button className="btn btn-chico" disabled={sumando} onClick={() => sumar('seleccion')}><Icono nombre="playlist_add" tamano={16} />Sumar {plural(quedanElegidos, 'elegido', 'elegidos')} del catálogo</button>}
+              {quedanErp > 0 && <button className="btn btn-chico" disabled={sumando} onClick={() => sumar('erp')}><Icono nombre="sync" tamano={16} />Sumar promos del ERP ({quedanErp})</button>}
             </div>
           )}
-        </section>
-
-        {/* ---------- filas ---------- */}
-        <section className="tarjeta editor-filas" aria-label="Filas de la promo">
-          <span className="rotulo-columna">Filas (arrastrá para ordenar)</span>
+          {(rev.bloquean.length > 0 || rev.avisos.length > 0) && (
+            <div className={`revision ${rev.bloquean.length ? 'revision-bloquea' : ''}`} role="status">
+              <b><Icono nombre={rev.bloquean.length ? 'error' : 'info'} tamano={16} />{rev.bloquean.length ? 'Para exportar falta:' : 'Antes de exportar, revisá:'}</b>
+              <ul>
+                {[...rev.bloquean, ...rev.avisos].map((t, k) => <li key={k}>{t}</li>)}
+              </ul>
+            </div>
+          )}
+          {datos.filas.length > 0 && <span className="rotulo-columna">Filas · arrastrá para ordenar</span>}
           {datos.filas.map((f, i) => (
             <TarjetaFila
               key={`${i}-${f.productos.map((p) => p.id).join('-')}`}
@@ -218,7 +285,6 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               total={datos.filas.length}
               info={info}
               listaId={datos.listaId}
-              arrastrable
               resaltada={sobre === i && arrastrando !== null && arrastrando !== i}
               onDragStart={() => setArrastrando(i)}
               onDragOver={() => setSobre(i)}
@@ -237,17 +303,6 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               }}
             />
           ))}
-          {!datos.filas.length && <p className="texto-suave">Todavía no hay productos en esta promo.</p>}
-          <div className="sumar-filas">
-            <button className="btn btn-chico" disabled={sumando || !quedanElegidos} onClick={() => sumar('seleccion')} title={quedanElegidos ? '' : 'Elegí productos con las casillas del catálogo'}>
-              <Icono nombre="playlist_add" tamano={16} />Sumar los elegidos del catálogo{quedanElegidos ? ` (${quedanElegidos})` : ''}
-            </button>
-            {quedanErp > 0 && (
-              <button className="btn btn-chico" disabled={sumando} onClick={() => sumar('erp')}>
-                <Icono nombre="sync" tamano={16} />Sumar promos del ERP ({quedanErp})
-              </button>
-            )}
-          </div>
         </section>
       </div>
     </div>
@@ -261,6 +316,79 @@ function EstadoGuardado({ estado }: { estado: 'guardado' | 'cambios' | 'guardand
       <Icono nombre={estado === 'guardado' ? 'cloud_done' : 'cloud_upload'} tamano={16} />
       {estado === 'guardado' ? 'Guardado' : 'Guardando…'}
     </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Buscador: sumar productos sin ir al catálogo
+// ---------------------------------------------------------------------------
+function Buscador({ listaId, presentes, alSumar, enfocar }: { listaId: number; presentes: Set<number>; alSumar: (ids: number[]) => Promise<void>; enfocar: boolean }) {
+  const [q, setQ] = useState('')
+  const [res, setRes] = useState<{ q: string; resultados: ResultadoBusqueda[]; aproximada: boolean } | null>(null)
+  const [abierto, setAbierto] = useState(false)
+  const [sumando, setSumando] = useState<number | null>(null)
+  const ultimaQ = useRef('')
+
+  useEffect(() => {
+    const texto = q.trim()
+    ultimaQ.current = texto
+    if (texto.length < 2) { setRes(null); return }
+    const t = setTimeout(async () => {
+      const r = await buscarParaPromo(texto, listaId)
+      if (ultimaQ.current === texto) setRes({ q: texto, ...r })
+    }, 250)
+    return () => clearTimeout(t)
+  }, [q, listaId])
+
+  async function sumar(pid: number) {
+    setSumando(pid)
+    await alSumar([pid])
+    setSumando(null)
+  }
+  const buscando = q.trim().length >= 2 && res?.q !== q.trim()
+
+  return (
+    <div className="buscador-promo" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setAbierto(false) }}>
+      <label className="filtro-busqueda">
+        <Icono nombre="search" />
+        <input
+          value={q}
+          autoFocus={enfocar}
+          placeholder="Buscar productos para agregar…"
+          aria-label="Buscar productos para agregar"
+          onChange={(e) => { setQ(e.target.value); setAbierto(true) }}
+          onFocus={() => setAbierto(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setAbierto(false)
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              const primero = res?.resultados.find((r) => !presentes.has(r.id))
+              if (primero) void sumar(primero.id)
+            }
+          }}
+        />
+        {buscando && <Icono nombre="sync" className="girando" tamano={16} />}
+      </label>
+      {abierto && res && (
+        // El foco queda en el buscador al apretar «Agregar», así la lista sigue abierta para sumar varios
+        <div className="resultados-promo" role="listbox" onMouseDown={(e) => e.preventDefault()}>
+          {res.aproximada && res.resultados.length > 0 && <div className="texto-chico resultados-nota">No hay nada escrito así: te mostramos los parecidos.</div>}
+          {res.resultados.map((r) => (
+            <div key={r.id} className="resultado-promo" role="option" aria-selected={false}>
+              <span className="miniatura"><img src={r.foto} alt="" /></span>
+              <span className="resultado-nombre">{r.nombre}<small>{r.precio ?? 'Sin precio en esta lista'}</small></span>
+              {presentes.has(r.id) ? (
+                <span className="texto-chico">Ya está</span>
+              ) : (
+                <button className="btn btn-chico" disabled={sumando === r.id} onClick={() => void sumar(r.id)}><Icono nombre="add" tamano={16} />Agregar</button>
+              )}
+            </div>
+          ))}
+          {!res.resultados.length && <div className="texto-chico resultados-nota">No encontramos productos con «{res.q}» que tengan foto y vayan en piezas.</div>}
+          {res.resultados.length > 0 && <div className="texto-chico resultados-nota">Enter agrega el primero · solo aparecen los que tienen foto</div>}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -315,8 +443,7 @@ function MiniPlaca({ ruta, formato }: { ruta: string; formato: PlacaVista['forma
 type Acciones = { subir: () => void; bajar: () => void; grupo: (() => void) | null; variantes: (() => void) | null; separar: (() => void) | null; quitar: () => void }
 
 function TarjetaFila(p: {
-  fila: FilaEditor; i: number; total: number; info: Record<number, InfoProducto>; listaId: number
-  arrastrable: boolean; resaltada: boolean
+  fila: FilaEditor; i: number; total: number; info: Record<number, InfoProducto>; listaId: number; resaltada: boolean
   onDragStart: () => void; onDragOver: () => void; onDrop: () => void; onDragEnd: () => void
   cambiar: (x: Partial<FilaEditor>) => void
   cambiarItem: (pid: number, x: { nombre?: string | null; tam?: string | null; presentacion?: string | null }) => void
@@ -324,7 +451,7 @@ function TarjetaFila(p: {
   acciones: Acciones
 }) {
   const { fila: f, info, listaId, acciones } = p
-  const [abierta, setAbierta] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
   const [nombres, setNombres] = useState(false)
   const menu = useRef<HTMLDetailsElement>(null)
   const prods = f.productos.map((x) => info[x.id])
@@ -333,22 +460,31 @@ function TarjetaFila(p: {
   const sugerido = f.tipo === 'producto' ? nombresProd[0] : tituloComun(nombresProd) || 'Promo'
   const erp = f.origen === 'erp'
 
-  // Precio del primero (y rango si cambian entre productos)
+  // Precios: el que se ve en la placa (el más bajo con «desde» si cambian entre productos)
   const precios = f.productos.map((x) => {
-    const base = info[x.id]?.bases[String(listaId)]?.[x.presentacion ?? ''] ?? null
-    return { base, promo: precioPromo(base, f) }
+    const b = baseDe(info, x.id, listaId, x.presentacion)
+    return { base: b?.precio ?? null, unidad: b?.unidad ?? 'c/u', promo: precioPromo(b?.precio ?? null, f) }
   })
-  const conPrecio = precios.filter((x) => x.promo != null)
-  const sinPrecio = precios.length - conPrecio.length
-  const iguales = conPrecio.every((x) => x.promo === conPrecio[0]?.promo)
+  const conPrecio = precios.filter((x) => x.promo != null).sort((a, b) => a.promo! - b.promo!)
+  const distintos = new Set(conPrecio.map((x) => x.promo)).size > 1
+  const n = f.cantidadMinima ?? 1
+  const etiqueta = erp && n > 1 ? textoPrecioErp(f.precioFijo ?? 0, n) : textoOferta(f)
+
+  let lineaPrecio: ReactNode = 'Sin precio en esta lista'
+  if (conPrecio.length) {
+    const x = conPrecio[0]
+    if (erp && n > 1) lineaPrecio = <>{x.base != null && <>{textoPrecioErp(x.base, n)} → </>}<b>{textoPrecioErp(f.precioFijo ?? 0, n)}</b></>
+    else if (distintos && f.tipo === 'grupo') lineaPrecio = <>Cada uno con su precio: <b>de {pesosPromo(conPrecio[0].promo!)} a {pesosPromo(conPrecio[conPrecio.length - 1].promo!)}</b></>
+    else lineaPrecio = <>{distintos && 'desde '}{x.base != null && x.base !== x.promo && <>{pesosPromo(x.base)} → </>}<b>{pesosPromo(x.promo!)}</b> {x.unidad}</>
+  }
 
   const hacer = (fn: (() => void) | null) => () => { if (menu.current) menu.current.open = false; fn?.() }
 
   return (
     <article
       className={`fila-promo ${p.resaltada ? 'fila-promo-destino' : ''}`}
-      draggable={p.arrastrable && !abierta}
-      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; p.onDragStart() }}
+      draggable={!menuAbierto}
+      onDragStart={(e) => { if ((e.target as HTMLElement).closest('input, select, button')) { e.preventDefault(); return } e.dataTransfer.effectAllowed = 'move'; p.onDragStart() }}
       onDragOver={(e) => { e.preventDefault(); p.onDragOver() }}
       onDrop={(e) => { e.preventDefault(); p.onDrop() }}
       onDragEnd={p.onDragEnd}
@@ -357,22 +493,14 @@ function TarjetaFila(p: {
         <Icono nombre="drag_indicator" className="asa" />
         <span className={`chip chip-tipo-${f.tipo}`}>{TIPO[f.tipo]}</span>
         {erp && <span className="chip chip-erp" title="Viene de la lista Promo del ERP: el precio es el del ERP">ERP</span>}
-        {prods.some((x) => x && !x.foto) && <a className="chip chip-cambio-precio" href={`/catalogo/${f.productos.find((x) => !info[x.id]?.foto)?.id}`} target="_blank" rel="noreferrer" title="Sale con «Sin foto» en el flyer. Subile una en el catálogo.">SIN FOTO</a>}
-        <input
-          className="input input-titulo-fila"
-          value={f.titulo ?? ''}
-          placeholder={sugerido}
-          maxLength={60}
-          aria-label="Título en el flyer"
-          onChange={(e) => p.cambiar({ titulo: e.target.value || null })}
-        />
-        <details className="menu-fila" ref={menu} onToggle={(e) => setAbierta((e.target as HTMLDetailsElement).open)}>
+        <input className="input input-titulo-fila" value={f.titulo ?? ''} placeholder={sugerido} maxLength={60} aria-label="Título en el flyer" onChange={(e) => p.cambiar({ titulo: e.target.value || null })} />
+        <details className="menu-fila" ref={menu} onToggle={(e) => setMenuAbierto((e.target as HTMLDetailsElement).open)}>
           <summary className="superior-boton" aria-label="Más opciones"><Icono nombre="more_vert" /></summary>
           <div className="menu-fila-opciones">
             <button disabled={p.i === 0} onClick={hacer(acciones.subir)}><Icono nombre="arrow_upward" tamano={16} />Subir</button>
             <button disabled={p.i === p.total - 1} onClick={hacer(acciones.bajar)}><Icono nombre="arrow_downward" tamano={16} />Bajar</button>
             <button disabled={!acciones.grupo} onClick={hacer(acciones.grupo)}><Icono nombre="view_module" tamano={16} />Juntar con la de abajo (grupo)</button>
-            <button disabled={!acciones.variantes} onClick={hacer(acciones.variantes)}><Icono nombre="style" tamano={16} />Juntar con la de abajo (variantes)</button>
+            <button disabled={!acciones.variantes} onClick={hacer(acciones.variantes)}><Icono nombre="style" tamano={16} />Juntar con la de abajo (sabores)</button>
             <button disabled={!acciones.separar} onClick={hacer(acciones.separar)}><Icono nombre="call_split" tamano={16} />Separar en productos</button>
             <button onClick={hacer(acciones.quitar)} className="menu-peligro"><Icono nombre="delete" tamano={16} />Quitar fila</button>
           </div>
@@ -381,7 +509,7 @@ function TarjetaFila(p: {
 
       <div className="fila-promo-fotos">
         {f.productos.map((x, k) => (
-          <span key={x.id} className="miniatura" title={nombresProd[k]}>
+          <span key={x.id} className={`miniatura ${prods[k]?.foto ? '' : 'miniatura-falta'}`} title={nombresProd[k]}>
             {prods[k]?.foto ? <img src={prods[k].foto!} alt="" /> : <Icono nombre="no_photography" tamano={16} />}
             {f.productos.length > 1 && (
               <button className="quitar-producto" onClick={() => p.quitarProducto(x.id)} aria-label={`Sacar ${nombresProd[k]}`}><Icono nombre="close" tamano={12} /></button>
@@ -389,47 +517,44 @@ function TarjetaFila(p: {
           </span>
         ))}
       </div>
-      {f.tipo === 'variantes' && <div className="texto-chico">Variantes: {cortos.map((c, k) => f.productos[k].nombre || c.nombre).join(' · ')}</div>}
+      {f.tipo === 'variantes' && <div className="texto-chico">Sabores: {cortos.map((c, k) => f.productos[k].nombre || c.nombre).join(' · ')}</div>}
 
       {erp ? (
-        <div className="texto-chico">Promo cargada en el ERP: {textoOferta(f)}{f.cantidadMinima ? ` (${pesosPromo(f.precioFijo ?? 0)} c/u)` : ''}. El precio no se cambia acá.</div>
+        <div className="texto-chico">Promo cargada en el ERP: el precio no se cambia acá.</div>
       ) : (
         <div className="fila-promo-regla">
-          <label>Descuento <input className="input input-num" inputMode="decimal" value={f.descuento ?? ''} onChange={(e) => { const n = numeroONull(e.target.value); if (n !== undefined && (n ?? 0) <= 90) p.cambiar({ descuento: n }) }} aria-label="Descuento en %" /> %</label>
-          <label>Llevando <input className="input input-num" inputMode="numeric" value={f.cantidadMinima ?? ''} placeholder="—" onChange={(e) => { const n = numeroONull(e.target.value); if (n !== undefined && (n == null || Number.isInteger(n))) p.cambiar({ cantidadMinima: n || null }) }} aria-label="Cantidad mínima" /> o más</label>
+          <label>Descuento <input className="input input-num" inputMode="decimal" value={f.descuento ?? ''} onChange={(e) => { const v = numeroONull(e.target.value); if (v !== undefined && (v ?? 0) <= 90) p.cambiar({ descuento: v }) }} aria-label="Descuento en %" /> %</label>
+          <label>Llevando <input className="input input-num" inputMode="numeric" value={f.cantidadMinima ?? ''} placeholder="—" onChange={(e) => { const v = numeroONull(e.target.value); if (v !== undefined && (v == null || Number.isInteger(v))) p.cambiar({ cantidadMinima: v || null }) }} aria-label="Cantidad mínima" /> o más</label>
         </div>
       )}
-      <div className="texto-chico fila-promo-precio">
-        {conPrecio.length ? (
-          <>
-            {conPrecio[0].base != null && conPrecio[0].base !== conPrecio[0].promo && <>{pesosPromo(conPrecio[0].base)} → </>}
-            <b>{pesosPromo(conPrecio[0].promo!)}</b> c/u
-            {!iguales && ' (cambia según el producto)'}
-          </>
-        ) : 'Sin precio en esta lista'}
-        {sinPrecio > 0 && conPrecio.length > 0 && <span className="falta"> · {sinPrecio} sin precio</span>}
-        {' · etiqueta '}<b>{textoOferta(f)}</b>
+      <div className="fila-promo-precio">
+        <span>{lineaPrecio}</span>
+        <span className="chip etiqueta-oferta">{etiqueta}</span>
       </div>
 
-      <button className="enlace texto-chico" onClick={() => setNombres(!nombres)}>{nombres ? 'Ocultar nombres' : 'Cambiar nombres en el flyer'}</button>
+      <button className="enlace texto-chico fila-promo-nombres" onClick={() => setNombres(!nombres)}>
+        <Icono nombre={nombres ? 'expand_less' : 'edit'} tamano={14} />{nombres ? 'Ocultar' : f.tipo === 'producto' && !prods[0]?.granel ? 'Nombre' : 'Nombres, medidas y precio de granel'}
+      </button>
       {nombres && (
         <div className="nombres-fila">
+          {f.tipo === 'producto' && <p className="texto-chico">El nombre de un producto solo se cambia en el título de la fila (arriba).</p>}
           {f.productos.map((x, k) => {
             const pr = prods[k]
+            const granel = pr?.granel && pr.presentaciones.length > 0 && !erp
+            if (f.tipo === 'producto' && !granel) return null
             return (
               <div key={x.id} className="nombre-item">
-                <input className="input" value={x.nombre ?? ''} placeholder={f.tipo === 'producto' ? (f.titulo || nombresProd[k]) : cortos[k].nombre} maxLength={40} aria-label="Nombre" onChange={(e) => p.cambiarItem(x.id, { nombre: e.target.value || null })} disabled={f.tipo === 'producto'} />
+                {f.tipo !== 'producto' && <input className="input" value={x.nombre ?? ''} placeholder={cortos[k].nombre} maxLength={40} aria-label="Nombre" onChange={(e) => p.cambiarItem(x.id, { nombre: e.target.value || null })} />}
                 {f.tipo !== 'producto' && <input className="input input-tam" value={x.tam ?? ''} placeholder={cortos[k].tam ?? 'medida'} maxLength={20} aria-label="Medida" onChange={(e) => p.cambiarItem(x.id, { tam: e.target.value || null })} />}
-                {pr?.granel && pr.presentaciones.length > 0 && !erp && (
+                {granel && (
                   <select className="input input-tam" value={x.presentacion ?? ''} aria-label="Precio de" onChange={(e) => p.cambiarItem(x.id, { presentacion: e.target.value || null })}>
                     <option value="">Por kilo</option>
-                    {pr.presentaciones.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {pr!.presentaciones.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 )}
               </div>
             )
           })}
-          {f.tipo === 'producto' && <p className="texto-chico">En un producto solo, el nombre se cambia en el título de la fila.</p>}
         </div>
       )}
     </article>
@@ -439,7 +564,7 @@ function TarjetaFila(p: {
 // ---------------------------------------------------------------------------
 // Exportar: arma los JPEG con el motor y deja el .zip para descargar
 // ---------------------------------------------------------------------------
-function Exportar({ id, inicial, antes, hayPlacas }: { id: number; inicial: Exportacion; antes: () => Promise<void>; hayPlacas: boolean }) {
+function Exportar({ id, inicial, antes, habilitado, motivo }: { id: number; inicial: Exportacion; antes: () => Promise<void>; habilitado: boolean; motivo: string }) {
   const [exp, setExp] = useState<{ id: number; estado: string; avance: number; zip: string | null; error?: string | null } | null>(inicial ? { ...inicial, avance: 100 } : null)
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
@@ -461,7 +586,8 @@ function Exportar({ id, inicial, antes, hayPlacas }: { id: number; inicial: Expo
       )}
       <button
         className="btn btn-pri"
-        disabled={corriendo || !hayPlacas}
+        disabled={corriendo || !habilitado}
+        title={habilitado ? '' : motivo}
         onClick={() => empezar(async () => {
           setError(null)
           await antes()
