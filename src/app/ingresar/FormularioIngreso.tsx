@@ -9,8 +9,8 @@ export function FormularioIngreso({ volver }: { volver: string }) {
     <form action={accion} className="ingreso-form">
       <input type="hidden" name="volver" value={volver} />
       <label className="campo">
-        <span className="campo-rotulo">Contraseña</span>
-        <input className="input" type="password" name="clave" autoComplete="current-password" autoFocus required />
+        <span className="campo-rotulo">PIN</span>
+        <input className="input input-pin" type="password" name="clave" inputMode="numeric" autoComplete="current-password" maxLength={64} autoFocus required />
       </label>
       {estado.error && (
         <p className="ingreso-error" role="alert">

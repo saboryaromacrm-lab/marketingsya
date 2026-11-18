@@ -2,7 +2,8 @@
 
 import { guardarAjuste } from '@/lib/ajustes'
 import { hashearClave, verificarClave } from '@/lib/auth/clave'
-import { hashDeClave, LARGO_MINIMO_CLAVE } from '@/lib/auth/clave-guardada'
+import { hashDeClave } from '@/lib/auth/clave-guardada'
+import { ERROR_PIN, esPinValido } from '@/lib/auth/pin'
 
 export type EstadoCambioClave = { error?: string; ok?: boolean }
 
@@ -10,10 +11,10 @@ export async function cambiarClave(_previo: EstadoCambioClave, form: FormData): 
   const actual = String(form.get('actual') ?? '')
   const nueva = String(form.get('nueva') ?? '')
   const guardado = await hashDeClave()
-  if (!guardado || !(await verificarClave(actual, guardado))) return { error: 'La contraseña actual no es correcta.' }
-  if (nueva.length < LARGO_MINIMO_CLAVE) return { error: `La nueva tiene que tener al menos ${LARGO_MINIMO_CLAVE} caracteres.` }
-  if (nueva !== String(form.get('repetir') ?? '')) return { error: 'Las dos contraseñas nuevas no coinciden.' }
-  if (nueva === actual) return { error: 'La nueva es igual a la actual.' }
+  if (!guardado || !(await verificarClave(actual, guardado))) return { error: 'El PIN actual no es correcto.' }
+  if (!esPinValido(nueva)) return { error: ERROR_PIN }
+  if (nueva !== String(form.get('repetir') ?? '')) return { error: 'Los dos PIN nuevos no coinciden.' }
+  if (nueva === actual) return { error: 'El PIN nuevo es igual al actual.' }
   await guardarAjuste('clave_hash', await hashearClave(nueva))
   return { ok: true }
 }

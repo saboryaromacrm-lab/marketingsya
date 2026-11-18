@@ -21,6 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ ruta: s
         'content-length': String(info.size),
         'cache-control': 'public, max-age=31536000, immutable',
         'x-content-type-options': 'nosniff',
+        ...(tipo === 'application/zip' ? { 'content-disposition': `attachment; filename="${path.basename(relativa)}"` } : {}),
       },
     })
   } catch {

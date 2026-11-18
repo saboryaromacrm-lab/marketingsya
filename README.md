@@ -9,7 +9,7 @@ Necesita Node 22 o más nuevo y PostgreSQL 16.
 1. Copiá `.env.example` a `.env` y completá `DATABASE_URL` y `CODIGO_INSTALACION`.
 2. Instalá las dependencias: `npm install`
 3. Levantá la app: `npm run dev`. Las tablas se crean solas al arrancar.
-4. Entrá: la primera vez te pide el código de instalación y que crees la contraseña.
+4. Entrá: la primera vez te pide el código de instalación y que crees el PIN (de 4 a 8 números).
 
 ## Instalación en el servidor
 

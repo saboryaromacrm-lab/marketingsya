@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation'
 import { entorno } from '@/lib/entorno'
 import { guardarAjusteSiFalta } from '@/lib/ajustes'
 import { hashearClave, verificarClave } from '@/lib/auth/clave'
-import { hashDeClave, LARGO_MINIMO_CLAVE } from '@/lib/auth/clave-guardada'
+import { hashDeClave } from '@/lib/auth/clave-guardada'
+import { ERROR_PIN, esPinValido } from '@/lib/auth/pin'
 import { COOKIE_SESION, crearToken } from '@/lib/auth/sesion'
 import { minutosDeBloqueo, registrarIntento } from '@/lib/auth/limite'
 import { asegurarSecretoDeSesion } from '@/lib/arranque'
@@ -22,7 +23,10 @@ function destinoSeguro(valor: FormDataEntryValue | null): string {
 
 async function quienEs() {
   const h = await headers()
-  return { ip: h.get('x-forwarded-for')?.split(',')[0].trim() || h.get('x-real-ip') || 'local', navegador: h.get('user-agent') }
+  // La IP real es la ÚLTIMA de X-Forwarded-For: la agrega nuestro propio proxy (Traefik en Dokploy).
+  // Las anteriores las puede escribir cualquiera, y con eso saltearía el freno por IP.
+  const cadena = (h.get('x-forwarded-for') ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+  return { ip: cadena.at(-1) || h.get('x-real-ip') || 'local', navegador: h.get('user-agent') }
 }
 
 async function abrirSesion() {
@@ -38,7 +42,7 @@ async function abrirSesion() {
   })
 }
 
-const mensajeBloqueo = (min: number) => `Demasiados intentos fallidos. Probá de nuevo en ${min} ${min === 1 ? 'minuto' : 'minutos'}.`
+const mensajeBloqueo = (min: number) => `Hubo demasiados intentos fallidos y el ingreso quedó frenado por seguridad. Probá de nuevo en ${min} ${min === 1 ? 'minuto' : 'minutos'}.`
 
 export async function ingresar(_previo: EstadoIngreso, form: FormData): Promise<EstadoIngreso> {
   const { ip, navegador } = await quienEs()
@@ -46,11 +50,11 @@ export async function ingresar(_previo: EstadoIngreso, form: FormData): Promise<
   if (bloqueo > 0) return { error: mensajeBloqueo(bloqueo) }
 
   const guardado = await hashDeClave()
-  if (!guardado) return { error: 'Todavía no se creó la contraseña. Recargá la página.' }
+  if (!guardado) return { error: 'Todavía no se creó el PIN. Recargá la página.' }
   const clave = String(form.get('clave') ?? '')
   const ok = clave.length > 0 && (await verificarClave(clave, guardado))
   await registrarIntento(ip, ok, navegador)
-  if (!ok) return { error: 'La contraseña no es correcta.' }
+  if (!ok) return { error: 'El PIN no es correcto.' }
 
   await abrirSesion()
   redirect(destinoSeguro(form.get('volver')))
@@ -62,12 +66,12 @@ function mismoTexto(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y)
 }
 
-/** Primera vez: crear la contraseña. Pide el código de instalación que Lucas puso en Dokploy. */
+/** Primera vez: crear el PIN. Pide el código de instalación que Lucas puso en Dokploy. */
 export async function crearClave(_previo: EstadoIngreso, form: FormData): Promise<EstadoIngreso> {
   const { ip, navegador } = await quienEs()
   const bloqueo = await minutosDeBloqueo(ip)
   if (bloqueo > 0) return { error: mensajeBloqueo(bloqueo) }
-  if (await hashDeClave()) return { error: 'La contraseña ya está creada. Recargá la página para ingresar.' }
+  if (await hashDeClave()) return { error: 'El PIN ya está creado. Recargá la página para ingresar.' }
 
   const esperado = entorno.codigoInstalacion
   if (!esperado) return { error: 'Falta el código de instalación (CODIGO_INSTALACION) en Dokploy.' }
@@ -77,12 +81,12 @@ export async function crearClave(_previo: EstadoIngreso, form: FormData): Promis
     return { error: 'El código de instalación no es correcto.' }
   }
   const clave = String(form.get('clave') ?? '')
-  if (clave.length < LARGO_MINIMO_CLAVE) return { error: `La contraseña tiene que tener al menos ${LARGO_MINIMO_CLAVE} caracteres.` }
-  if (clave !== String(form.get('repetir') ?? '')) return { error: 'Las dos contraseñas no coinciden.' }
+  if (!esPinValido(clave)) return { error: ERROR_PIN }
+  if (clave !== String(form.get('repetir') ?? '')) return { error: 'Los dos PIN no coinciden.' }
 
   // Si dos personas crean a la vez, gana la primera: la otra recibe el aviso.
   if (!(await guardarAjusteSiFalta('clave_hash', await hashearClave(clave)))) {
-    return { error: 'La contraseña ya está creada. Recargá la página para ingresar.' }
+    return { error: 'El PIN ya está creado. Recargá la página para ingresar.' }
   }
   await registrarIntento(ip, true, navegador)
   await abrirSesion()

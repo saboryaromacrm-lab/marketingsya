@@ -58,8 +58,9 @@ generadas** (carruseles, promos, placas) usan la paleta de marca del manual. No 
 
 ## Marca (solo para las piezas generadas)
 
-**Hay un conflicto sin resolver entre el manual de identidad y los carruseles aprobados.**
-No escribir el sistema de diseño de las piezas hasta que el cliente elija.
+**Resuelto (15/11/2026):** las piezas usan la **paleta de los carruseles aprobados** (columna derecha)
+y **las dos familias tipográficas**: Fraunces y Nunito ya, Utendo y Bluestars cuando Lucas pase los archivos
+(hay que confirmar que la licencia permita render en servidor). El fucsia **no** entra.
 
 | | Manual de identidad | Carruseles aprobados |
 | --- | --- | --- |
@@ -146,10 +147,13 @@ Poner contador visible y corte automático al llegar al tope.
 - **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
 - **Imágenes:** quedan públicas solo las de `/media` (las necesita Meta); todo lo demás pide sesión.
 - **Recetas:** el contenido es mezcla: la IA propone a partir del catálogo y Lucas edita.
-- **Login:** una sola contraseña (hash scrypt guardado en la tabla `ajustes`), sesión de 30 días por dispositivo,
-  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP. La primera vez se crea desde
-  la pantalla de ingreso con el `CODIGO_INSTALACION` (así nadie la crea antes que Lucas); se cambia en
-  Configuración; se recupera con `REINICIAR_CLAVE=si` + publicar. El secreto de sesión se genera solo.
+- **Login:** un **PIN numérico de 4 a 8 dígitos** (pedido de Lucas, 18/11/2026; hash scrypt en la tabla `ajustes`),
+  sesión de 30 días por dispositivo. Dos frenos: 5 fallos en 15 min por IP, y **freno general** de 20 fallos
+  en una hora desde cualquier IP (sin él, un PIN de 4 dígitos se adivina rápido con muchas IP). La IP es la
+  última de `X-Forwarded-For` (la agrega Traefik; las anteriores se pueden falsificar). El PIN se crea en
+  la pantalla de ingreso con el `CODIGO_INSTALACION`; se cambia en Configuración; se recupera con
+  `REINICIAR_CLAVE=si` + publicar. Antes de conectar Meta (etapas 5 y 6), recomendar un PIN más largo.
+  El secreto de sesión se genera solo.
 - **Catálogo:** campo «nombre para piezas» editable con sugerencia automática; el nombre del ERP no se toca.
   Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
   se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.
@@ -178,7 +182,19 @@ Poner contador visible y corte automático al llegar al tope.
   Probado entero en Docker: instalación nueva, sincronización real (~6 min la primera), reinicio, recuperación
   de contraseña y restauración de la copia. Uso medido: app ~110 MB, base ~55 MB.
 - **Logo:** se sube desde Configuración (PNG/SVG, hasta 512 px, sin recortar ni deformar).
-- **Pendiente para la etapa 2:** qué precio de granel va en las piezas (fraccionado o kilo).
+- **Etapa 2 (carruseles), decidido el 15/11/2026:**
+  - Paleta de los carruseles aprobados: `#0b3b2e`, `#137a52`, `#6E9A35`, naranja `#ff8f00`. Sin fucsia.
+  - Tipografías: Fraunces + Nunito y también Utendo + Bluestars (archivos pendientes).
+  - De 1 a 3 productos por placa, según la placa.
+  - Granel: Lucas elige en cada pieza si va el precio por kilo o el de un fraccionado.
+  - Siempre visibles: `tiendaonline.saboryaroma.com`, WhatsApp **370 462-1563** y `@saboryaroma__`.
+  - Variación: cada carrusel cambia detalles solo y además se puede elegir la variante.
+  - Textos: los escribe Lucas (con los slogans aprobados para elegir); el nombre sale de «nombre para piezas».
+  - Fotos con su fondo blanco, como vienen (sin quitar fondo por ahora).
+  - Flujo: estilo → casillas en el catálogo → 5 placas en vivo → editar textos → .zip con los JPEG.
+  - Se guardan los carruseles (borradores y terminados).
+  - Render: Chromium sin pantalla (`playwright-core`) dentro de la imagen; tope de memoria de `app` a ~2 GB.
+  - Faltan: los 3 HTML de los carruseles y el logo oficial en archivo.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
@@ -199,11 +215,11 @@ Poner contador visible y corte automático al llegar al tope.
 
 ## Decisiones pendientes (bloquean el arranque)
 
-- [ ] Paleta: ¿la del manual o la de los carruseles?
-- [ ] Tipografías: ¿Fraunces y Nunito, o Utendo y Bluestars con sus archivos?
-- [ ] ¿El fucsia entra en la paleta? (el manual lo nombra pero muestra naranja)
+- [x] Paleta: la de los carruseles aprobados
+- [x] Tipografías: las dos familias (faltan los archivos de Utendo y Bluestars)
+- [x] El fucsia no entra
 - [ ] Los 3 HTML de los carruseles, al repo
 - [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
-- [ ] ¿Dónde se administra el DNS: Hostinger, Cloudflare u otro?
+- [x] DNS: registro A `marketing` creado; la plataforma ya anda en `marketing.saboryaroma.com`
 - [ ] ¿Qué servicio de IA de imágenes?
 - [ ] Credenciales de Meta: app ID, cuenta publicitaria, token

@@ -7,7 +7,7 @@ import { entorno } from '@/lib/entorno'
 // Se sirven en /media/<ruta>. Meta necesita poder leerlos sin sesión.
 
 const TIPOS: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/svg+xml': 'svg' }
-export const TIPO_POR_EXTENSION: Record<string, string> = Object.fromEntries(Object.entries(TIPOS).map(([t, e]) => [e, t]))
+export const TIPO_POR_EXTENSION: Record<string, string> = { ...Object.fromEntries(Object.entries(TIPOS).map(([t, e]) => [e, t])), zip: 'application/zip' }
 const MAXIMO = 8 * 1024 * 1024
 
 // Error con el código HTTP, para poder distinguir «esperá un poco» (429) de «no existe» (404).

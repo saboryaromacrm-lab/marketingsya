@@ -2,8 +2,9 @@
 
 import { useActionState } from 'react'
 import { crearClave, type EstadoIngreso } from './acciones'
+import { AYUDA_PIN, PIN_MAXIMO, PIN_MINIMO } from '@/lib/auth/pin'
 
-export function FormularioCrearClave({ largoMinimo, faltaCodigo }: { largoMinimo: number; faltaCodigo: boolean }) {
+export function FormularioCrearClave({ faltaCodigo }: { faltaCodigo: boolean }) {
   const [estado, accion, enviando] = useActionState<EstadoIngreso, FormData>(crearClave, {})
   if (faltaCodigo) {
     return (
@@ -15,20 +16,20 @@ export function FormularioCrearClave({ largoMinimo, faltaCodigo }: { largoMinimo
   }
   return (
     <form action={accion} className="ingreso-form">
-      <p className="texto-suave">Es la primera vez: creá la contraseña para entrar a la plataforma.</p>
+      <p className="texto-suave">Es la primera vez: creá el PIN para entrar a la plataforma.</p>
       <label className="campo">
         <span className="campo-rotulo">Código de instalación</span>
         <input className="input" name="codigo" autoComplete="off" required autoFocus />
         <span className="texto-chico">El que escribiste en Dokploy como CODIGO_INSTALACION.</span>
       </label>
       <label className="campo">
-        <span className="campo-rotulo">Contraseña nueva</span>
-        <input className="input" type="password" name="clave" autoComplete="new-password" minLength={largoMinimo} required />
-        <span className="texto-chico">Al menos {largoMinimo} caracteres.</span>
+        <span className="campo-rotulo">PIN nuevo</span>
+        <input className="input input-pin" type="password" name="clave" inputMode="numeric" pattern="[0-9]*" autoComplete="new-password" minLength={PIN_MINIMO} maxLength={PIN_MAXIMO} required />
+        <span className="texto-chico">{AYUDA_PIN}</span>
       </label>
       <label className="campo">
-        <span className="campo-rotulo">Repetila</span>
-        <input className="input" type="password" name="repetir" autoComplete="new-password" minLength={largoMinimo} required />
+        <span className="campo-rotulo">Repetilo</span>
+        <input className="input input-pin" type="password" name="repetir" inputMode="numeric" pattern="[0-9]*" autoComplete="new-password" minLength={PIN_MINIMO} maxLength={PIN_MAXIMO} required />
       </label>
       {estado.error && (
         <p className="ingreso-error" role="alert">
@@ -36,7 +37,7 @@ export function FormularioCrearClave({ largoMinimo, faltaCodigo }: { largoMinimo
           {estado.error}
         </p>
       )}
-      <button className="btn btn-pri btn-ancho" disabled={enviando}>{enviando ? 'Creando…' : 'Crear contraseña y entrar'}</button>
+      <button className="btn btn-pri btn-ancho" disabled={enviando}>{enviando ? 'Creando…' : 'Crear PIN y entrar'}</button>
     </form>
   )
 }
