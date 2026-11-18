@@ -6,6 +6,10 @@ import { asc, eq, inArray } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { encolarExportacion } from '@/lib/piezas/exportar'
 import { cargarPromo, filasDelErp, planDePlacas, rutaPlaca } from '@/lib/promos/datos'
+import { leerFiltros } from '@/lib/catalogo/filtros'
+import { buscarProductos } from '@/lib/catalogo/listado'
+import { detalleBase, pesosPromo } from '@/lib/promos/calculo'
+import { urlMedia } from '@/lib/media'
 import { disenoSiguiente, infoProductos, placasDe, type DatosEditor, type FilaEditor } from '@/lib/promos/editor'
 import { esFecha, hoyFormosa, sumarDias } from '@/lib/promos/fechas'
 
@@ -132,6 +136,9 @@ export async function borrarPromo(id: number) {
 export async function exportarPromo(id: number): Promise<Resultado<{ exportacionId: number; placas: number }>> {
   const d = await cargarPromo(id)
   if (!d) return { error: 'Esa promo ya no existe.' }
+  // Nunca sale una placa con «Sin foto»
+  const sinFoto = [...d.productos.values()].filter((p) => !p.foto)
+  if (sinFoto.length) return { error: `No se puede exportar: ${sinFoto.map((p) => `«${p.nombre}»`).join(', ')} no ${sinFoto.length === 1 ? 'tiene' : 'tienen'} foto.` }
   const placas = planDePlacas(d)
   if (!placas.length) return { error: 'No hay nada para exportar: sumá productos y elegí al menos un formato.' }
   try {
@@ -141,4 +148,34 @@ export async function exportarPromo(id: number): Promise<Resultado<{ exportacion
   } catch {
     return { error: 'No se pudo iniciar la exportación.' }
   }
+}
+
+// ---------- buscador del editor ----------
+
+export type ResultadoBusqueda = { id: number; nombre: string; foto: string; precio: string | null }
+
+/** Productos para sumar a la promo: solo los que pueden ir en piezas (activos, con foto y no excluidos). */
+export async function buscarParaPromo(q: string, listaId: number): Promise<{ resultados: ResultadoBusqueda[]; aproximada: boolean }> {
+  const texto = typeof q === 'string' ? q.trim().slice(0, 80) : ''
+  if (texto.length < 2) return { resultados: [], aproximada: false }
+  const f = leerFiltros({ q: texto, foto: 'con', piezas: 'si', lista: String(Number(listaId) || 3) })
+  const r = await buscarProductos(f)
+  const ids = r.filas.slice(0, 8).map((p) => p.id)
+  const erp = ids.length ? await db.select({ id: productos.id, erp: productos.erp, tipo: productos.tipo }).from(productos).where(inArray(productos.id, ids)) : []
+  const porId = new Map(erp.map((p) => [p.id, p]))
+  return {
+    aproximada: r.aproximada,
+    resultados: r.filas.slice(0, 8).map((p) => {
+      const x = porId.get(p.id)
+      const det = x ? detalleBase(x.erp, x.tipo === 'granel', f.lista) : null
+      return { id: p.id, nombre: p.nombrePiezas || p.nombreSugerido, foto: urlMedia(p.foto!), precio: det ? `${pesosPromo(det.precio)} ${det.unidad}` : null }
+    }),
+  }
+}
+
+/** Datos para mostrar en el editor los productos que se acaban de sumar (solo los que pueden ir en piezas). */
+export async function infoParaSumar(ids: number[]) {
+  const limpios = (Array.isArray(ids) ? ids : []).filter((n) => Number.isInteger(n) && n > 0).slice(0, 50)
+  const info = await infoProductos(limpios)
+  return Object.fromEntries(Object.entries(info).filter(([, p]) => p.foto))
 }

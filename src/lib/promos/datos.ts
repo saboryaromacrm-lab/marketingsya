@@ -115,13 +115,27 @@ export const rutaPlaca = (promoId: number, p: Pick<Placa, 'formato' | 'pagina'>)
  * Promos cargadas en el ERP (lista «Promo»): se suman solas a cada promo nueva.
  * La lista se busca por nombre, no por número, por si cambia en el ERP.
  */
-export async function filasDelErp(): Promise<{ tipo: TipoFila; precioFijo: number; cantidadMinima: number | null; productos: ItemFila[] }[]> {
+async function productosDeListaPromo() {
   const [lista] = await db.select({ id: listas.id }).from(listas).where(ilike(listas.nombre, 'promo%')).limit(1)
-  if (!lista) return []
+  if (!lista) return { lista: null, filas: [] }
   const filas = await db
-    .select({ id: productos.id, precios: productos.preciosLista })
+    .select({ id: productos.id, nombre: sql<string>`coalesce(${productos.nombrePiezas}, ${productos.nombreSugerido})`, precios: productos.preciosLista, foto: fotoEfectiva })
     .from(productos)
     .where(sql`not ${productos.dadoDeBaja} and not ${productos.excluirDePiezas} and ${productos.preciosLista} ? ${String(lista.id)}`)
+  return { lista, filas }
+}
+
+/** Promos del ERP que no se pueden sumar porque el producto no tiene foto (para avisar en el editor). */
+export async function erpSinFoto(): Promise<{ id: number; nombre: string }[]> {
+  const { filas } = await productosDeListaPromo()
+  return filas.filter((f) => !f.foto).map((f) => ({ id: f.id, nombre: f.nombre }))
+}
+
+export async function filasDelErp(): Promise<{ tipo: TipoFila; precioFijo: number; cantidadMinima: number | null; productos: ItemFila[] }[]> {
+  const { lista, filas: todas } = await productosDeListaPromo()
+  if (!lista) return []
+  // Sin foto no se suma (una placa con «Sin foto» no sale): se avisa en el editor con erpSinFoto()
+  const filas = todas.filter((f) => f.foto)
   return filas.map((f) => {
     const x = f.precios[String(lista.id)]
     return { tipo: 'producto' as const, precioFijo: x.precio, cantidadMinima: x.unidades > 1 ? x.unidades : null, productos: [{ id: f.id, presentacion: x.presentacion }] }

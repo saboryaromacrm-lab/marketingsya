@@ -4,13 +4,15 @@ import { db, esquema } from '@/lib/db'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
 import { urlMedia } from '@/lib/media'
 import type { DisenoPromo, FormatosPromo, ItemFila, TipoFila } from '@/lib/db/esquema'
-import { precioBase } from './calculo'
+import { detalleBase } from './calculo'
 import { cargarPromo, planDePlacas, rutaPlaca } from './datos'
 
 const { productos, listas, promos } = esquema
 
-// Lo que el editor necesita de cada producto: nombre, foto, fraccionados (granel) y precio base por lista y fraccionado.
-export type InfoProducto = { id: number; nombre: string; foto: string | null; granel: boolean; presentaciones: string[]; bases: Record<string, Record<string, number | null>> }
+// Lo que el editor necesita de cada producto: nombre, foto, fraccionados (granel) y precio base
+// (con su unidad: «c/u», «el kg», «x250 g») por lista y por fraccionado ('' = el de siempre).
+export type BaseProducto = { precio: number; unidad: string } | null
+export type InfoProducto = { id: number; nombre: string; foto: string | null; granel: boolean; presentaciones: string[]; bases: Record<string, Record<string, BaseProducto>> }
 
 export async function infoProductos(ids: number[]): Promise<Record<number, InfoProducto>> {
   if (!ids.length) return {}
@@ -24,7 +26,8 @@ export async function infoProductos(ids: number[]): Promise<Record<number, InfoP
   return Object.fromEntries(
     filas.map((p) => {
       const presentaciones = p.erp.presentaciones.map((pr) => pr.tamano)
-      const bases = Object.fromEntries(lsts.map((l) => [String(l.id), Object.fromEntries(['', ...presentaciones].map((pr) => [pr, precioBase(p.erp, l.id, pr || null)]))]))
+      const granel = p.tipo === 'granel'
+      const bases = Object.fromEntries(lsts.map((l) => [String(l.id), Object.fromEntries(['', ...presentaciones].map((pr) => [pr, detalleBase(p.erp, granel, l.id, pr || null)]))]))
       return [p.id, { id: p.id, nombre: p.nombre, foto: p.foto ? urlMedia(p.foto) : null, granel: p.tipo === 'granel', presentaciones, bases }]
     }),
   )
