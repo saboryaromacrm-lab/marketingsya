@@ -10,8 +10,8 @@ export type ReglaFila = { descuento: number | null; cantidadMinima: number | nul
 const conCentavos = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const sinCentavos = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 })
 
-/** «$ 6.797,45», como en el flyer de ejemplo. */
-export const pesosPromo = (n: number) => `$ ${conCentavos.format(n)}`
+/** «$ 6.797,45», como en el flyer de ejemplo; los ,00 no se muestran («$ 4.887»). */
+export const pesosPromo = (n: number) => `$ ${Number.isInteger(Math.round(n * 100) / 100) ? sinCentavos.format(n) : conCentavos.format(n)}`
 export const pesosEnteros = (n: number) => `$ ${sinCentavos.format(Math.round(n))}`
 
 /**
@@ -27,6 +27,24 @@ export function precioBase(erp: Pick<ProductoNormalizado, 'precios' | 'presentac
   return precioDeLista(erp, listaId)?.precio ?? null
 }
 
+/**
+ * Precio base y a qué corresponde, para que la placa no engañe:
+ * envasados «c/u»; granel «el kg» (precio por kilo propio o del fraccionado de 1 kg)
+ * o la medida del fraccionado («x250 g») si no hay de 1 kg o si se eligió otro.
+ */
+export function detalleBase(erp: Pick<ProductoNormalizado, 'precios' | 'presentaciones'>, granel: boolean, listaId: number, presentacion?: string | null): { precio: number; unidad: string } | null {
+  if (presentacion) {
+    const pr = erp.presentaciones.find((p) => p.tamano === presentacion)
+    const x = pr?.precios.find((y) => y.listaId === listaId && y.unidades === 1) ?? pr?.precios.find((y) => y.listaId === listaId)
+    if (pr && x) return { precio: x.precio, unidad: pr.kg === 1 ? 'el kg' : `x${pr.tamano}` }
+  }
+  const e = precioDeLista(erp, listaId)
+  if (!e) return null
+  if (!granel) return { precio: e.precio, unidad: 'c/u' }
+  const pr = e.presentacion ? erp.presentaciones.find((p) => p.tamano === e.presentacion) : null
+  return { precio: e.precio, unidad: !pr || pr.kg === 1 ? 'el kg' : `x${pr.tamano}` }
+}
+
 /** Precio promo por unidad: el fijo del ERP si lo hay; si no, el base menos el descuento. Con centavos. */
 export function precioPromo(base: number | null, r: ReglaFila): number | null {
   if (r.precioFijo != null) return r.precioFijo
@@ -37,14 +55,15 @@ export function precioPromo(base: number | null, r: ReglaFila): number | null {
 
 /** Texto de la etiqueta verde: «X6 -15%», «-10%», o para el ERP «3 × $ 2.300». */
 export function textoOferta(r: ReglaFila): string {
-  if (r.precioFijo != null) {
-    const n = r.cantidadMinima ?? 1
-    return n > 1 ? `${n} × ${pesosEnteros(r.precioFijo * n)}` : 'PROMO'
-  }
+  // Las del ERP muestran su precio en el cuadro («3 × $ 2.300»): la etiqueta solo dice que es promo
+  if (r.precioFijo != null) return 'PROMO'
   const d = r.descuento ?? 0
   const pct = `-${Number.isInteger(d) ? d : conCentavos.format(d)}%`
   return r.cantidadMinima && r.cantidadMinima > 1 ? `X${r.cantidadMinima} ${pct}` : pct
 }
+
+/** Precio de una promo del ERP de varias unidades, entero y claro: «3 × $ 2.300». */
+export const textoPrecioErp = (fijo: number, n: number | null) => (n && n > 1 ? `${n} × ${pesosEnteros(fijo * n)}` : pesosPromo(fijo))
 
 // ---------------------------------------------------------------------------
 // Nombres cortos: en un grupo, lo que se repite en todos los productos sobra.
@@ -111,8 +130,7 @@ export type Bloque = { fila: number; desde: number; hasta: number } // productos
 
 const altoGrupo = (lineas: number) => ALTO.grupoBase + lineas * ALTO.grupoLinea + (lineas - 1) * ALTO.grupoEntreLineas
 
-export function paginar(filas: { tipo: TipoFila; productos: ItemFila[] }[], formato: 'historia' | 'feed', diseno: '1' | '2'): Bloque[][] {
-  const disponible = MEDIDAS[formato].alto - ALTO.cabeza[diseno] - ALTO.pie - ALTO.margenInferior
+function armarPaginas(filas: { tipo: TipoFila; productos: ItemFila[] }[], disponible: number, tope: number): Bloque[][] {
   const paginas: Bloque[][] = []
   let actual: Bloque[] = []
   let usado = 0
@@ -123,7 +141,7 @@ export function paginar(filas: { tipo: TipoFila; productos: ItemFila[] }[], form
   }
   const poner = (b: Bloque, alto: number, grupo: boolean) => {
     const extra = (n: number) => (n ? ALTO.separacion : grupo ? ALTO.grupoPrimero : 0)
-    if (usado + extra(actual.length) + alto > disponible) cerrar()
+    if (actual.length && usado + extra(actual.length) + alto > tope) cerrar()
     usado += extra(actual.length) + alto
     actual.push(b)
   }
@@ -142,14 +160,44 @@ export function paginar(filas: { tipo: TipoFila; productos: ItemFila[] }[], form
 }
 
 /**
- * Cómo repartir el espacio que sobra en una placa con pocos productos: un poco más de aire entre filas
- * (hasta 56 px) y el resto mitad arriba, mitad abajo, así no queda un hueco blanco al pie.
+ * Qué va en cada placa. Primero se ve cuántas placas hacen falta llenándolas al máximo;
+ * después se baja el tope todo lo posible sin sumar placas, así quedan parejas (14 → 5 + 5 + 4, no 6 + 6 + 2).
  */
-export function aireDePlaca(altos: number[], primeroEsGrupo: boolean, formato: 'historia' | 'feed', diseno: '1' | '2') {
+export function paginar(filas: { tipo: TipoFila; productos: ItemFila[] }[], formato: 'historia' | 'feed', diseno: '1' | '2'): Bloque[][] {
   const disponible = MEDIDAS[formato].alto - ALTO.cabeza[diseno] - ALTO.pie - ALTO.margenInferior
-  const usado = altos.reduce((a, b) => a + b, 0) + ALTO.separacion * Math.max(0, altos.length - 1) + (primeroEsGrupo ? ALTO.grupoPrimero : 0)
-  const libre = Math.max(0, disponible - usado)
-  if (!altos.length) return { arriba: 0, entre: ALTO.separacion }
-  const extra = Math.min(56, libre / (altos.length + 1))
-  return { arriba: Math.round(extra + (libre - extra * (altos.length + 1)) / 2), entre: Math.round(ALTO.separacion + extra) }
+  const llenas = armarPaginas(filas, disponible, disponible)
+  if (llenas.length < 2) return llenas
+  let bajo = 0
+  let alto = disponible
+  while (alto - bajo > 4) {
+    const medio = Math.floor((bajo + alto) / 2)
+    if (armarPaginas(filas, disponible, medio).length <= llenas.length) alto = medio
+    else bajo = medio
+  }
+  return armarPaginas(filas, disponible, alto)
 }
+
+export const ESCALA_MAXIMA = 1.5
+
+/**
+ * Con pocos productos, la placa no queda vacía: primero crecen las filas (fotos, nombres y precios más grandes,
+ * hasta ×1,5); lo que todavía sobra va como aire entre filas (hasta 56 px) y el resto, mitad arriba y mitad abajo.
+ * `bloques`: cada fila de la placa; los grupos con su cantidad de líneas de productos.
+ */
+export function escalaDePlaca(bloques: { grupo: boolean; lineas: number }[], formato: 'historia' | 'feed', diseno: '1' | '2') {
+  const disponible = MEDIDAS[formato].alto - ALTO.cabeza[diseno] - ALTO.pie - ALTO.margenInferior
+  if (!bloques.length) return { k: 1, arriba: 0, entre: ALTO.separacion }
+  const crece = bloques.reduce((a, b) => a + (b.grupo ? b.lineas * ALTO.grupoLinea : ALTO.fila), 0)
+  const fijo =
+    bloques.reduce((a, b) => a + (b.grupo ? ALTO.grupoBase + (b.lineas - 1) * ALTO.grupoEntreLineas : 0), 0) +
+    ALTO.separacion * (bloques.length - 1) +
+    (bloques[0].grupo ? ALTO.grupoPrimero : 0)
+  const k = Math.min(ESCALA_MAXIMA, Math.max(1, (disponible - fijo) / crece))
+  const libre = Math.max(0, disponible - fijo - crece * k)
+  const extra = Math.min(56, libre / (bloques.length + 1))
+  return { k: Math.floor(k * 1000) / 1000, arriba: Math.floor(extra + (libre - extra * (bloques.length + 1)) / 2), entre: Math.floor(ALTO.separacion + extra) }
+}
+
+/** Alto de un bloque con la escala aplicada (el mismo cálculo que usa el CSS del flyer). */
+export const altoEscalado = (b: { grupo: boolean; lineas: number }, k: number) =>
+  b.grupo ? ALTO.grupoBase + b.lineas * Math.round(ALTO.grupoLinea * k) + (b.lineas - 1) * ALTO.grupoEntreLineas : Math.round(ALTO.fila * k)

@@ -5,7 +5,7 @@ import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
 import { urlMedia } from '@/lib/media'
 import type { ItemFila, TipoFila } from '@/lib/db/esquema'
 import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
-import { nombresCortos, paginar, pesosPromo, precioBase, precioPromo, separarMedida, textoOferta, tituloComun, type Formato } from './calculo'
+import { detalleBase, nombresCortos, paginar, pesosPromo, precioBase, precioPromo, separarMedida, textoOferta, textoPrecioErp, tituloComun, type Formato } from './calculo'
 import { textoVigencia } from './fechas'
 import type { BloqueFlyer, DatosFlyer, ItemFlyer } from './flyer'
 
@@ -35,13 +35,21 @@ export function preciosDe(p: ProductoPromo | undefined, item: ItemFila, fila: Pi
   return { base, promo: precioPromo(base, fila) }
 }
 
+/** Un producto como lo dibuja el flyer: precio promo con su unidad («c/u», «el kg», «x250 g»). */
 function itemFlyer(p: ProductoPromo | undefined, item: ItemFila, fila: FilaPromo, listaId: number, corto: { nombre: string; tam: string | null }): ItemFlyer {
-  const { base, promo } = preciosDe(p, item, fila, listaId)
+  const det = p ? detalleBase(p.erp, p.tipo === 'granel', listaId, item.presentacion) : null
+  const base = det?.precio ?? null
+  const promo = precioPromo(base, fila)
+  const comun = { nombre: item.nombre || corto.nombre, tam: item.tam ?? corto.tam, foto: p?.foto ?? null }
+  // Promo del ERP por cantidad: un solo precio, entero y claro («3 × $ 2.300»)
+  if (fila.precioFijo != null && fila.cantidadMinima && fila.cantidadMinima > 1) {
+    const n = fila.cantidadMinima
+    return { ...comun, precio: textoPrecioErp(fila.precioFijo, n), unidad: '', antes: base != null && base * n > fila.precioFijo * n ? textoPrecioErp(base, n) : null }
+  }
   return {
-    nombre: item.nombre || corto.nombre,
-    tam: item.tam ?? corto.tam,
-    foto: p?.foto ?? null,
+    ...comun,
     precio: promo != null ? pesosPromo(promo) : null,
+    unidad: det?.unidad ?? 'c/u',
     antes: base != null && promo != null && promo < base ? pesosPromo(base) : null,
   }
 }
@@ -61,10 +69,16 @@ function bloque(d: PromoCargada, i: number, desde: number, hasta: number): Bloqu
   if (fila.tipo === 'variantes') {
     const medidas = new Set(cortos.map((c) => c.tam))
     const medida = medidas.size === 1 ? [...medidas][0] : null
-    const titulo = fila.titulo || [tituloComun(nombres), medida].filter(Boolean).join(' ')
-    return { tipo: 'variantes', nombre: titulo, oferta, variantes: items.map((it) => it.nombre), item: items[0] }
+    const t = separarMedida(fila.titulo || tituloComun(nombres))
+    // Si los sabores cuestan distinto, va el más barato con «desde» (nunca un precio que no corresponde)
+    const conPrecio = fila.productos.map((it, k) => ({ k, v: precioPromo(preciosDe(prods[k], it, fila, lista).base, fila) })).filter((x) => x.v != null)
+    const menor = conPrecio.sort((a, b) => a.v! - b.v!)[0]
+    const distintos = new Set(conPrecio.map((x) => x.v)).size > 1
+    const item = menor ? { ...items[menor.k], desde: distintos } : items[0]
+    return { tipo: 'variantes', nombre: t.nombre, tam: t.tam ?? medida, oferta, variantes: items.map((it) => it.nombre), item }
   }
-  return { tipo: 'producto', nombre: fila.titulo || nombres[0], oferta, item: { ...items[0], tam: null } }
+  const t = separarMedida(fila.titulo || nombres[0])
+  return { tipo: 'producto', nombre: t.nombre, tam: t.tam, oferta, item: items[0] }
 }
 
 export type Placa = { formato: Formato; pagina: number; paginas: number; datos: DatosFlyer }
@@ -88,8 +102,8 @@ export function planDePlacas(d: PromoCargada): Placa[] {
       // En «uno por producto» cada producto va solo, con su nombre completo
       const p = d.productos.get(d.filas[i].productos[k].id)
       const item = b.tipo === 'grupo' ? b.items[k] : itemFlyer(p, d.filas[i].productos[k], d.filas[i], promo.listaId, separarMedida(p?.nombre ?? ''))
-      const nombre = d.filas[i].tipo === 'producto' ? (d.filas[i].titulo || p?.nombre || '') : (p?.nombre ?? '')
-      placas.push({ formato: 'uno', pagina: n + 1, paginas: unos.length, datos: { ...base, formato: 'uno', pagina: n + 1, paginas: unos.length, bloques: [{ tipo: 'producto', nombre, oferta: b.oferta, item }] } })
+      const t = separarMedida(d.filas[i].tipo === 'producto' ? (d.filas[i].titulo || p?.nombre || '') : (p?.nombre ?? ''))
+      placas.push({ formato: 'uno', pagina: n + 1, paginas: unos.length, datos: { ...base, formato: 'uno', pagina: n + 1, paginas: unos.length, bloques: [{ tipo: 'producto', nombre: t.nombre, tam: t.tam, oferta: b.oferta, item: { ...item, desde: false } }] } })
     })
   }
   return placas

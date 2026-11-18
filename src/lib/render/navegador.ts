@@ -69,6 +69,8 @@ export function renderizarJpeg(urls: string[], o: OpcionesRender = {}): Promise<
           await document.fonts.ready
           await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => { i.onload = i.onerror = r }))))
         })
+        // Si la placa achica textos para que entren, avisa con data-listo: se espera (hasta 5 s)
+        await page.waitForSelector('html[data-listo]', { state: 'attached', timeout: 5_000 }).catch(() => {})
         // Una placa puede declarar su tamaño (por ejemplo, las historias de 1080×1920)
         const declarado = await page.evaluate(() => document.querySelector('meta[name="pieza-tamano"]')?.getAttribute('content') ?? null)
         const m = declarado?.match(/^(\d{3,4})x(\d{3,4})$/)
