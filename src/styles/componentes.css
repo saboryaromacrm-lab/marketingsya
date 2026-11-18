@@ -329,3 +329,6 @@ code { background: var(--superficie-sutil); border: 1px solid var(--borde); bord
 .miniaturas-placas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; max-width: 760px; }
 .miniaturas-placas img { width: 100%; aspect-ratio: 1080 / 1350; object-fit: cover; border: 1px solid var(--borde); border-radius: 6px; display: block; }
 @media (max-width: 600px) { .miniaturas-placas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* PIN: dígitos espaciados y grandes */
+.input-pin { letter-spacing: .3em; font-size: 18px; }

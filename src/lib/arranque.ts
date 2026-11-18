@@ -15,13 +15,13 @@ export async function aplicarMigraciones() {
 }
 
 /**
- * Recuperar la contraseña: en Dokploy se pone REINICIAR_CLAVE=si y se vuelve a publicar.
- * La contraseña se borra y la pantalla de ingreso pide crear una nueva (con el código de instalación).
+ * Recuperar el PIN: en Dokploy se pone REINICIAR_CLAVE=si y se vuelve a publicar.
+ * El PIN se borra y la pantalla de ingreso pide crear uno nuevo (con el código de instalación).
  */
 export async function reiniciarClaveSiSePide() {
   if (process.env.REINICIAR_CLAVE?.toLowerCase() !== 'si') return
   await borrarAjuste('clave_hash')
-  console.warn('[arranque] REINICIAR_CLAVE=si: se borró la contraseña. Entrá a crear una nueva y después sacá esa variable en Dokploy.')
+  console.warn('[arranque] REINICIAR_CLAVE=si: se borró el PIN. Entrá a crear uno nuevo y después sacá esa variable en Dokploy.')
 }
 
 /** El secreto que firma las sesiones: si no vino en el entorno, se genera una vez y queda en la base. */

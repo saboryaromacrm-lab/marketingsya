@@ -147,10 +147,13 @@ Poner contador visible y corte automático al llegar al tope.
 - **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
 - **Imágenes:** quedan públicas solo las de `/media` (las necesita Meta); todo lo demás pide sesión.
 - **Recetas:** el contenido es mezcla: la IA propone a partir del catálogo y Lucas edita.
-- **Login:** una sola contraseña (hash scrypt guardado en la tabla `ajustes`), sesión de 30 días por dispositivo,
-  bloqueo de 15 minutos después de 5 intentos fallidos desde la misma IP. La primera vez se crea desde
-  la pantalla de ingreso con el `CODIGO_INSTALACION` (así nadie la crea antes que Lucas); se cambia en
-  Configuración; se recupera con `REINICIAR_CLAVE=si` + publicar. El secreto de sesión se genera solo.
+- **Login:** un **PIN numérico de 4 a 8 dígitos** (pedido de Lucas, 18/11/2026; hash scrypt en la tabla `ajustes`),
+  sesión de 30 días por dispositivo. Dos frenos: 5 fallos en 15 min por IP, y **freno general** de 20 fallos
+  en una hora desde cualquier IP (sin él, un PIN de 4 dígitos se adivina rápido con muchas IP). La IP es la
+  última de `X-Forwarded-For` (la agrega Traefik; las anteriores se pueden falsificar). El PIN se crea en
+  la pantalla de ingreso con el `CODIGO_INSTALACION`; se cambia en Configuración; se recupera con
+  `REINICIAR_CLAVE=si` + publicar. Antes de conectar Meta (etapas 5 y 6), recomendar un PIN más largo.
+  El secreto de sesión se genera solo.
 - **Catálogo:** campo «nombre para piezas» editable con sugerencia automática; el nombre del ERP no se toca.
   Etiquetas y subcategorías repetidas se unifican al importar. Los productos que desaparecen de la API
   se marcan «dado de baja», no se borran. Si Lucas sube una foto, gana la suya y se guardan las dos.

@@ -3,7 +3,7 @@ import { FormularioIngreso } from './FormularioIngreso'
 import { FormularioCrearClave } from './FormularioCrearClave'
 import { Logo } from '@/components/Logo'
 import { leerAjuste } from '@/lib/ajustes'
-import { hashDeClave, LARGO_MINIMO_CLAVE } from '@/lib/auth/clave-guardada'
+import { hashDeClave } from '@/lib/auth/clave-guardada'
 import { entorno } from '@/lib/entorno'
 import { urlMedia } from '@/lib/media'
 
@@ -22,7 +22,7 @@ export default async function PaginaIngreso({ searchParams }: { searchParams: Pr
             <p className="texto-suave">Sabor y Aroma</p>
           </div>
         </div>
-        {hash ? <FormularioIngreso volver={volver ?? '/'} /> : <FormularioCrearClave largoMinimo={LARGO_MINIMO_CLAVE} faltaCodigo={!entorno.codigoInstalacion} />}
+        {hash ? <FormularioIngreso volver={volver ?? '/'} /> : <FormularioCrearClave faltaCodigo={!entorno.codigoInstalacion} />}
       </div>
     </main>
   )

@@ -37,8 +37,8 @@ Anotalas en un lugar seguro (por ejemplo, tu gestor de contraseñas). **No las m
 - **`DB_CLAVE`**: contraseña de la base. **Solo letras y números**, 32 caracteres.
   Un generador de contraseñas con los símbolos desactivados sirve.
 - **`CODIGO_INSTALACION`**: un código que te va a pedir la plataforma la primera vez, para que
-  nadie más pueda crear la contraseña antes que vos. Cualquier frase larga que no se adivine.
-  Guardalo: también sirve para recuperar la contraseña.
+  nadie más pueda crear el PIN antes que vos. Cualquier frase larga que no se adivine.
+  Guardalo: también sirve para recuperar el PIN.
 
 ## 3. Crear el servicio en Dokploy
 
@@ -70,17 +70,17 @@ Anotalas en un lugar seguro (por ejemplo, tu gestor de contraseñas). **No las m
 ## 4. Primera entrada
 
 1. Abrí `https://marketing.saboryaroma.com`.
-2. Te pide el **código de instalación** y que crees tu **contraseña** (10 caracteres o más).
+2. Te pide el **código de instalación** y que crees tu **PIN** (de 4 a 8 números).
 3. Andá a **Catálogo › Sincronizar ahora**. La primera vez tarda unos **6 minutos**, porque copia
    las más de 2.000 fotos del ERP de a poco para no sobrecargarlo. Podés seguir usando la plataforma mientras tanto.
 4. En **Configuración** subí el logo.
 
-## Si te olvidás la contraseña
+## Si te olvidás el PIN
 
 1. En Dokploy › Environment agregá `REINICIAR_CLAVE=si` y apretá **Deploy**.
-2. Entrá a la plataforma: te pide crear una contraseña nueva con el código de instalación.
+2. Entrá a la plataforma: te pide crear un PIN nuevo con el código de instalación.
 3. **Sacá** `REINICIAR_CLAVE=si` de Environment y volvé a apretar **Deploy**.
-   (Si queda puesta, cada publicación borra la contraseña.)
+   (Si queda puesta, cada publicación borra el PIN.)
 
 ## Copias de seguridad
 
