@@ -111,6 +111,7 @@ function BarraSeleccion({ ids, elegidos, vaciar, cambiar, pendiente }: { ids: Se
         <span className="barra-seleccion-botones">
           <button className="btn btn-chico" onClick={() => setAbierta(!abierta)}><Icono nombre="list" tamano={16} />Ver elegidos</button>
           <button className="btn btn-chico" onClick={vaciar} disabled={pendiente}><Icono nombre="remove_done" tamano={16} />Vaciar</button>
+          <a className="btn btn-chico" href="/carruseles/nuevo"><Icono nombre="view_carousel" tamano={16} />Armar carrusel</a>
           <button className="btn btn-chico btn-pri" disabled={pendiente || armando} onClick={() => empezarArmar(() => crearPromoDesdeSeleccion())}>
             <Icono nombre="sell" tamano={16} />{armando ? 'Armando…' : 'Armar promo'}
           </button>

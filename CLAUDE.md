@@ -194,7 +194,23 @@ Poner contador visible y corte automático al llegar al tope.
   - Flujo: estilo → casillas en el catálogo → 5 placas en vivo → editar textos → .zip con los JPEG.
   - Se guardan los carruseles (borradores y terminados).
   - Render: Chromium sin pantalla (`playwright-core`) dentro de la imagen; tope de memoria de `app` a ~2 GB.
-  - Faltan: los 3 HTML de los carruseles y el logo oficial en archivo.
+  - **Hecho el 19/11/2026** con los 15 HTML que pasó Lucas (5 placas por estilo), pasados a plantillas en
+    `src/lib/carruseles/plantillas.ts` y servidos en `/render/carrusel/[id]?placa=N`:
+    - **Lanzamiento:** portada (2 fotos), productos (hasta 6, etiqueta washi desde la categoría), cómo comprar,
+      ¿por qué Sabor y Aroma? y cierre con QR. Las 3 del medio se pueden sacar. Sin precio.
+    - **NutriOfertas:** portada, una placa por producto (1 a 6, platos alternados solos) y cierre. Precio = lista
+      elegida − % (0 de entrada) con «antes» tachado si hay descuento; granel «el kg» y línea «A granel · 90 g, 250 g y 1 kg».
+    - **Recetas:** portada, ingredientes (hasta 5, con cantidad), preparación (2 a 4 pasos, «En N pasos» solo),
+      ¿por qué te hace bien? (se puede sacar; hasta 4) y cierre. Sin precio. Lucas escribe la receta (IA en etapa 4).
+    - Recursos creados por nosotros porque no venían (`public/piezas/`): papel crema, panorámica de acuarelas y
+      ramita de olivo de 5400 px (continúa de placa en placa), trazos de pincel verde y lima, y el QR de la tienda
+      (generado sin bibliotecas; Lucas tiene que confirmar que escanea). Fraunces (OFL) en `public/fuentes/`.
+    - Textos automáticos desde el catálogo: nombre en la placa (sin marca ni medida, minúscula de oración, 2 renglones),
+      línea chica, etiqueta, frase sugerida por categoría. La frase que escribe Lucas se guarda en `productos.frase_piezas`.
+    - Fotos: granel ampliado llenando la forma; envasado completo con margen. Textos que se achican solos sin «…».
+    - Editor igual al de promos: placa elegida en la tira → panel de esa placa; buscador para elegir cada producto;
+      revisión antes de exportar (falta producto o foto, pasos vacíos); texto del posteo automático y editable.
+    - Las casillas del catálogo sirven para promos y carruseles («Armar carrusel» en la barra de abajo).
 
 - **Etapa 3 (promos), adelantada el 18/11/2026.** Flyer igual al de referencia que pasó Lucas, con su marca:
   - Formatos: historia/WhatsApp 1080×1920, feed 1080×1350 y «uno por producto» 1080×1350. Si no entra, se parte
@@ -245,7 +261,7 @@ Poner contador visible y corte automático al llegar al tope.
 - [x] Paleta: la de los carruseles aprobados
 - [x] Tipografías: las dos familias (faltan los archivos de Utendo y Bluestars)
 - [x] El fucsia no entra
-- [ ] Los 3 HTML de los carruseles, al repo
+- [x] Los 3 HTML de los carruseles (recibidos el 19/11; los recursos los creamos nosotros)
 - [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
 - [x] DNS: registro A `marketing` creado; la plataforma ya anda en `marketing.saboryaroma.com`
 - [ ] ¿Qué servicio de IA de imágenes?

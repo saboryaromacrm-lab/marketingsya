@@ -59,6 +59,8 @@ export const productos = pgTable(
     nombreSugerido: text('nombre_sugerido').notNull(),
     // Lo carga Lucas a mano; si está vacío, las piezas usan el sugerido.
     nombrePiezas: text('nombre_piezas'),
+    // Frase corta para las piezas («Ideal para tus desayunos»): se guarda al usarla en un carrusel
+    frasePiezas: text('frase_piezas'),
     marcaId: integer('marca_id').references(() => marcas.id),
     categoria: text('categoria'),
     subcategoria: text('subcategoria'),
@@ -240,3 +242,21 @@ export const promoFilas = pgTable(
   },
   (t) => [index('promo_filas_promo').on(t.promoId, t.orden)],
 )
+
+// ---------------------------------------------------------------------------
+// Carruseles (etapa 2): los 3 estilos aprobados. El contenido de cada estilo va en `datos`
+// (ver src/lib/carruseles/tipos.ts); los productos se guardan por id y se leen del catálogo al dibujar.
+// ---------------------------------------------------------------------------
+export type EstiloCarrusel = 'lanzamiento' | 'nutriofertas' | 'recetas'
+export const carruseles = pgTable('carruseles', {
+  id: serial('id').primaryKey(),
+  estilo: text('estilo').$type<EstiloCarrusel>().notNull(),
+  titulo: text('titulo').notNull(),
+  listaId: integer('lista_id').notNull().default(3),
+  datos: jsonb('datos').$type<Record<string, unknown>>().notNull(),
+  // Texto del posteo editado a mano (null = se arma solo)
+  textoPosteo: text('texto_posteo'),
+  exportacionId: integer('exportacion_id'),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+})

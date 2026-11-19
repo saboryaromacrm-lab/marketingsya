@@ -152,7 +152,8 @@ export async function exportarPromo(id: number): Promise<Resultado<{ exportacion
 
 // ---------- buscador del editor ----------
 
-export type ResultadoBusqueda = { id: number; nombre: string; foto: string; precio: string | null }
+import type { ResultadoBusqueda } from '@/components/piezas/Editor'
+export type { ResultadoBusqueda }
 
 /** Productos para sumar a la promo: solo los que pueden ir en piezas (activos, con foto y no excluidos). */
 export async function buscarParaPromo(q: string, listaId: number): Promise<{ resultados: ResultadoBusqueda[]; aproximada: boolean }> {

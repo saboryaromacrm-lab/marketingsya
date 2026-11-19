@@ -8,7 +8,7 @@ export const MENU: SeccionMenu[] = [
     rotulo: 'Módulo',
     items: [
       { texto: 'Catálogo', href: '/catalogo', icono: 'inventory_2' },
-      { texto: 'Carruseles', href: '/carruseles', icono: 'view_carousel', etapa: 2 },
+      { texto: 'Carruseles', href: '/carruseles', icono: 'view_carousel' },
       { texto: 'Promos', href: '/promos', icono: 'sell' },
       { texto: 'Asesor IA', href: '/asesor', icono: 'auto_awesome', etapa: 4 },
       { texto: 'Publicaciones', href: '/publicaciones', icono: 'send', etapa: 5 },
