@@ -7,6 +7,7 @@ import { entorno } from '@/lib/entorno'
 
 export const COLA_SINCRONIZAR = 'sincronizar-catalogo'
 export const COLA_RENDER = 'renderizar-piezas'
+export const COLA_PUBLICAR = 'publicar-meta'
 
 const global = globalThis as unknown as { cola?: Promise<PgBoss> }
 
@@ -21,6 +22,10 @@ async function crear(): Promise<PgBoss> {
   }
   if (!(await boss.getQueue(COLA_RENDER))) {
     await boss.createQueue(COLA_RENDER, { retryLimit: 0, expireInSeconds: 10 * 60 })
+  }
+  // Los reintentos de las publicaciones los maneja la plataforma (por destino), no la cola
+  if (!(await boss.getQueue(COLA_PUBLICAR))) {
+    await boss.createQueue(COLA_PUBLICAR, { retryLimit: 0, expireInSeconds: 10 * 60 })
   }
   return boss
 }

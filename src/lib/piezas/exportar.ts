@@ -13,8 +13,8 @@ const { exportaciones } = esquema
 const base = () => `http://127.0.0.1:${process.env.PORT || 3000}`
 
 /** Crea la exportación y la pone en la cola. Devuelve su id. */
-export async function encolarExportacion(tipo: 'prueba' | 'carrusel' | 'promo', placas: string[], referenciaId: number | null = null) {
-  const [{ id }] = await db.insert(exportaciones).values({ tipo, referenciaId, placas, estado: 'en_cola' }).returning({ id: exportaciones.id })
+export async function encolarExportacion(tipo: 'prueba' | 'carrusel' | 'promo', placas: string[], referenciaId: number | null = null, huella: string | null = null) {
+  const [{ id }] = await db.insert(exportaciones).values({ tipo, referenciaId, placas, estado: 'en_cola', huella }).returning({ id: exportaciones.id })
   try {
     await (await cola()).send(COLA_RENDER, { id })
   } catch (e) {

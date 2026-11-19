@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Cabecera } from '@/components/Cabecera'
 import { Icono } from '@/components/Icono'
 import { nombresCortos, pesosPromo, precioPromo, textoOferta, textoPrecioErp, tituloComun } from '@/lib/promos/calculo'
@@ -86,6 +87,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const [quedanErp, setQuedanErp] = useState(erpFaltantes)
   const [sumando, empezarSumar] = useTransition()
   const [yendo, empezarIr] = useTransition()
+  const router = useRouter()
 
   // ---------- guardado automático (0,7 s después del último cambio) ----------
   const ultimo = useRef(inicial)
@@ -197,6 +199,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
             <EstadoGuardado estado={estado} />
             <button className="btn" disabled={yendo} onClick={() => empezarIr(async () => { await guardarYa(); await duplicarPromo(id) })}><Icono nombre="content_copy" />Duplicar</button>
             <Exportar exportar={() => exportarPromo(id)} inicial={exportacionInicial} antes={guardarYa} habilitado={placas.length > 0 && !rev.bloquean.length} motivo={!totalProductos ? 'Sumá productos primero' : rev.bloquean.length ? 'Revisá lo que falta (a la derecha)' : ''} />
+            <button className="btn" disabled={yendo || placas.length === 0 || rev.bloquean.length > 0} title={placas.length === 0 || rev.bloquean.length > 0 ? 'Revisá lo que falta (a la derecha)' : 'Publicar en Instagram y Facebook'} onClick={() => empezarIr(async () => { await guardarYa(); router.push(`/publicaciones/nueva?promo=${id}`) })}><Icono nombre="send" />Publicar</button>
           </>
         }
       />

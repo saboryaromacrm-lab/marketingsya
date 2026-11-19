@@ -41,7 +41,21 @@ export type Config = {
     criterios: { nuevos: boolean; bajaron: boolean; epoca: boolean; sinUsar: boolean; diasSinUsar: number }
     ideasPorVez: number
   }
+  meta: {
+    // Destinos marcados de entrada en «Publicar»
+    destinos: { feed: { instagram: boolean; facebook: boolean }; historia: { instagram: boolean; facebook: boolean } }
+    horaFeed: string // HH:MM, hora de Formosa
+    horaHistoria: string
+    reintentos: number // reintentos automáticos si Meta falla (cada 5 minutos)
+    textoAlt: boolean
+    // Dirección pública de la plataforma: Meta descarga las imágenes de ahí
+    urlPublica: string
+    versionApi: string
+  }
 }
+
+/** Minutos entre un reintento y el siguiente cuando Meta falla. */
+export const MINUTOS_ENTRE_REINTENTOS = 5
 
 export const CONFIG_INICIAL: Config = {
   contacto: { web: 'tiendaonline.saboryaroma.com', whatsapp: '370 462-1563', instagram: '@saboryaroma__' },
@@ -67,6 +81,15 @@ export const CONFIG_INICIAL: Config = {
     criterios: { nuevos: true, bajaron: true, epoca: true, sinUsar: true, diasSinUsar: 30 },
     ideasPorVez: 8,
   },
+  meta: {
+    destinos: { feed: { instagram: true, facebook: true }, historia: { instagram: true, facebook: true } },
+    horaFeed: '10:00',
+    horaHistoria: '19:00',
+    reintentos: 3,
+    textoAlt: true,
+    urlPublica: 'https://marketing.saboryaroma.com',
+    versionApi: 'v24.0',
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -82,11 +105,16 @@ const booleano = (v: unknown, def: boolean) => (typeof v === 'boolean' ? v : def
 const lista = (v: unknown, def: string[], maxItems = 40, maxLargo = 120) =>
   Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter(Boolean).map((x) => x.slice(0, maxLargo)))].slice(0, maxItems) : def
 const deLista = <T extends string>(v: unknown, opciones: readonly T[], def: T): T => (opciones.includes(v as T) ? (v as T) : def)
+const hora = (v: unknown, def: string) => {
+  const m = typeof v === 'string' ? /^(\d{1,2}):(\d{2})$/.exec(v.trim()) : null
+  return m && Number(m[1]) < 24 && Number(m[2]) < 60 ? `${m[1].padStart(2, '0')}:${m[2]}` : def
+}
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {})
 
 export function limpiarConfig(valor: unknown): Config {
   const v = obj(valor)
-  const c = obj(v.contacto), p = obj(v.piezas), ia = obj(v.ia)
+  const c = obj(v.contacto), p = obj(v.piezas), ia = obj(v.ia), m = obj(v.meta)
+  const md = obj(m.destinos), mf = obj(md.feed), mh = obj(md.historia)
   const d = CONFIG_INICIAL
   const f = obj(p.formatos), cal = obj(ia.calendario), cr = obj(ia.criterios)
   const hashtags = lista(ia.hashtags, d.ia.hashtags, 15, 40).map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, ''))
@@ -125,6 +153,22 @@ export function limpiarConfig(valor: unknown): Config {
         diasSinUsar: numero(cr.diasSinUsar, d.ia.criterios.diasSinUsar, 1, 365),
       },
       ideasPorVez: numero(ia.ideasPorVez, d.ia.ideasPorVez, 3, 20),
+    },
+    meta: {
+      destinos: {
+        feed: { instagram: booleano(mf.instagram, d.meta.destinos.feed.instagram), facebook: booleano(mf.facebook, d.meta.destinos.feed.facebook) },
+        historia: { instagram: booleano(mh.instagram, d.meta.destinos.historia.instagram), facebook: booleano(mh.facebook, d.meta.destinos.historia.facebook) },
+      },
+      horaFeed: hora(m.horaFeed, d.meta.horaFeed),
+      horaHistoria: hora(m.horaHistoria, d.meta.horaHistoria),
+      reintentos: Math.round(numero(m.reintentos, d.meta.reintentos, 0, 5)),
+      textoAlt: booleano(m.textoAlt, d.meta.textoAlt),
+      urlPublica: (() => {
+        const u = texto(m.urlPublica, d.meta.urlPublica, 120).replace(/\/+$/, '')
+        const conEsquema = /^https?:\/\//.test(u) ? u : `https://${u}`
+        try { return new URL(conEsquema).origin } catch { return d.meta.urlPublica }
+      })(),
+      versionApi: typeof m.versionApi === 'string' && /^v\d{1,2}\.\d$/.test(m.versionApi.trim()) ? m.versionApi.trim() : d.meta.versionApi,
     },
   }
 }

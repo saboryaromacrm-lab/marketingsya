@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { COOKIE_SESION, tokenValido } from '@/lib/auth/sesion'
 import { firmaValida, rutaCanonica } from '@/lib/render/firma'
 
-// Todo pide sesión, salvo la pantalla de ingreso, el chequeo de salud
-// y (más adelante) las imágenes públicas que necesita Meta.
+// Todo pide sesión, salvo la pantalla de ingreso, el chequeo de salud,
+// las imágenes públicas que necesita Meta y la política de privacidad.
 export function proxy(req: NextRequest) {
   const secreto = process.env.SESION_SECRETO ?? ''
   if (tokenValido(req.cookies.get(COOKIE_SESION)?.value, secreto)) return NextResponse.next()
@@ -20,6 +20,7 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Públicos: fotos y piezas (/media, Meta las necesita), logos (/marca), fuentes (/fuentes) y recursos de los carruseles (/piezas).
-  matcher: ['/((?!ingresar|api/salud|media|marca|fuentes|piezas|_next/static|_next/image|favicon.ico|icono.png).*)'],
+  // Públicos: fotos y piezas (/media, Meta las necesita), logos (/marca), fuentes (/fuentes), recursos de los carruseles (/piezas)
+  // y la política de privacidad (/privacidad, la pide Meta).
+  matcher: ['/((?!ingresar|api/salud|media|marca|fuentes|piezas|privacidad|_next/static|_next/image|favicon.ico|icono.png).*)'],
 }

@@ -8,10 +8,10 @@ import type { EstadoIA } from '@/lib/ia/claude'
 import { dolares } from '@/lib/ia/precios'
 import { borrarClaveIA, guardarClaveIA, guardarConfig } from './acciones-config'
 
-type Seccion = 'contacto' | 'piezas' | 'ia'
+type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta'
 
 /** Botón «Guardar cambios» con su estado. */
-function useGuardar<K extends Seccion>(seccion: K) {
+export function useGuardar<K extends Seccion>(seccion: K) {
   const [pendiente, empezar] = useTransition()
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null)
   const guardar = (valores: Partial<Config[K]>, alGuardar?: (c: Config) => void) =>
@@ -30,7 +30,7 @@ function useGuardar<K extends Seccion>(seccion: K) {
   return { guardar, pie }
 }
 
-function Campo({ rotulo, children, ayuda }: { rotulo: string; children: ReactNode; ayuda?: ReactNode }) {
+export function Campo({ rotulo, children, ayuda }: { rotulo: string; children: ReactNode; ayuda?: ReactNode }) {
   return (
     <label className="campo">
       <span className="rotulo-columna">{rotulo}</span>
@@ -40,7 +40,7 @@ function Campo({ rotulo, children, ayuda }: { rotulo: string; children: ReactNod
   )
 }
 
-function Interruptor({ valor, alCambiar, texto }: { valor: boolean; alCambiar: (v: boolean) => void; texto: ReactNode }) {
+export function Interruptor({ valor, alCambiar, texto }: { valor: boolean; alCambiar: (v: boolean) => void; texto: ReactNode }) {
   return (
     <label className="interruptor">
       <input type="checkbox" role="switch" checked={valor} onChange={(e) => alCambiar(e.target.checked)} />
@@ -50,7 +50,7 @@ function Interruptor({ valor, alCambiar, texto }: { valor: boolean; alCambiar: (
   )
 }
 
-function Segmentado<T extends string>({ valor, opciones, alCambiar }: { valor: T; opciones: [T, string][]; alCambiar: (v: T) => void }) {
+export function Segmentado<T extends string>({ valor, opciones, alCambiar }: { valor: T; opciones: [T, string][]; alCambiar: (v: T) => void }) {
   return (
     <div className="segmentado" role="radiogroup">
       {opciones.map(([v, t]) => (

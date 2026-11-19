@@ -184,6 +184,8 @@ export const exportaciones = pgTable('exportaciones', {
   archivos: jsonb('archivos').$type<string[]>().notNull().default([]),
   zip: text('zip'),
   error: text('error'),
+  // Huella del HTML de las placas al exportar: si la pieza (o el catálogo) cambió, ya no coincide y hay que exportar de nuevo
+  huella: text('huella'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   terminadoEn: timestamp('terminado_en', { withTimezone: true }),
 })
@@ -302,3 +304,54 @@ export const iaChat = pgTable('ia_chat', {
   texto: text('texto').notNull(),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// ---------------------------------------------------------------------------
+// Publicaciones (etapa 5): cada vez que Lucas aprueba publicar una pieza (ahora o programada).
+// Cada destino (Instagram feed, Instagram historia, Facebook…) lleva su propio estado,
+// así un reintento solo repite lo que falló y nunca publica dos veces lo que ya salió.
+// ---------------------------------------------------------------------------
+export type EstadoPublicacion = 'programada' | 'publicando' | 'reintentando' | 'publicada' | 'parcial' | 'error' | 'cancelada'
+export type EstadoDestino = 'pendiente' | 'publicando' | 'ok' | 'error' | 'cancelado'
+export type RedSocial = 'instagram' | 'facebook'
+export type UbicacionDestino = 'feed' | 'historia'
+
+export const publicaciones = pgTable(
+  'publicaciones',
+  {
+    id: serial('id').primaryKey(),
+    tipo: text('tipo').$type<'carrusel' | 'promo'>().notNull(),
+    referenciaId: integer('referencia_id').notNull(),
+    titulo: text('titulo').notNull(),
+    texto: text('texto').notNull().default(''),
+    textoAlt: text('texto_alt'),
+    // Las imágenes salen de esta exportación (si estaba al día se reusa; si no, se arma una nueva al aprobar)
+    exportacionId: integer('exportacion_id').references(() => exportaciones.id, { onDelete: 'set null' }),
+    programadaPara: timestamp('programada_para', { withTimezone: true }).notNull(),
+    // Próximo reintento (si Meta falló y quedan reintentos)
+    proximoIntento: timestamp('proximo_intento', { withTimezone: true }),
+    intentos: integer('intentos').notNull().default(0),
+    estado: text('estado').$type<EstadoPublicacion>().notNull(),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    terminadoEn: timestamp('terminado_en', { withTimezone: true }),
+  },
+  (t) => [index('publicaciones_estado').on(t.estado, t.programadaPara), index('publicaciones_pieza').on(t.tipo, t.referenciaId)],
+)
+
+export const publicacionDestinos = pgTable(
+  'publicacion_destinos',
+  {
+    id: serial('id').primaryKey(),
+    publicacionId: integer('publicacion_id').notNull().references(() => publicaciones.id, { onDelete: 'cascade' }),
+    red: text('red').$type<RedSocial>().notNull(),
+    ubicacion: text('ubicacion').$type<UbicacionDestino>().notNull(),
+    // Qué placas de la exportación van (posiciones, empezando en 0), en orden
+    placas: jsonb('placas').$type<number[]>().notNull(),
+    estado: text('estado').$type<EstadoDestino>().notNull().default('pendiente'),
+    error: text('error'),
+    // Id de lo publicado en Meta y su enlace
+    metaId: text('meta_id'),
+    enlace: text('enlace'),
+    publicadoEn: timestamp('publicado_en', { withTimezone: true }),
+  },
+  (t) => [index('publicacion_destinos_pub').on(t.publicacionId)],
+)

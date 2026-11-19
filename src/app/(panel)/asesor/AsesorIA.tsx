@@ -147,7 +147,10 @@ function Calendario(p: Props & Ctx) {
                   {x.angulo && <span className="texto-chico">{x.angulo}</span>}
                   {x.productos.length > 0 && <Minis ids={x.productos} info={p.info} />}
                   {x.borrador ? (
-                    <Link className="btn btn-chico" href={x.borrador.tipo === 'promo' ? `/promos/${x.borrador.id}` : `/carruseles/${x.borrador.id}`}><Icono nombre="open_in_new" tamano={16} />Abrir borrador</Link>
+                    <span className="fila-chips">
+                      <Link className="btn btn-chico" href={x.borrador.tipo === 'promo' ? `/promos/${x.borrador.id}` : `/carruseles/${x.borrador.id}`}><Icono nombre="open_in_new" tamano={16} />Abrir borrador</Link>
+                      <Link className="btn btn-chico" href={`/publicaciones/nueva?${x.borrador.tipo}=${x.borrador.id}&fecha=${x.dia}`}><Icono nombre="send" tamano={16} />Publicar</Link>
+                    </span>
                   ) : x.tipo !== 'historia' ? (
                     <button className="btn btn-chico" disabled={pendiente || (x.tipo === 'receta' && !!p.bloqueado)} onClick={() => armar(x.k)}>
                       <Icono nombre={armando === x.k ? 'sync' : 'note_add'} className={armando === x.k ? 'girando' : ''} tamano={16} />
@@ -161,7 +164,7 @@ function Calendario(p: Props & Ctx) {
           )
         })}
       </div>
-      <p className="texto-chico">«Armar borrador» crea el carrusel o la promo con los productos cargados (la receta la escribe la IA). Nada se publica sin que lo apruebes.{semana ? ` Propuesta del ${new Date(semana.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}.` : ''}</p>
+      <p className="texto-chico">«Armar borrador» crea el carrusel o la promo con los productos cargados (la receta la escribe la IA). Nada se publica sin que lo apruebes: «Publicar» te propone el día de la idea.{semana ? ` Propuesta del ${new Date(semana.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}.` : ''}</p>
     </>
   )
 }

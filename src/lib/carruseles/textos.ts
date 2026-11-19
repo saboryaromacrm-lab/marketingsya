@@ -48,7 +48,7 @@ export function partirEnDos(t: string): string {
   return `${p.slice(0, mejor).join(' ')} / ${p.slice(mejor).join(' ')}`
 }
 
-type ProductoTexto = { nombre: string; marca?: string | null; granel?: boolean; categoria?: string | null; presentaciones?: { tamano: string; kg: number | null }[] }
+export type ProductoTexto = { nombre: string; marca?: string | null; granel?: boolean; categoria?: string | null; presentaciones?: { tamano: string; kg: number | null }[] }
 
 /** Nombre grande de la placa: sin medida ni marca, en minúscula de oración y en 2 renglones. */
 export function nombreEnPlaca(p: ProductoTexto): string {

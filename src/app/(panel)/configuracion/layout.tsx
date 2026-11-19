@@ -12,6 +12,7 @@ export default function LayoutConfiguracion({ children }: { children: ReactNode 
             { texto: 'General', href: '/configuracion', icono: 'tune', exacto: true },
             { texto: 'Piezas', href: '/configuracion/piezas', icono: 'image' },
             { texto: 'Asesor IA', href: '/configuracion/asesor', icono: 'auto_awesome' },
+            { texto: 'Meta', href: '/configuracion/meta', icono: 'share' },
             { texto: 'Seguridad', href: '/configuracion/seguridad', icono: 'lock' },
             { texto: 'Motor de piezas', href: '/configuracion/motor', icono: 'memory' },
           ]}
