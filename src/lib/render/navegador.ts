@@ -6,7 +6,7 @@ import type { Browser } from 'playwright-core'
 // Los renders van de a uno: así la memoria queda acotada aunque se pidan varios a la vez.
 
 const INACTIVIDAD_MS = 3 * 60_000
-const global = globalThis as unknown as { navegador?: Promise<Browser>; cierre?: NodeJS.Timeout; turno?: Promise<unknown> }
+const global = globalThis as unknown as { navegador?: Promise<Browser>; cierre?: NodeJS.Timeout; turno?: Promise<unknown>; enUso?: number }
 
 async function abrir(): Promise<Browser> {
   const { chromium } = await import('playwright-core')
@@ -23,6 +23,8 @@ async function abrir(): Promise<Browser> {
 function programarCierre() {
   clearTimeout(global.cierre)
   global.cierre = setTimeout(async () => {
+    // Nunca se cierra en medio de un render
+    if (global.enUso) return
     const b = await global.navegador?.catch(() => undefined)
     global.navegador = undefined
     await b?.close().catch(() => {})
@@ -34,10 +36,14 @@ function programarCierre() {
 export async function conNavegador<T>(fn: (b: Browser) => Promise<T>): Promise<T> {
   const anterior = global.turno ?? Promise.resolve()
   const actual = anterior.catch(() => {}).then(async () => {
+    // El reloj de cierre del render anterior se frena: si no, cerraría el navegador en medio de este
+    clearTimeout(global.cierre)
+    global.enUso = (global.enUso ?? 0) + 1
     global.navegador ??= abrir().catch((e) => { global.navegador = undefined; throw e })
     try {
       return await fn(await global.navegador)
     } finally {
+      global.enUso -= 1
       programarCierre()
     }
   })

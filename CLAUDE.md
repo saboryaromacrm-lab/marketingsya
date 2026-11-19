@@ -262,6 +262,36 @@ Poner contador visible y corte automático al llegar al tope.
     Seguridad (PIN e ingresos) y Motor. Todo se guarda en el ajuste `configuracion` y se valida en `limpiarConfig`.
   - **Pruebas sin gastar:** un servidor de prueba imita la API (`ANTHROPIC_BASE_URL`); la prueba de punta a punta no usa IA real.
 
+- **Etapa 5 (publicación en Instagram y Facebook), hecha el 19/11/2026:**
+  - **Conexión:** token del **usuario del sistema** del portafolio comercial (no vence), pegado en Configuración › Meta,
+    probado contra Meta y guardado cifrado (AES-256-GCM, llave propia derivada de `SESION_SECRETO`, ajuste `meta_token`).
+    Página e Instagram de empresa se detectan solos con `me/accounts` (ajuste `meta_cuentas`; si hay varias páginas, se elige).
+    «Probar conexión»: token, vencimiento, permisos, cupo del día (`content_publishing_limit`) y que la dirección pública responda.
+    Sin paquetes: pedidos HTTP a la Graph API (`src/lib/meta/`), versión configurable (v24.0 de entrada).
+  - **Destinos:** carrusel → feed de Instagram (carrusel) + página de Facebook (un posteo con todas las fotos). Promo: feed y «uno por
+    producto» al feed; historias a historias de Instagram y de Facebook (cada historia es un destino aparte). Interruptores por publicación;
+    los de entrada, en Configuración. Primero Instagram, después Facebook. Si Facebook rechaza la historia, lo demás sale igual.
+  - **Pantalla «Publicar»** (`/publicaciones/nueva?carrusel=N` o `?promo=N`, botón «Publicar» en los editores y en el calendario del asesor):
+    imágenes en orden (se pueden destildar), texto del posteo (el mismo del editor; lo editado acá queda en la pieza), «Mejorar con IA»,
+    texto alternativo automático editable, Ahora (con confirmación) o Programar (día y hora de Formosa, UTC−3; programar ya es la aprobación).
+    Horas sugeridas 10:00 feed y 19:00 historias (Configuración); desde el calendario propone el día de la idea. Hasta 75 días adelante.
+  - **Revisión antes de aprobar** (pantalla y servidor): productos con foto y no dados de baja, 1 a 10 imágenes por posteo en Instagram,
+    texto ≤ 2.200 letras, ≤ 30 hashtags y ≤ 20 menciones, Meta conectado, hora futura.
+  - **Imágenes al día:** cada exportación guarda la **huella** del HTML de sus placas. Si la pieza, un precio, una foto o el contacto cambiaron,
+    al aprobar se exporta de nuevo; si no, se reusa. Meta descarga los JPEG desde `/media` en la dirección pública (Configuración › Meta › Avanzado).
+  - **Motor** (`src/lib/publicaciones/motor.ts`): tablas `publicaciones` y `publicacion_destinos` (estado por destino). Una revisión cada 20 s
+    manda a la cola `publicar-meta` (pg-boss) lo que ya tiene que salir; la publicación se toma de forma atómica (nunca dos a la vez).
+    Reintentos: 3 de entrada, cada 5 minutos (configurable 0 a 5), **solo de lo que falló**. No se reintenta: token vencido o revocado
+    (corta todo y pide cargar otro), falta de permisos, tope de 100 por día, medida rechazada. Si la conexión se corta justo al publicar
+    (o el servidor se reinicia en ese momento), queda «no sabemos si salió» y no se reintenta solo: así nunca sale dos veces.
+  - **Historial** (`/publicaciones`): programada / publicando / reintentando / publicada / salió en parte / falló / cancelada, con el motivo,
+    enlaces «Ver en Instagram/Facebook», cancelar programadas y «Reintentar» (solo lo que falló). Se actualiza solo mientras algo está en curso.
+    En el celular, tarjetas. Inicio muestra las fallas de la semana y la próxima programada. Instagram no deja borrar por la API.
+  - **Política de privacidad pública** en `/privacidad` (la pide Meta para el modo «Activo»), con el contacto de Configuración.
+  - Arreglado de paso: el navegador de render se podía cerrar por inactividad en medio de una exportación que arrancaba justo a los 3 minutos.
+  - **Pruebas sin Meta real:** un servidor que imita la Graph API (`META_GRAPH_URL`) y descarga las imágenes como Meta. La prueba final
+    es la primera publicación de verdad. Fuera de alcance por ahora: etiquetar productos, ubicación, colaboradores y comentarios.
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
@@ -288,4 +318,4 @@ Poner contador visible y corte automático al llegar al tope.
 - [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
 - [x] DNS: registro A `marketing` creado; la plataforma ya anda en `marketing.saboryaroma.com`
 - [ ] ¿Qué servicio de IA de imágenes?
-- [ ] Credenciales de Meta: app ID, cuenta publicitaria, token
+- [ ] Credenciales de Meta: el token de publicación lo carga Lucas en Configuración › Meta (guía en `docs/INSTALACION.md`, paso 6); la cuenta publicitaria hace falta en la etapa 6

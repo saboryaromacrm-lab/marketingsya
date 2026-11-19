@@ -6,6 +6,7 @@ import { asc, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import type { EstiloCarrusel } from '@/lib/db/esquema'
 import { encolarExportacion } from '@/lib/piezas/exportar'
+import { cargarPieza } from '@/lib/publicaciones/piezas'
 import { cargarCarrusel, planDePlacas, precioNutri, productosPieza } from '@/lib/carruseles/datos'
 import { datosIniciales, ESTILOS, idsDe, limpiarDatos, type DatosCarrusel, type DatosNutriofertas, type DatosRecetas } from '@/lib/carruseles/tipos'
 import { hoyFormosa } from '@/lib/promos/fechas'
@@ -107,7 +108,7 @@ export async function exportarCarrusel(id: number): Promise<Resultado<{ exportac
   if (sinFoto.length) return { error: `No se puede exportar: ${sinFoto.map((p) => `«${p!.nombre}»`).join(', ')} no ${sinFoto.length === 1 ? 'tiene' : 'tienen'} foto.` }
   const placas = planDePlacas(c)
   try {
-    const exportacionId = await encolarExportacion('carrusel', placas.map((p) => p.ruta), id)
+    const exportacionId = await encolarExportacion('carrusel', placas.map((p) => p.ruta), id, (await cargarPieza('carrusel', id))?.huella ?? null)
     await db.update(carruseles).set({ exportacionId }).where(eq(carruseles.id, id))
     return { ok: true, exportacionId }
   } catch {

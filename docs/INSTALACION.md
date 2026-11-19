@@ -87,6 +87,28 @@ Anotalas en un lugar seguro (por ejemplo, tu gestor de contraseñas). **No las m
 
 El gasto del mes se ve en Inicio, en el Asesor y en Configuración. Al llegar al tope, la IA se apaga sola hasta el día 1.
 
+## 6. Conectar Instagram y Facebook (una vez)
+
+Hace falta: el Instagram como cuenta de **empresa** (no de creador), vinculado a la página de Facebook,
+y las dos dentro de tu portafolio comercial (business.facebook.com).
+
+1. **Crear la app:** en **developers.facebook.com › Mis apps › Crear app**, tipo **Negocio**, asociada a tu portafolio de Sabor y Aroma.
+   En la configuración básica de la app pegá la política de privacidad: `https://marketing.saboryaroma.com/privacidad`
+   (también sirve como «instrucciones para borrar datos»). Pasá la app a modo **Activo**.
+2. **Crear el usuario del sistema:** en **business.facebook.com › Configuración del negocio › Usuarios del sistema › Agregar**,
+   nombre `Plataforma marketing`, rol **Administrador**.
+3. **Asignarle los activos** (botón «Asignar activos»), con control total: la **app**, la **página de Facebook** y la **cuenta de Instagram**.
+4. **Generar el token** (botón «Generar token»): elegí la app, vencimiento **Nunca** y marcá los permisos
+   `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts` y `business_management`.
+   Copialo. **No lo mandes por chat ni por mail.**
+5. En la plataforma: **Configuración › Meta › Conexión con Meta**, pegalo y apretá **Probar y guardar**.
+   La página y el Instagram se detectan solos. Después tocá **Probar conexión**: tienen que salir todos los tildes verdes
+   (si la dirección pública no responde, Meta no va a poder bajar las imágenes).
+6. Antes de publicar, cambiá el PIN por uno de 6 a 8 dígitos en **Configuración › Seguridad**.
+
+Meta cambia seguido los nombres de esos menús: si algo no aparece igual, buscá «Usuarios del sistema» en la configuración del negocio.
+La primera publicación de verdad es la prueba final: conviene hacerla con una pieza sencilla.
+
 ## Si te olvidás el PIN
 
 1. En Dokploy › Environment agregá `REINICIAR_CLAVE=si` y apretá **Deploy**.

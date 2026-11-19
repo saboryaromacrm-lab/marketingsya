@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Cabecera } from '@/components/Cabecera'
 import { Icono } from '@/components/Icono'
 import { Buscador, EstadoGuardado, Exportar, MiniPlaca, VistaPlaca, type Exportacion } from '@/components/piezas/Editor'
@@ -10,7 +11,8 @@ import type { ContactoTexto } from '@/lib/carruseles/textos'
 import { accionMejorarTexto, accionSugerirCampo } from '../../asesor/acciones'
 import type { EstiloCarrusel } from '@/lib/db/esquema'
 import { pesosPromo, precioPromo } from '@/lib/promos/calculo'
-import { enUnaLinea, etiquetaDeCategoria, fraseSugerida, lineaChica, nombreCorto, nombreEnPlaca, textoIngrediente, textoPosteo } from '@/lib/carruseles/textos'
+import { etiquetaDeCategoria, fraseSugerida, lineaChica, nombreCorto, nombreEnPlaca, textoIngrediente } from '@/lib/carruseles/textos'
+import { posteoCarrusel } from '@/lib/carruseles/posteo'
 import { datosIniciales, ESTILOS, idsDe, MAX, placasDe, type DatosCarrusel, type DatosLanzamiento, type DatosNutriofertas, type DatosRecetas, type Id } from '@/lib/carruseles/tipos'
 import { buscarParaPromo } from '../../promos/acciones'
 import { borrarCarrusel, duplicarCarrusel, exportarCarrusel, guardarCarrusel, infoProductosCarrusel, type InfoCarrusel } from '../acciones'
@@ -69,21 +71,6 @@ function revisar(f: Form, info: Info): { bloquean: string[]; avisos: string[] } 
   return { bloquean, avisos }
 }
 
-function posteoAutomatico(f: Form, info: Info, contacto: ContactoTexto, hashtags: string[]): string {
-  const nombre = (id: Id) => (id != null && info[id] ? nombreCorto(info[id]) : null)
-  const lista = (ids: Id[]) => [...new Set(ids.map(nombre).filter((x): x is string => !!x))]
-  if (f.estilo === 'nutriofertas') {
-    const d = f.datos as DatosNutriofertas
-    return textoPosteo('nutriofertas', { titulo: enUnaLinea(d.portada.titulo), productos: lista(d.productos.map((p) => p.id)), contacto, hashtags })
-  }
-  if (f.estilo === 'recetas') {
-    const d = f.datos as DatosRecetas
-    return textoPosteo('recetas', { titulo: enUnaLinea(d.portada.titulo), bajada: d.ingredientes.bajada, productos: lista(d.ingredientes.items.map((p) => p.id)), contacto, hashtags })
-  }
-  const d = f.datos as DatosLanzamiento
-  return textoPosteo('lanzamiento', { titulo: enUnaLinea(d.portada.titulo), bajada: d.productos.subtitulo, productos: lista(d.productos.items.map((p) => p.id)).slice(0, 4), contacto, hashtags })
-}
-
 export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, contacto, hashtags, ia }: Props) {
   const [form, setForm] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
@@ -92,6 +79,7 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
   const [version, setVersion] = useState(0)
   const [estado, setEstado] = useState<'guardado' | 'cambios' | 'guardando' | { error: string }>('guardado')
   const [yendo, empezarIr] = useTransition()
+  const router = useRouter()
 
   // ---------- guardado automático (0,7 s después del último cambio) ----------
   const ultimo = useRef(inicial)
@@ -150,7 +138,7 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
   const vista = placas[Math.min(indice, placas.length - 1)]
   const rev = revisar(form, info)
   const ids = idsDe(form.estilo, form.datos)
-  const auto = posteoAutomatico(form, info, contacto, hashtags)
+  const auto = posteoCarrusel(form.estilo, form.datos, info, contacto, hashtags)
   const descripcion = `carrusel ${ESTILOS[form.estilo].nombre} «${form.titulo}»`
   const exportado = exportacionInicial?.estado === 'ok'
 
@@ -166,6 +154,7 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
             <EstadoGuardado estado={estado} />
             <button className="btn" disabled={yendo} onClick={() => empezarIr(async () => { await guardarYa(); await duplicarCarrusel(id) })}><Icono nombre="content_copy" />Duplicar</button>
             <Exportar exportar={() => exportarCarrusel(id)} inicial={exportacionInicial} antes={guardarYa} habilitado={!rev.bloquean.length} motivo="Revisá lo que falta (a la derecha)" />
+            <button className="btn" disabled={yendo || rev.bloquean.length > 0} title={rev.bloquean.length > 0 ? 'Revisá lo que falta (a la derecha)' : 'Publicar en Instagram y Facebook'} onClick={() => empezarIr(async () => { await guardarYa(); router.push(`/publicaciones/nueva?carrusel=${id}`) })}><Icono nombre="send" />Publicar</button>
           </>
         }
       />

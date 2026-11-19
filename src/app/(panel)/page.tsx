@@ -6,9 +6,11 @@ import { ultimaSincronizacionBuena } from '@/lib/catalogo/iniciar'
 import { cuando, numero, plural } from '@/lib/formato'
 import { estadoIA } from '@/lib/ia/claude'
 import { dolares } from '@/lib/ia/precios'
+import { resumenPublicaciones } from '@/lib/publicaciones/resumen'
+import { textoCuando } from '@/lib/publicaciones/reglas'
 
 export default async function Inicio() {
-  const [r, ultima, ia] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), estadoIA()])
+  const [r, ultima, ia, pub] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), estadoIA(), resumenPublicaciones()])
   const irAlCatalogo = <Link className="btn btn-pri btn-chico" href="/catalogo">Ir al catálogo</Link>
   return (
     <div className="contenido">
@@ -29,6 +31,24 @@ export default async function Inicio() {
       ) : (
         <Aviso tono={ia.aviso ? 'ambar' : 'verde'} dato={`IA: ${dolares(ia.gasto)} de ${dolares(ia.tope)} este mes`} accion={<Link className="btn btn-chico" href="/asesor">Ir al asesor</Link>}>
           {ia.cortada ? 'Llegaste al tope: vuelve el día 1.' : ia.aviso ? `Ya usaste el ${Math.round((ia.gasto / ia.tope) * 100)} % del tope.` : 'Ideas, calendario, recetas y textos.'}
+        </Aviso>
+      )}
+      {pub.fallidas.length > 0 && (
+        <Aviso tono="ambar" dato={`${plural(pub.fallidas.length, 'publicación falló', 'publicaciones fallaron')}:`} accion={<Link className="btn btn-chico" href="/publicaciones?ver=error">Revisar</Link>}>
+          «{pub.fallidas[0].titulo}»{pub.fallidas[0].error ? `. ${pub.fallidas[0].error}` : ''}
+        </Aviso>
+      )}
+      {!pub.metaConectada ? (
+        <Aviso tono="ambar" dato="Meta todavía no está conectado:" accion={<Link className="btn btn-chico" href="/configuracion/meta">Conectar</Link>}>
+          cargá el token en Configuración › Meta para publicar en Instagram y Facebook.
+        </Aviso>
+      ) : pub.proxima ? (
+        <Aviso tono="verde" dato={`Próxima publicación ${textoCuando(pub.proxima.programadaPara)}:`} accion={<Link className="btn btn-chico" href="/publicaciones?ver=programadas">Ver</Link>}>
+          «{pub.proxima.titulo}»{pub.programadas > 1 ? ` y ${plural(pub.programadas - 1, 'más programada', 'más programadas')}` : ''}.
+        </Aviso>
+      ) : (
+        <Aviso tono="verde" dato="Nada programado para publicar." accion={<Link className="btn btn-chico" href="/carruseles">Ir a carruseles</Link>}>
+          Abrí un carrusel o una promo y tocá «Publicar».
         </Aviso>
       )}
       {ultima && r.sinFoto > 0 && (

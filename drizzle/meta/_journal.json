@@ -71,6 +71,13 @@
       "when": 1795089077077,
       "tag": "0009_asesor_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795109604028,
+      "tag": "0010_publicaciones",
+      "breakpoints": true
     }
   ]
 }

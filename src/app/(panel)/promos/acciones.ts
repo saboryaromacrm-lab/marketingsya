@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { asc, eq, inArray } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { encolarExportacion } from '@/lib/piezas/exportar'
+import { cargarPieza } from '@/lib/publicaciones/piezas'
 import { cargarPromo, filasDelErp, planDePlacas, rutaPlaca } from '@/lib/promos/datos'
 import { leerFiltros } from '@/lib/catalogo/filtros'
 import { buscarProductos } from '@/lib/catalogo/listado'
@@ -146,7 +147,7 @@ export async function exportarPromo(id: number): Promise<Resultado<{ exportacion
   const placas = planDePlacas(d)
   if (!placas.length) return { error: 'No hay nada para exportar: sumá productos y elegí al menos un formato.' }
   try {
-    const exportacionId = await encolarExportacion('promo', placas.map((p) => rutaPlaca(id, p)), id)
+    const exportacionId = await encolarExportacion('promo', placas.map((p) => rutaPlaca(id, p)), id, (await cargarPieza('promo', id))?.huella ?? null)
     await db.update(promos).set({ exportacionId }).where(eq(promos.id, id))
     return { ok: true, exportacionId, placas: placas.length }
   } catch {
