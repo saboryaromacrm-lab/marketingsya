@@ -99,17 +99,23 @@ export const textoIngrediente = (p: ProductoTexto) => `de ${nombreCorto(p).toLow
 // ---------------------------------------------------------------------------
 // Texto del posteo (lo que va debajo del carrusel en Instagram)
 // ---------------------------------------------------------------------------
-const CIERRE = '🛒 tiendaonline.saboryaroma.com · Sin mínimo de compra\n📲 WhatsApp 370 462-1563 · @saboryaroma__'
+export type ContactoTexto = { web: string; whatsapp: string; instagram: string }
+const cierre = (k: ContactoTexto) => `🛒 ${k.web} · Sin mínimo de compra\n📲 WhatsApp ${k.whatsapp} · ${k.instagram}`
 
 const enumerar = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs[0] ?? '')
 
-export function textoPosteo(estilo: 'lanzamiento' | 'nutriofertas' | 'recetas', d: { titulo: string; bajada?: string; productos: string[] }): string {
+export function textoPosteo(estilo: 'lanzamiento' | 'nutriofertas' | 'recetas' | 'promo', d: { titulo: string; bajada?: string; productos: string[]; contacto: ContactoTexto; hashtags?: string[] }): string {
+  const CIERRE = cierre(d.contacto)
+  const tags = (extra: string) => [...(d.hashtags ?? ['#SaborYAroma', '#Formosa', '#VidaSana']), extra].join(' ')
+  if (estilo === 'promo') {
+    return `🧡 ${d.titulo} en Sabor y Aroma${d.bajada ? ` · ${d.bajada}` : ''}${d.productos.length ? `\n${enumerar(d.productos.map((x) => x.toLowerCase()))}.` : ''}\n${CIERRE}\n${tags('#Promociones')}`
+  }
   const productos = enumerar(d.productos.map((x) => x.toLowerCase()))
   if (estilo === 'nutriofertas') {
-    return `🧡 NutriOfertas de la semana en Sabor y Aroma${productos ? `: ${productos}` : ''}, a precios bajos que nutren.\n${CIERRE}\n#SaborYAroma #Formosa #VidaSana #NutriOfertas`
+    return `🧡 NutriOfertas de la semana en Sabor y Aroma${productos ? `: ${productos}` : ''}, a precios bajos que nutren.\n${CIERRE}\n${tags('#NutriOfertas')}`
   }
   if (estilo === 'recetas') {
-    return `🥣 ${d.titulo}${d.bajada ? ` · ${d.bajada}` : ''}\n${productos ? `Ingredientes: ${productos}. ` : ''}Conseguí todo en un solo lugar.\n${CIERRE}\n#SaborYAroma #Formosa #RecetasSaludables #VidaSana`
+    return `🥣 ${d.titulo}${d.bajada ? ` · ${d.bajada}` : ''}\n${productos ? `Ingredientes: ${productos}. ` : ''}Conseguí todo en un solo lugar.\n${CIERRE}\n${tags('#RecetasSaludables')}`
   }
-  return `🌿 ${d.titulo}${d.bajada ? `\n${d.bajada}` : ''}${productos ? `\n${productos.charAt(0).toUpperCase()}${productos.slice(1)} y mucho más.` : ''}\n${CIERRE}\n#SaborYAroma #Formosa #VidaSana #Dietética`
+  return `🌿 ${d.titulo}${d.bajada ? `\n${d.bajada}` : ''}${productos ? `\n${productos.charAt(0).toUpperCase()}${productos.slice(1)} y mucho más.` : ''}\n${CIERRE}\n${tags('#Dietética')}`
 }

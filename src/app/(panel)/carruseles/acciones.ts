@@ -9,6 +9,7 @@ import { encolarExportacion } from '@/lib/piezas/exportar'
 import { cargarCarrusel, planDePlacas, precioNutri, productosPieza } from '@/lib/carruseles/datos'
 import { datosIniciales, ESTILOS, idsDe, limpiarDatos, type DatosCarrusel, type DatosNutriofertas, type DatosRecetas } from '@/lib/carruseles/tipos'
 import { hoyFormosa } from '@/lib/promos/fechas'
+import { leerConfig } from '@/lib/configuracion'
 import { detalleBase } from '@/lib/promos/calculo'
 
 const { carruseles, seleccion, productos, listas } = esquema
@@ -40,7 +41,7 @@ export async function crearCarrusel(estilo: string) {
   const hoy = hoyFormosa()
   const [{ id }] = await db
     .insert(carruseles)
-    .values({ estilo, titulo: `${ESTILOS[estilo].nombre} ${hoy.slice(8, 10)}/${hoy.slice(5, 7)}`, datos: datosIniciales(estilo, ids) as unknown as Record<string, unknown> })
+    .values({ estilo, listaId: (await leerConfig()).piezas.listaId, titulo: `${ESTILOS[estilo].nombre} ${hoy.slice(8, 10)}/${hoy.slice(5, 7)}`, datos: datosIniciales(estilo, ids) as unknown as Record<string, unknown> })
     .returning({ id: carruseles.id })
   if (ids.length) {
     await db.delete(seleccion)

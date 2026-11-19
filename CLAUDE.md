@@ -204,7 +204,7 @@ Poner contador visible y corte automático al llegar al tope.
       ¿por qué te hace bien? (se puede sacar; hasta 4) y cierre. Sin precio. Lucas escribe la receta (IA en etapa 4).
     - Recursos creados por nosotros porque no venían (`public/piezas/`): papel crema, panorámica de acuarelas y
       ramita de olivo de 5400 px (continúa de placa en placa), trazos de pincel verde y lima, y el QR de la tienda
-      (generado sin bibliotecas; Lucas tiene que confirmar que escanea). Fraunces (OFL) en `public/fuentes/`.
+      (generado sin bibliotecas; **Lucas confirmó el 19/11 que escanea bien**). Fraunces (OFL) en `public/fuentes/`.
     - Textos automáticos desde el catálogo: nombre en la placa (sin marca ni medida, minúscula de oración, 2 renglones),
       línea chica, etiqueta, frase sugerida por categoría. La frase que escribe Lucas se guarda en `productos.frase_piezas`.
     - Fotos: granel ampliado llenando la forma; envasado completo con margen. Textos que se achican solos sin «…».
@@ -238,6 +238,29 @@ Poner contador visible y corte automático al llegar al tope.
     - Nunca se exporta con productos sin foto ni sin formatos (cuadro «Para exportar falta» / «Antes de exportar»).
     - Buscador dentro del editor para sumar productos (solo los que tienen foto y van en piezas).
     - «Sorprendeme» se sacó: dos diseños con miniatura y cada promo nueva alterna sola.
+
+- **Etapa 4 (asesor con IA), hecha el 19/11/2026:**
+  - **Claude Opus 5.5** por defecto (se elige en Configuración: Opus 5.5, Sonnet 5.5 o Haiku 5.5), con el paquete oficial
+    `@anthropic-ai/sdk`. Profundidad rápida/normal/a fondo = effort low/medium/high. En Opus y Sonnet va el respaldo del
+    servidor ante rechazos (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`).
+  - **Clave:** Lucas la pega en Configuración › Asesor IA; se prueba (gratis, `models.retrieve`) y se guarda cifrada
+    (AES-256-GCM con llave derivada de `SESION_SECRETO`, ajuste `ia_clave`). Solo se ven los últimos 4. Si no hay, usa `ANTHROPIC_API_KEY`.
+  - **Gasto:** cada pedido queda en `ia_consumos` con su costo (precios en `src/lib/ia/precios.ts`). Tope total 30 USD,
+    20 para texto (10 reservados para imágenes), aviso al 80 % y corte automático al tope (mes calendario de Formosa).
+    Contador visible en el asesor, en Inicio y en Configuración. Cada botón muestra el costo aproximado.
+  - **Asesor (`/asesor`):** calendario semanal según los días de Configuración (con fechas especiales de Argentina,
+    Pascua y domingos móviles calculados) y «Armar borrador» (carrusel, promo, o receta escrita por la IA); qué promocionar
+    (nuevos sin contar la primera importación, bajaron de precio, época, sin usar en piezas) → armar promo o carrusel;
+    recetas solo con productos del catálogo con foto → carrusel Recetas lleno; chat con historial (`ia_chat`).
+  - **Textos:** «Mejorar con IA» en el texto del posteo de carruseles y promos (las promos ahora tienen texto del posteo,
+    `promos.texto_posteo`), y «Sugerir» en frases y títulos de los carruseles.
+  - **Reglas para la IA (en las instrucciones, en caché):** voz de la marca, voseo, slogans tal cual, «Sabor y Aroma» bien
+    escrito, lista «nunca decir» (sin promesas medicinales), solo saludables, no inventar precios ni productos (por id).
+  - **Configuración** ahora tiene secciones: General (logo y **datos de contacto**, que salen en todas las placas; el **QR
+    se genera solo** con la dirección de la tienda, `src/lib/piezas/qr.ts`, idéntico al probado), Piezas (lista, descuento,
+    vigencia y formatos de entrada), Asesor IA (conexión, modelo, profundidad, presupuesto, voz, calendario, criterios),
+    Seguridad (PIN e ingresos) y Motor. Todo se guarda en el ajuste `configuracion` y se valida en `limpiarConfig`.
+  - **Pruebas sin gastar:** un servidor de prueba imita la API (`ANTHROPIC_BASE_URL`); la prueba de punta a punta no usa IA real.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 

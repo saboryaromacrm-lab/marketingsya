@@ -34,7 +34,7 @@ export async function infoProductos(ids: number[]): Promise<Record<number, InfoP
 }
 
 export type FilaEditor = { tipo: TipoFila; titulo: string | null; descuento: number | null; cantidadMinima: number | null; precioFijo: number | null; origen: 'manual' | 'erp'; productos: ItemFila[] }
-export type DatosEditor = { titulo: string; desde: string; hasta: string; listaId: number; diseno: DisenoPromo; formatos: FormatosPromo; filas: FilaEditor[] }
+export type DatosEditor = { titulo: string; desde: string; hasta: string; listaId: number; diseno: DisenoPromo; formatos: FormatosPromo; textoPosteo: string | null; filas: FilaEditor[] }
 
 /** Placas que salen (para la vista previa) con su dirección. */
 export async function placasDe(id: number) {

@@ -3,7 +3,8 @@ import { db, esquema } from '@/lib/db'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
 import { pesos } from '@/lib/formato'
 import { urlMedia } from '@/lib/media'
-import { CONTACTO, escaparHtml as e, PALETA, respuestaHtml } from '@/lib/piezas/html'
+import { escaparHtml as e, PALETA, respuestaHtml } from '@/lib/piezas/html'
+import { leerConfig } from '@/lib/configuracion'
 
 // Placa de PRUEBA del motor (diagnóstico). No es ninguno de los 3 estilos: esos llegan con los HTML de Lucas.
 // 1: portada · 2 a 4: un producto cada una · 5: cierre con los datos de contacto.
@@ -11,6 +12,8 @@ import { CONTACTO, escaparHtml as e, PALETA, respuestaHtml } from '@/lib/piezas/
 const { productos } = esquema
 
 export async function GET(req: Request, { params }: { params: Promise<{ placa: string }> }) {
+  const { contacto } = await leerConfig()
+  const CONTACTO = { web: contacto.web, whatsapp: `WhatsApp ${contacto.whatsapp}`, instagram: contacto.instagram }
   const placa = Number((await params).placa)
   const ids = (new URL(req.url).searchParams.get('productos') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 3)
   const filas = ids.length

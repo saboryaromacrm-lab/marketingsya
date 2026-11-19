@@ -14,6 +14,7 @@
     "clave": "node scripts/clave.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
     "drizzle-orm": "^0.45.4",
     "material-icons": "^1.13.14",
     "next": "^16.4.6",

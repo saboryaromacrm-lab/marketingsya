@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import { cargarCarrusel, planDePlacas } from '@/lib/carruseles/datos'
 import { idsDe } from '@/lib/carruseles/tipos'
 import { listasDisponibles, ultimaExportacion } from '@/lib/promos/editor'
+import { leerConfig } from '@/lib/configuracion'
+import { estadoIA } from '@/lib/ia/claude'
+import { aprox, costoEstimado } from '@/lib/ia/precios'
+import { disponibilidad } from '@/lib/ia/disponibilidad'
 import { cantidadElegidosCarrusel, infoProductosCarrusel } from '../acciones'
 import { EditorCarrusel } from './EditorCarrusel'
 
@@ -12,8 +16,9 @@ export default async function PaginaCarrusel({ params }: { params: Promise<{ id:
   if (!Number.isInteger(id) || id <= 0) notFound()
   const c = await cargarCarrusel(id)
   if (!c) notFound()
-  const [info, listas, exportacion, elegidos] = await Promise.all([
-    infoProductosCarrusel(idsDe(c.carrusel.estilo, c.datos), c.carrusel.listaId), listasDisponibles(), ultimaExportacion(c.carrusel.exportacionId), cantidadElegidosCarrusel(),
+  const config = await leerConfig()
+  const [info, listas, exportacion, elegidos, estado] = await Promise.all([
+    infoProductosCarrusel(idsDe(c.carrusel.estilo, c.datos), c.carrusel.listaId), listasDisponibles(), ultimaExportacion(c.carrusel.exportacionId), cantidadElegidosCarrusel(), estadoIA(config),
   ])
   return (
     <EditorCarrusel
@@ -24,6 +29,9 @@ export default async function PaginaCarrusel({ params }: { params: Promise<{ id:
       listas={listas}
       exportacionInicial={exportacion}
       elegidos={elegidos}
+      contacto={config.contacto}
+      hashtags={config.ia.hashtags}
+      ia={disponibilidad(estado, aprox(costoEstimado(config.ia.modelo, 'texto')))}
     />
   )
 }
