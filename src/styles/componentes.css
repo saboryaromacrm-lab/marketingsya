@@ -474,3 +474,29 @@ code { background: var(--superficie-sutil); border: 1px solid var(--borde); bord
   .vista-historia { max-width: 300px; }
   .tira-placas { display: flex; overflow-x: auto; max-height: none; }
 }
+
+/* Carruseles: elegir estilo y editor */
+.elegir-estilo { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 300px)); gap: 20px; }
+.opcion-estilo { gap: 10px; align-content: start; }
+.opcion-estilo img { width: 100%; aspect-ratio: 1080 / 1350; object-fit: cover; border: 1px solid var(--borde); border-radius: var(--radio); }
+.opcion-estilo b { font-size: 16px; font-weight: 600; }
+.opciones-estilo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.opciones-estilo .opcion-diseno img { height: 86px; }
+.opciones-lado { display: flex; flex-wrap: wrap; gap: 6px; }
+.panel-placa, .panel-posteo { gap: 14px; padding: 16px; }
+.panel-placa .campo { min-width: 0; }
+.area { height: auto; min-height: 64px; padding: 8px 12px; resize: vertical; font: inherit; line-height: 1.4; }
+.producto-placa { display: grid; gap: 8px; }
+.slot-producto { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
+.slot-producto .miniatura { width: 48px; height: 48px; flex: none; }
+.slot-falta { border-color: var(--rojo); }
+.lista-placa { display: grid; gap: 10px; }
+.item-placa { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--borde); border-radius: var(--radio-tarjeta); background: var(--superficie-sutil); }
+.item-placa-cabeza { display: flex; align-items: center; justify-content: space-between; }
+.item-placa-botones { display: flex; gap: 2px; }
+.item-placa-botones .superior-boton { width: 30px; height: 30px; }
+.item-placa-botones .superior-boton:disabled { opacity: .35; cursor: not-allowed; }
+.dos-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px; }
+.texto-verde { color: var(--verde); font-weight: 600; }
+.panel-placa .resultados-promo { position: static; margin-top: 6px; }
+@media (max-width: 600px) { .dos-campos { grid-template-columns: minmax(0, 1fr); } }

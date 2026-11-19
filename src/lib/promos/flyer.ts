@@ -4,7 +4,7 @@
 // las filas crecen (escalaDePlaca) y los textos largos se achican solos hasta entrar, sin «…».
 
 import { ALTO, altoEscalado, escalaDePlaca, MEDIDAS, POR_LINEA, type Formato } from './calculo'
-import { CONTACTO, escaparHtml as e, PALETA } from '@/lib/piezas/html'
+import { AJUSTE, CONTACTO, escaparHtml as e, PALETA } from '@/lib/piezas/html'
 
 export type ItemFlyer = {
   nombre: string
@@ -99,27 +99,7 @@ function uno(d: DatosFlyer) {
   return `<div class="uno" style="height:${alto}px">${caja(item, 'caja-grande')}<div class="texto-grande">${nombreYMedida(nombre, tam, 'nombre-grande', 34, 2)}</div><div class="fila-precio"><div class="${claseOferta(b.oferta)}" ${aj(40)}>${e(b.oferta)}</div><div class="cuadro-uno">${cuadroPrecio(item, true)}</div></div></div>`
 }
 
-/** Achica los textos que no entran y avisa al motor que la placa está lista (data-listo). */
-const AJUSTE = `<script>(async () => {
-  await document.fonts.ready
-  for (const el of document.querySelectorAll('[data-ajustar]')) {
-    const lineas = Number(el.dataset.lineas || 1)
-    const min = Number(el.dataset.ajustar)
-    // Ancho: nada se sale de su caja. Alto: no más renglones de los permitidos
-    // (se cuentan por el alto de renglón, no por el dibujo de la letra, que sobresale un poco).
-    const entra = () => {
-      const cs = getComputedStyle(el)
-      const caja = el.parentElement
-      return el.scrollWidth <= el.clientWidth + 1 && (lineas === 1 || el.offsetHeight <= lineas * parseFloat(cs.lineHeight) + 2) &&
-        (!('caja' in el.dataset) || caja.scrollHeight <= caja.clientHeight + 1)
-    }
-    let f = parseFloat(getComputedStyle(el).fontSize)
-    while (!entra() && f > min) { f -= 1; el.style.fontSize = f + 'px' }
-    // Si ni con la letra mínima entra, se corta prolijo en los renglones permitidos
-    if (!entra() && lineas > 1) { el.style.overflowWrap = 'anywhere'; el.style.maxHeight = (lineas * parseFloat(getComputedStyle(el).lineHeight)) + 'px'; el.style.overflow = 'hidden' }
-  }
-  document.documentElement.dataset.listo = '1'
-})()</script>`
+
 
 export function htmlFlyer(d: DatosFlyer): string {
   const { alto } = MEDIDAS[d.formato]

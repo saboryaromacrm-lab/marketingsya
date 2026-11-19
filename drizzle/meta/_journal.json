@@ -57,6 +57,13 @@
       "when": 1795026052972,
       "tag": "0007_promos",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795086233972,
+      "tag": "0008_carruseles",
+      "breakpoints": true
     }
   ]
 }
