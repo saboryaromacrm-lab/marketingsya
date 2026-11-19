@@ -3,6 +3,7 @@
 // Los recursos (papel, ramita, trazos de pincel, QR) están en /piezas y las fuentes en /fuentes.
 
 import { AJUSTE, ajustar as aj, escaparHtml as e } from '@/lib/piezas/html'
+import { partirWeb } from '@/lib/configuracion-tipos'
 import type { EstiloCarrusel } from '@/lib/db/esquema'
 import { etiquetaDeCategoria, fraseSugerida, lineaChica, nombreCorto, nombreEnPlaca, renglones, textoIngrediente } from './textos'
 import type { DatosCarrusel, DatosLanzamiento, DatosNutriofertas, DatosRecetas, Id, PlacaCarrusel, ProductoNutri } from './tipos'
@@ -27,6 +28,8 @@ export type ContextoPlaca = {
   productos: Map<number, ProductoPieza>
   semilla: number // para variar detalles solos (giros, hojitas), siempre igual para el mismo carrusel
   precio: (item: ProductoNutri) => PrecioPieza
+  contacto: { web: string; whatsapp: string; instagram: string } // de Configuración › General
+  qr: string // QR de la tienda (data URI), armado con la dirección de Configuración
 }
 
 const V = { oscuro: '#0b3b2e', verde: '#137a52', oliva: '#6E9A35', naranja: '#ff8f00', gris: '#3e564c' }
@@ -69,6 +72,12 @@ function foto(p: ProductoPieza | undefined, ancho: number, opciones: { zoom?: nu
     ? `<img src="${e(p.foto)}" alt="" style="width: ${ancho}px; height: ${ancho}px; object-fit: cover; transform: scale(${opciones.zoom ?? 1.3}); display: block;">`
     : `<img src="${e(p.foto)}" alt="" style="width: ${ancho}px; height: ${ancho}px; object-fit: contain; padding: ${opciones.margen ?? '22px'}; box-sizing: border-box; display: block; background: #fff;">`
 }
+/** «tiendaonline.<resaltado>saboryaroma</resaltado>.com» con el color pedido. */
+function webResaltada(web: string, color: string) {
+  const [a, b, c] = partirWeb(web)
+  return `${e(a)}<span style="color: ${color};">${e(b)}</span>${e(c)}`
+}
+const imgQR = (ctx: ContextoPlaca) => `<img src="${ctx.qr}" alt="Código QR a ${e(ctx.contacto.web)}" style="flex-shrink: 0; width: 270px; height: 270px; display: block;">`
 const prod = (ctx: ContextoPlaca, id: Id) => (id != null ? ctx.productos.get(id) : undefined)
 const logo = (estilo: string) => `<img src="/marca/circular-verde.svg" alt="Sabor y Aroma" style="position: absolute; ${estilo} object-fit: contain;">`
 
@@ -181,7 +190,7 @@ function lanzamiento(ctx: ContextoPlaca): string {
       cuerpo = `${logo('left: 465px; top: 60px; width: 150px; height: 128px;')}
   ${h(d.cierre.titulo, 220, 960, 82, 'center')}
   <div style="position: absolute; left: 90px; top: 450px; width: 900px; padding: 34px 40px; border-radius: 48px 62px 44px 66px / 58px 46px 64px 50px; background: #fff; box-shadow: 0 18px 36px rgba(90,60,20,0.18); display: flex; align-items: center; gap: 40px;">
-    <img src="/piezas/qr-tienda.svg" alt="Código QR a tiendaonline.saboryaroma.com" style="flex-shrink: 0; width: 270px; height: 270px; display: block;">
+    ${imgQR(ctx)}
     <div style="display: flex; flex-direction: column; gap: 18px;">
       <div style="${FRAUNCES} font-weight: 800; font-size: 50px; line-height: 1.02; color: ${V.oscuro};">Escaneá<br>y comprá</div>
       <div style="font-size: 31px; font-weight: 700; line-height: 1.3; color: ${V.gris};">desde tu celular, cuando quieras.</div>
@@ -190,7 +199,7 @@ function lanzamiento(ctx: ContextoPlaca): string {
   </div>
   <div style="position: absolute; left: 60px; top: 880px; width: 960px; padding: 28px 24px; border-radius: 40px 56px 36px 60px / 52px 38px 58px 42px; background: ${V.oscuro}; transform: rotate(-1.5deg); box-shadow: 0 14px 28px rgba(11,59,46,0.28); text-align: center;">
     <div style="font-size: 30px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #ffd08a;">Entrá a</div>
-    <div style="margin-top: 6px; font-size: 58px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; color: #fff;">tiendaonline.<span style="color: ${V.naranja};">saboryaroma</span>.com</div>
+    <div style="margin-top: 6px; font-size: 58px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; color: #fff;">${webResaltada(ctx.contacto.web, V.naranja)}</div>
   </div>
   <p class="una" ${aj(24)} style="position: absolute; left: 60px; top: 1100px; margin: 0; width: 960px; text-align: center; ${FRAUNCES} font-style: italic; font-weight: 600; font-size: 36px; color: ${V.oscuro};">${e(d.cierre.pie)}</p>`
     }
@@ -220,7 +229,7 @@ function ondas(p: Paleta, espejo: boolean, hojas: 'ab' | 'a' | 'b', puntosY = 0)
   </svg>`
 }
 
-const pastillaWeb = (p: Paleta) => `<div style="position: absolute; left: 44px; top: 46px; padding: 10px 24px; border-radius: 999px; background: ${p.pastilla}; color: #fff; font-size: 24px; font-weight: 800;">tiendaonline.saboryaroma.com</div>${logo('right: 70px; top: 60px; width: 130px; height: 111px;')}`
+const pastillaWeb = (p: Paleta, ctx: ContextoPlaca) => `<div style="position: absolute; left: 44px; top: 46px; padding: 10px 24px; border-radius: 999px; background: ${p.pastilla}; color: #fff; font-size: 24px; font-weight: 800;">${e(ctx.contacto.web)}</div>${logo('right: 70px; top: 60px; width: 130px; height: 111px;')}`
 
 /** Plato redondo con la foto y el trazo de pincel que lo abraza. A la izquierda (grande) o a la derecha. */
 function plato(p: Paleta, producto: ProductoPieza | undefined, derecha: boolean): string {
@@ -250,7 +259,7 @@ function sello(texto: string, color: string, lugar: string, giro: number, tam = 
 const bajada = (t: string, extra = '') => `<div class="una" ${aj(18)} style="margin-top: 14px; font-size: 30px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: ${V.gris}; ${extra}">${e(t)}</div>`
 
 function portadaOndas(ctx: ContextoPlaca, p: Paleta, d: { titulo: string; bajada: string; destacado: string; texto: string; boton: string; sello: string; producto: Id }, colorTitulo: string, colorBoton: string, colorSello: string, tamTitulo: number, r: () => number): string {
-  return `${ondas(p, false, 'ab')}${pastillaWeb(p)}${plato(p, prod(ctx, d.producto), false)}
+  return `${ondas(p, false, 'ab')}${pastillaWeb(p, ctx)}${plato(p, prod(ctx, d.producto), false)}
   ${sello(d.sello, colorSello, 'left: 60px; top: 470px;', Math.round(r() * 10 - 5))}
   <div style="position: absolute; left: 470px; top: 200px; width: 550px; text-align: right;">
     <h1 class="una" ${aj(60)} style="margin: 0; ${FRAUNCES} font-style: italic; font-weight: 800; font-size: ${tamTitulo}px; line-height: 1.02; color: ${colorTitulo};">${conCortes(d.titulo)}</h1>
@@ -263,22 +272,22 @@ function portadaOndas(ctx: ContextoPlaca, p: Paleta, d: { titulo: string; bajada
   </div>`
 }
 
-function cierreOndas(p: Paleta, d: { titulo: string; bajada: string }, colorDestacado: string, boton: string, colorBoton: string, fondoWeb: string, colorSello: string, r: () => number): string {
-  return `${ondas(p, false, 'b', 130)}${pastillaWeb(p)}
+function cierreOndas(ctx: ContextoPlaca, p: Paleta, d: { titulo: string; bajada: string }, colorDestacado: string, boton: string, colorBoton: string, fondoWeb: string, colorSello: string, r: () => number): string {
+  return `${ondas(p, false, 'b', 130)}${pastillaWeb(p, ctx)}
   <div style="position: absolute; left: 70px; top: 200px; width: 720px;">
     <h2 class="una" ${aj(56)} style="margin: 0; ${FRAUNCES} font-style: italic; font-weight: 800; font-size: 100px; line-height: 1.02; color: ${V.oscuro};">${titulo(d.titulo, colorDestacado)}</h2>
     ${bajada(d.bajada, 'margin-top: 16px;')}
   </div>
   ${sello('Sin / mínimo de / compra', colorSello, 'left: 820px; top: 230px;', Math.round(4 + r() * 6), 200, false)}
   <div style="position: absolute; left: 90px; top: 560px; width: 900px; padding: 34px 40px; border-radius: 56px; background: #fff; box-shadow: 0 20px 40px rgba(90,60,20,0.16); display: flex; align-items: center; gap: 40px;">
-    <img src="/piezas/qr-tienda.svg" alt="Código QR a tiendaonline.saboryaroma.com" style="flex-shrink: 0; width: 270px; height: 270px; display: block;">
+    ${imgQR(ctx)}
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <div style="${FRAUNCES} font-style: italic; font-weight: 800; font-size: 54px; line-height: 1.0; color: ${V.oscuro};">Escaneá<br>y comprá</div>
       <div style="font-size: 30px; font-weight: 600; line-height: 1.35; color: ${V.gris};">Pedís online y lo retirás o te lo llevamos.</div>
       <div style="align-self: flex-start; padding: 16px 34px; border-radius: 999px; background: ${colorBoton}; color: #fff; font-size: 32px; font-weight: 900;">${e(boton)}</div>
     </div>
   </div>
-  <div style="position: absolute; left: 90px; top: 1000px; width: 900px; padding: 26px 20px; border-radius: 999px; background: ${fondoWeb}; text-align: center; color: #fff; font-size: 54px; font-weight: 900; letter-spacing: -0.5px;">tiendaonline.<span style="color: #ffd08a;">saboryaroma</span>.com</div>
+  <div style="position: absolute; left: 90px; top: 1000px; width: 900px; padding: 26px 20px; border-radius: 999px; background: ${fondoWeb}; text-align: center; color: #fff; font-size: 54px; font-weight: 900; letter-spacing: -0.5px;">${webResaltada(ctx.contacto.web, '#ffd08a')}</div>
   <div style="position: absolute; left: 90px; top: 1135px; width: 900px; text-align: center; font-size: 30px; font-weight: 700; color: ${V.gris};">Envíos a todo Formosa Capital</div>`
 }
 
@@ -292,7 +301,7 @@ function nutriofertas(ctx: ContextoPlaca): string {
   if (ctx.placa.clave === 'portada') {
     cuerpo = portadaOndas(ctx, DURAZNO, d.portada, V.naranja, V.naranja, V.verde, 124, r)
   } else if (ctx.placa.clave === 'cierre') {
-    cuerpo = cierreOndas(DURAZNO, d.cierre, V.naranja, 'Ver las NutriOfertas →', V.naranja, V.verde, V.verde, r)
+    cuerpo = cierreOndas(ctx, DURAZNO, d.cierre, V.naranja, 'Ver las NutriOfertas →', V.naranja, V.verde, V.verde, r)
   } else {
     const k = Number(ctx.placa.clave.split('-')[1])
     const it = d.productos[k]
@@ -305,7 +314,7 @@ function nutriofertas(ctx: ContextoPlaca): string {
     const precio = ctx.precio(it)
     const alinear = derecha ? 'left' : 'right'
     const columna = derecha ? 'left: 70px; width: 640px; align-items: flex-start;' : 'left: 420px; width: 600px; align-items: flex-end;'
-    cuerpo = `${ondas(DURAZNO, derecha, r() < 0.5 ? 'a' : 'b', Math.round(r() * 60))}${pastillaWeb(DURAZNO)}${plato(DURAZNO, p, derecha)}
+    cuerpo = `${ondas(DURAZNO, derecha, r() < 0.5 ? 'a' : 'b', Math.round(r() * 60))}${pastillaWeb(DURAZNO, ctx)}${plato(DURAZNO, p, derecha)}
   ${sello('Oferta', V.naranja, derecha ? 'left: 790px; top: 470px;' : 'left: 60px; top: 470px;', Math.round((r() * 8 + 4) * (r() < 0.5 ? -1 : 1)))}
   <div style="position: absolute; top: 190px; ${columna} display: flex; flex-direction: column; text-align: ${alinear};">
     <div style="${FRAUNCES} font-style: italic; font-weight: 800; font-size: 44px; color: ${V.naranja};">NutriOferta</div>
@@ -337,7 +346,7 @@ function recetas(ctx: ContextoPlaca): string {
       break
     case 'ingredientes': {
       const items = d.ingredientes.items.slice(0, 5)
-      cuerpo = `${ondas(LIMA, false, 'a', -2000)}${pastillaWeb(LIMA)}
+      cuerpo = `${ondas(LIMA, false, 'a', -2000)}${pastillaWeb(LIMA, ctx)}
   <div style="position: absolute; left: 70px; top: 180px; width: 700px;">
     <h2 class="una" ${aj(56)} style="margin: 0; ${FRAUNCES} font-style: italic; font-weight: 800; font-size: 108px; line-height: 1; color: ${V.verde};">${conCortes(d.ingredientes.titulo)}</h2>
     ${bajada(d.ingredientes.bajada)}
@@ -356,7 +365,7 @@ function recetas(ctx: ContextoPlaca): string {
     case 'preparacion': {
       const pasos = d.preparacion.pasos.filter((x) => x.trim()).length ? d.preparacion.pasos : ['Escribí el primer paso', 'Escribí el segundo paso']
       const colores = [V.oliva, V.verde, V.naranja, V.oscuro]
-      cuerpo = `${ondas(LIMA, false, 'b', 0)}${pastillaWeb(LIMA)}${plato(LIMA, prod(ctx, d.preparacion.foto), false)}
+      cuerpo = `${ondas(LIMA, false, 'b', 0)}${pastillaWeb(LIMA, ctx)}${plato(LIMA, prod(ctx, d.preparacion.foto), false)}
   <div style="position: absolute; left: 420px; top: 190px; width: 600px; text-align: right;">
     <h2 class="una" ${aj(56)} style="margin: 0; ${FRAUNCES} font-style: italic; font-weight: 800; font-size: 108px; line-height: 1; color: ${V.verde};">${conCortes(d.preparacion.titulo)}</h2>
     ${bajada(`En ${pasos.length} pasos`)}
@@ -371,7 +380,7 @@ function recetas(ctx: ContextoPlaca): string {
     }
     case 'porQue': {
       const items = d.porQue.items.slice(0, 4)
-      cuerpo = `${ondas(LIMA, false, 'a', 180)}${pastillaWeb(LIMA)}
+      cuerpo = `${ondas(LIMA, false, 'a', 180)}${pastillaWeb(LIMA, ctx)}
   <div style="position: absolute; left: 70px; top: 180px; width: 720px;">
     <h2 class="una" ${aj(56)} style="margin: 0; ${FRAUNCES} font-style: italic; font-weight: 800; font-size: 100px; line-height: 1; color: ${V.verde};">${conCortes(d.porQue.titulo)}</h2>
   </div>
@@ -389,7 +398,7 @@ function recetas(ctx: ContextoPlaca): string {
       break
     }
     default:
-      cuerpo = cierreOndas(LIMA, d.cierre, V.verde, 'Ir a la tienda →', V.verde, V.oscuro, V.oliva, r)
+      cuerpo = cierreOndas(ctx, LIMA, d.cierre, V.verde, 'Ir a la tienda →', V.verde, V.oscuro, V.oliva, r)
   }
   return `${cabeza('background: #FFFDF7;')}<div class="placa">${cuerpo}</div>${pie}`
 }

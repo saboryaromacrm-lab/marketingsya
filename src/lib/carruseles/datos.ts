@@ -6,6 +6,8 @@ import { urlMedia } from '@/lib/media'
 import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
 import { detalleBase, pesosPromo, precioPromo } from '@/lib/promos/calculo'
 import { htmlPlaca, type PrecioPieza, type ProductoPieza } from './plantillas'
+import { leerConfig } from '@/lib/configuracion'
+import { qrDataUri } from '@/lib/piezas/qr'
 import { idsDe, limpiarDatos, placasDe, type DatosCarrusel, type ProductoNutri } from './tipos'
 
 const { carruseles, productos, marcas } = esquema
@@ -44,7 +46,8 @@ export async function cargarCarrusel(id: number) {
   const [c] = await db.select().from(carruseles).where(eq(carruseles.id, id))
   if (!c) return null
   const datos = limpiarDatos(c.estilo, c.datos)
-  return { carrusel: c, datos, productos: await productosPieza(idsDe(c.estilo, datos)) }
+  const [prods, config] = await Promise.all([productosPieza(idsDe(c.estilo, datos)), leerConfig()])
+  return { carrusel: c, datos, productos: prods, contacto: config.contacto }
 }
 export type CarruselCargado = NonNullable<Awaited<ReturnType<typeof cargarCarrusel>>>
 
@@ -75,5 +78,7 @@ export function htmlDePlaca(c: CarruselCargado, numero: number): string | null {
     productos: c.productos,
     semilla: c.carrusel.id * 7919,
     precio: (it) => precioNutri(it.id != null ? c.productos.get(it.id) : undefined, it, c.carrusel.listaId),
+    contacto: c.contacto,
+    qr: qrDataUri(`https://${c.contacto.web}`),
   })
 }

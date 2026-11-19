@@ -215,6 +215,8 @@ export const promos = pgTable('promos', {
   formatos: jsonb('formatos').$type<FormatosPromo>().notNull().default({ historia: true, feed: true, uno: false }),
   // Última exportación (para descargar de nuevo desde el historial)
   exportacionId: integer('exportacion_id'),
+  // Texto del posteo editado a mano (null = se arma solo)
+  textoPosteo: text('texto_posteo'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
 })
@@ -259,4 +261,44 @@ export const carruseles = pgTable('carruseles', {
   exportacionId: integer('exportacion_id'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
+// Asesor con IA (etapa 4): cada pedido a Claude queda registrado con su costo, para el contador
+// y el corte al llegar al tope del mes.
+// ---------------------------------------------------------------------------
+export const iaConsumos = pgTable(
+  'ia_consumos',
+  {
+    id: serial('id').primaryKey(),
+    tipo: text('tipo').notNull(), // sugerencias, semana, receta, texto, chat
+    modelo: text('modelo').notNull(),
+    entrada: integer('entrada').notNull(),
+    salida: integer('salida').notNull(),
+    cacheLectura: integer('cache_lectura').notNull().default(0),
+    cacheEscritura: integer('cache_escritura').notNull().default(0),
+    costo: numeric('costo', { precision: 12, scale: 6, mode: 'number' }).notNull(),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('ia_consumos_fecha').on(t.creadoEn)],
+)
+
+// Lo último que propuso la IA (sugerencias, y el calendario de cada semana), para no volver a pagar por verlo
+export const iaIdeas = pgTable(
+  'ia_ideas',
+  {
+    id: serial('id').primaryKey(),
+    tipo: text('tipo').$type<'sugerencias' | 'semana'>().notNull(),
+    clave: text('clave').notNull(), // «ultima» o el lunes de la semana (AAAA-MM-DD)
+    datos: jsonb('datos').$type<Record<string, unknown>>().notNull(),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('ia_ideas_tipo_clave').on(t.tipo, t.clave)],
+)
+
+export const iaChat = pgTable('ia_chat', {
+  id: serial('id').primaryKey(),
+  rol: text('rol').$type<'user' | 'assistant'>().notNull(),
+  texto: text('texto').notNull(),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 })

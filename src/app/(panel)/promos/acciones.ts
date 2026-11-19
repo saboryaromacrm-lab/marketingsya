@@ -12,6 +12,7 @@ import { detalleBase, pesosPromo } from '@/lib/promos/calculo'
 import { urlMedia } from '@/lib/media'
 import { disenoSiguiente, infoProductos, placasDe, type DatosEditor, type FilaEditor } from '@/lib/promos/editor'
 import { esFecha, hoyFormosa, sumarDias } from '@/lib/promos/fechas'
+import { leerConfig } from '@/lib/configuracion'
 
 const { promos, promoFilas, seleccion, listas, productos } = esquema
 const MAX_FILAS = 60
@@ -58,6 +59,7 @@ async function validar(d: DatosEditor): Promise<DatosEditor | string> {
     listaId: lista.id,
     diseno: d.diseno === '2' ? '2' : '1',
     formatos: { historia: !!d.formatos?.historia, feed: !!d.formatos?.feed, uno: !!d.formatos?.uno },
+    textoPosteo: typeof d.textoPosteo === 'string' && d.textoPosteo.trim() ? d.textoPosteo.slice(0, 2200) : null,
     filas,
   }
 }
@@ -74,15 +76,16 @@ async function guardarFilas(promoId: number, filas: FilaEditor[]) {
 
 /** Nueva promo con lo elegido en el catálogo (un producto por fila, 10 % de entrada) + las promos del ERP. */
 export async function crearPromoDesdeSeleccion() {
+  const config = await leerConfig()
   const elegidos = await db.select({ id: seleccion.productoId }).from(seleccion).orderBy(asc(seleccion.agregadoEn))
   const erp = await filasDelErp()
   const enErp = new Set(erp.flatMap((f) => f.productos.map((p) => p.id)))
   const filas: FilaEditor[] = [
-    ...elegidos.filter((e) => !enErp.has(e.id)).map((e): FilaEditor => ({ tipo: 'producto', titulo: null, descuento: 10, cantidadMinima: null, precioFijo: null, origen: 'manual', productos: [{ id: e.id }] })),
+    ...elegidos.filter((e) => !enErp.has(e.id)).map((e): FilaEditor => ({ tipo: 'producto', titulo: null, descuento: config.piezas.descuento, cantidadMinima: null, precioFijo: null, origen: 'manual', productos: [{ id: e.id }] })),
     ...erp.map((f): FilaEditor => ({ ...f, titulo: null, descuento: null, origen: 'erp' })),
   ]
   const hoy = hoyFormosa()
-  const [{ id }] = await db.insert(promos).values({ desde: hoy, hasta: sumarDias(hoy, 7), diseno: await disenoSiguiente() }).returning({ id: promos.id })
+  const [{ id }] = await db.insert(promos).values({ desde: hoy, hasta: sumarDias(hoy, config.piezas.vigenciaDias), diseno: await disenoSiguiente(), listaId: config.piezas.listaId, formatos: config.piezas.formatos }).returning({ id: promos.id })
   await guardarFilas(id, filas)
   await db.delete(seleccion)
   revalidatePath('/', 'layout')
@@ -110,7 +113,8 @@ export async function filasParaSumar(origen: 'seleccion' | 'erp', yaEstan: numbe
     filas = (await filasDelErp()).filter((f) => !presentes.has(f.productos[0].id)).map((f) => ({ ...f, titulo: null, descuento: null, origen: 'erp' as const }))
   } else {
     const elegidos = await db.select({ id: seleccion.productoId }).from(seleccion).orderBy(asc(seleccion.agregadoEn))
-    filas = elegidos.filter((e) => !presentes.has(e.id)).map((e) => ({ tipo: 'producto' as const, titulo: null, descuento: 10, cantidadMinima: null, precioFijo: null, origen: 'manual' as const, productos: [{ id: e.id }] }))
+    const { descuento } = (await leerConfig()).piezas
+    filas = elegidos.filter((e) => !presentes.has(e.id)).map((e) => ({ tipo: 'producto' as const, titulo: null, descuento, cantidadMinima: null, precioFijo: null, origen: 'manual' as const, productos: [{ id: e.id }] }))
     await db.delete(seleccion)
     revalidatePath('/', 'layout')
   }
@@ -122,7 +126,7 @@ export async function duplicarPromo(id: number) {
   if (!d) return
   const hoy = hoyFormosa()
   const { id: _i, creadoEn: _c, actualizadoEn: _a, exportacionId: _e, ...resto } = d.promo
-  const [{ id: nuevo }] = await db.insert(promos).values({ ...resto, desde: hoy, hasta: sumarDias(hoy, 7) }).returning({ id: promos.id })
+  const [{ id: nuevo }] = await db.insert(promos).values({ ...resto, desde: hoy, hasta: sumarDias(hoy, (await leerConfig()).piezas.vigenciaDias) }).returning({ id: promos.id })
   await guardarFilas(nuevo, d.filas.map(({ id: _x, promoId: _p, orden: _o, ...f }) => f))
   redirect(`/promos/${nuevo}`)
 }

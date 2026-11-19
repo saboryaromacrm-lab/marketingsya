@@ -64,6 +64,13 @@
       "when": 1795086233972,
       "tag": "0008_carruseles",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795089077077,
+      "tag": "0009_asesor_ia",
+      "breakpoints": true
     }
   ]
 }

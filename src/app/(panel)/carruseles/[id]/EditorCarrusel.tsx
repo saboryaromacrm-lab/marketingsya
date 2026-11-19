@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { Cabecera } from '@/components/Cabecera'
 import { Icono } from '@/components/Icono'
 import { Buscador, EstadoGuardado, Exportar, MiniPlaca, VistaPlaca, type Exportacion } from '@/components/piezas/Editor'
+import { BotonIA, ContextoIA, type DisponibilidadIA } from '@/components/piezas/IA'
+import type { ContactoTexto } from '@/lib/carruseles/textos'
+import { accionMejorarTexto, accionSugerirCampo } from '../../asesor/acciones'
 import type { EstiloCarrusel } from '@/lib/db/esquema'
 import { pesosPromo, precioPromo } from '@/lib/promos/calculo'
 import { enUnaLinea, etiquetaDeCategoria, fraseSugerida, lineaChica, nombreCorto, nombreEnPlaca, textoIngrediente, textoPosteo } from '@/lib/carruseles/textos'
@@ -15,7 +18,7 @@ import { borrarCarrusel, duplicarCarrusel, exportarCarrusel, guardarCarrusel, in
 type Form = { titulo: string; estilo: EstiloCarrusel; listaId: number; datos: DatosCarrusel; textoPosteo: string | null }
 type PlacaVista = { numero: number; nombre: string; ruta: string }
 type Info = Record<number, InfoCarrusel>
-type Props = { id: number; inicial: Form; infoInicial: Info; placasIniciales: PlacaVista[]; listas: { id: number; nombre: string }[]; exportacionInicial: Exportacion; elegidos: number }
+type Props = { id: number; inicial: Form; infoInicial: Info; placasIniciales: PlacaVista[]; listas: { id: number; nombre: string }[]; exportacionInicial: Exportacion; elegidos: number; contacto: ContactoTexto; hashtags: string[]; ia: DisponibilidadIA }
 type Ruta = (string | number)[]
 
 /** Copia con un cambio en la ruta indicada (sin tocar el original). */
@@ -66,22 +69,22 @@ function revisar(f: Form, info: Info): { bloquean: string[]; avisos: string[] } 
   return { bloquean, avisos }
 }
 
-function posteoAutomatico(f: Form, info: Info): string {
+function posteoAutomatico(f: Form, info: Info, contacto: ContactoTexto, hashtags: string[]): string {
   const nombre = (id: Id) => (id != null && info[id] ? nombreCorto(info[id]) : null)
   const lista = (ids: Id[]) => [...new Set(ids.map(nombre).filter((x): x is string => !!x))]
   if (f.estilo === 'nutriofertas') {
     const d = f.datos as DatosNutriofertas
-    return textoPosteo('nutriofertas', { titulo: enUnaLinea(d.portada.titulo), productos: lista(d.productos.map((p) => p.id)) })
+    return textoPosteo('nutriofertas', { titulo: enUnaLinea(d.portada.titulo), productos: lista(d.productos.map((p) => p.id)), contacto, hashtags })
   }
   if (f.estilo === 'recetas') {
     const d = f.datos as DatosRecetas
-    return textoPosteo('recetas', { titulo: enUnaLinea(d.portada.titulo), bajada: d.ingredientes.bajada, productos: lista(d.ingredientes.items.map((p) => p.id)) })
+    return textoPosteo('recetas', { titulo: enUnaLinea(d.portada.titulo), bajada: d.ingredientes.bajada, productos: lista(d.ingredientes.items.map((p) => p.id)), contacto, hashtags })
   }
   const d = f.datos as DatosLanzamiento
-  return textoPosteo('lanzamiento', { titulo: enUnaLinea(d.portada.titulo), bajada: d.productos.subtitulo, productos: lista(d.productos.items.map((p) => p.id)).slice(0, 4) })
+  return textoPosteo('lanzamiento', { titulo: enUnaLinea(d.portada.titulo), bajada: d.productos.subtitulo, productos: lista(d.productos.items.map((p) => p.id)).slice(0, 4), contacto, hashtags })
 }
 
-export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos }: Props) {
+export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, contacto, hashtags, ia }: Props) {
   const [form, setForm] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
   const [placas, setPlacas] = useState(placasIniciales)
@@ -147,10 +150,12 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
   const vista = placas[Math.min(indice, placas.length - 1)]
   const rev = revisar(form, info)
   const ids = idsDe(form.estilo, form.datos)
-  const auto = posteoAutomatico(form, info)
+  const auto = posteoAutomatico(form, info, contacto, hashtags)
+  const descripcion = `carrusel ${ESTILOS[form.estilo].nombre} «${form.titulo}»`
   const exportado = exportacionInicial?.estado === 'ok'
 
   return (
+    <ContextoIA.Provider value={ia}>
     <div className="contenido">
       <Cabecera
         titulo={<>{form.titulo || ESTILOS[form.estilo].nombre} <span className={`chip chip-titulo ${exportado ? 'chip-ok' : 'chip-en_cola'}`}>{exportado ? 'EXPORTADO' : 'BORRADOR'}</span></>}
@@ -240,12 +245,14 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
             <textarea className="input area" rows={7} value={form.textoPosteo ?? auto} onChange={(e) => setForm((f) => ({ ...f, textoPosteo: e.target.value }))} aria-label="Texto del posteo" />
             <div className="foto-acciones">
               <button className="btn btn-chico" onClick={() => void navigator.clipboard?.writeText(form.textoPosteo ?? auto)}><Icono nombre="content_copy" tamano={16} />Copiar texto</button>
+              <BotonIA texto="Mejorar con IA" pedir={() => accionMejorarTexto(descripcion, ids, form.textoPosteo ?? auto)} alObtener={(t) => setForm((f) => ({ ...f, textoPosteo: t }))} />
               {form.textoPosteo != null && <button className="enlace texto-chico" onClick={() => setForm((f) => ({ ...f, textoPosteo: null }))}>Volver al texto automático</button>}
             </div>
           </div>
         </section>
       </div>
     </div>
+    </ContextoIA.Provider>
   )
 }
 
@@ -296,10 +303,10 @@ function AjustesPlacas({ form, set }: { form: Form; set: (r: Ruta, v: unknown) =
 // ---------------------------------------------------------------------------
 // Campos y elección de producto
 // ---------------------------------------------------------------------------
-function Campo({ rotulo, valor, alCambiar, placeholder, ayuda, area = false, max = 160 }: { rotulo: string; valor: string | null; alCambiar: (v: string) => void; placeholder?: string; ayuda?: ReactNode; area?: boolean; max?: number }) {
+function Campo({ rotulo, valor, alCambiar, placeholder, ayuda, area = false, max = 160, ia }: { rotulo: string; valor: string | null; alCambiar: (v: string) => void; placeholder?: string; ayuda?: ReactNode; area?: boolean; max?: number; ia?: { campo: 'frase' | 'titulo'; contexto: string } }) {
   return (
     <label className="campo">
-      <span className="rotulo-columna">{rotulo}</span>
+      <span className="rotulo-columna rotulo-con-ia">{rotulo}{ia && <BotonIA texto="Sugerir" pedir={() => accionSugerirCampo(ia.campo, ia.contexto, valor || placeholder || '')} alObtener={alCambiar} />}</span>
       {area ? (
         <textarea className="input area" rows={2} value={valor ?? ''} placeholder={placeholder} maxLength={max} onChange={(e) => alCambiar(e.target.value)} />
       ) : (
@@ -431,7 +438,7 @@ function PanelPlaca({ form, info, clave, set, elegir, irA, indice }: { form: For
 
   const portada = (base: Ruta, p: DatosNutriofertas['portada'] | DatosRecetas['portada']) => (
     <>
-      <Campo rotulo="Título" valor={p.titulo} alCambiar={(v) => set([...base, 'titulo'], v)} ayuda={corte} />
+      <Campo rotulo="Título" valor={p.titulo} alCambiar={(v) => set([...base, 'titulo'], v)} ayuda={corte} ia={{ campo: 'titulo', contexto: `portada de un carrusel ${form.estilo === 'recetas' ? 'de receta' : 'NutriOfertas'} con: ${idsDe(form.estilo, form.datos).map((x) => info[x]?.nombre).filter(Boolean).join(', ')}` }} />
       <Campo rotulo="Debajo del título" valor={p.bajada} alCambiar={(v) => set([...base, 'bajada'], v)} max={40} />
       <Campo rotulo="Destacado" valor={p.destacado} alCambiar={(v) => set([...base, 'destacado'], v)} max={30} />
       <Campo rotulo="Texto" valor={p.texto} area alCambiar={(v) => set([...base, 'texto'], v)} />
@@ -476,7 +483,7 @@ function PanelPlaca({ form, info, clave, set, elegir, irA, indice }: { form: For
           <label>Descuento <input className="input input-num" inputMode="decimal" value={it.descuento ?? 0} onChange={(e) => { const n = Number(e.target.value.replace(',', '.') || 0); if (Number.isFinite(n) && n >= 0 && n <= 90) set(['productos', k, 'descuento'], n) }} aria-label="Descuento en %" /> %</label>
           <span className="texto-chico">Precio NutriOferta: <b className="texto-verde">{promo != null ? `${pesosPromo(promo)} ${base!.unidad}` : 'sin precio'}</b>{it.descuento && base ? <> · antes {pesosPromo(base.precio)}</> : null}</span>
         </div>
-        <Campo rotulo="Frase" valor={it.frase} area placeholder={p?.frase || fraseSugerida(p?.categoria)} alCambiar={(v) => set(['productos', k, 'frase'], v || null)} ayuda="Queda guardada en el producto para la próxima." />
+        <Campo rotulo="Frase" valor={it.frase} area placeholder={p?.frase || fraseSugerida(p?.categoria)} alCambiar={(v) => set(['productos', k, 'frase'], v || null)} ayuda="Queda guardada en el producto para la próxima." ia={{ campo: 'frase', contexto: `placa NutriOfertas del producto ${p?.nombre ?? ''}` }} />
         <div className="foto-acciones">
           <button className="btn btn-chico" disabled={k === 0} onClick={() => mover(k - 1)}><Icono nombre="arrow_back" tamano={16} />Antes</button>
           <button className="btn btn-chico" disabled={k === d.productos.length - 1} onClick={() => mover(k + 1)}><Icono nombre="arrow_forward" tamano={16} />Después</button>
@@ -526,7 +533,7 @@ function PanelPlaca({ form, info, clave, set, elegir, irA, indice }: { form: For
           <>
             <Producto id={it.id} info={info} alElegir={(pid) => elegir(['porQue', 'items', i, 'id'], pid)} />
             <Campo rotulo="Nombre" valor={it.nombre} placeholder={prod(it.id) ? nombreCorto(prod(it.id)!) : ''} alCambiar={(v) => set(['porQue', 'items', i, 'nombre'], v || null)} max={30} />
-            <Campo rotulo="Por qué hace bien" valor={it.texto} area placeholder={prod(it.id)?.frase || fraseSugerida(prod(it.id)?.categoria)} alCambiar={(v) => set(['porQue', 'items', i, 'texto'], v || null)} ayuda="Queda guardada en el producto para la próxima." />
+            <Campo rotulo="Por qué hace bien" valor={it.texto} area placeholder={prod(it.id)?.frase || fraseSugerida(prod(it.id)?.categoria)} alCambiar={(v) => set(['porQue', 'items', i, 'texto'], v || null)} ayuda="Queda guardada en el producto para la próxima." ia={{ campo: 'frase', contexto: `por qué hace bien ${prod(it.id)?.nombre ?? 'este ingrediente'} en una receta saludable (beneficio general, sin promesas)` }} />
           </>
         )} />
     </>

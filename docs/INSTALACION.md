@@ -75,6 +75,18 @@ Anotalas en un lugar seguro (por ejemplo, tu gestor de contraseñas). **No las m
    las más de 2.000 fotos del ERP de a poco para no sobrecargarlo. Podés seguir usando la plataforma mientras tanto.
 4. En **Configuración** subí el logo.
 
+## 5. Conectar el asesor con IA (una vez)
+
+1. Entrá a **console.anthropic.com** y creá una cuenta (podés entrar con Google).
+2. En **Billing**, cargá saldo (con 10 o 20 USD alcanza para varios meses de uso normal).
+3. En **Settings › Limits**, poné un tope mensual igual al de la plataforma (por ejemplo 20 USD), como doble seguro.
+4. En **Settings › API Keys › Create Key**, creá una clave (nombre: `marketing`). Copiala: empieza con `sk-ant-`.
+   **No la mandes por chat.**
+5. En la plataforma: **Configuración › Asesor IA › Conexión con Claude**, pegala y apretá **Probar y guardar**.
+   Tiene que decir «Conectada». Queda guardada cifrada y no se vuelve a mostrar.
+
+El gasto del mes se ve en Inicio, en el Asesor y en Configuración. Al llegar al tope, la IA se apaga sola hasta el día 1.
+
 ## Si te olvidás el PIN
 
 1. En Dokploy › Environment agregá `REINICIAR_CLAVE=si` y apretá **Deploy**.

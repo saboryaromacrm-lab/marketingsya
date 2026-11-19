@@ -9,6 +9,9 @@ import { estadoPromo, textoVigencia } from '@/lib/promos/fechas'
 import type { BaseProducto, DatosEditor, FilaEditor, InfoProducto } from '@/lib/promos/editor'
 import { borrarPromo, buscarParaPromo, duplicarPromo, exportarPromo, filasParaSumar, guardarPromo, infoParaSumar } from '../acciones'
 import { Buscador, EstadoGuardado, Exportar, MiniPlaca, VistaPlaca, type Exportacion } from '@/components/piezas/Editor'
+import { BotonIA, ContextoIA, type DisponibilidadIA } from '@/components/piezas/IA'
+import { textoPosteo, type ContactoTexto } from '@/lib/carruseles/textos'
+import { accionMejorarTexto } from '../../asesor/acciones'
 
 type PlacaVista = { formato: 'historia' | 'feed' | 'uno'; pagina: number; paginas: number; ruta: string }
 type Props = {
@@ -21,6 +24,10 @@ type Props = {
   elegidos: number
   erpFaltantes: number
   erpSinFoto: { id: number; nombre: string }[]
+  descuentoInicial: number
+  contacto: ContactoTexto
+  hashtags: string[]
+  ia: DisponibilidadIA
 }
 
 const FORMATOS = [
@@ -68,7 +75,7 @@ function revisar(d: DatosEditor, info: Record<number, InfoProducto>, erpSinFoto:
   return { bloquean, avisos }
 }
 
-export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes, erpSinFoto }: Props) {
+export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes, erpSinFoto, descuentoInicial, contacto, hashtags, ia }: Props) {
   const [datos, setDatos] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
   const [placas, setPlacas] = useState(placasIniciales)
@@ -148,7 +155,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
     if (!nuevos.length) return
     const extra = await infoParaSumar(nuevos)
     setInfo((x) => ({ ...x, ...extra }))
-    setFilas((fs) => [...fs, ...nuevos.filter((x) => extra[x]).map((x): FilaEditor => ({ tipo: 'producto', titulo: null, descuento: 10, cantidadMinima: null, precioFijo: null, origen: 'manual', productos: [{ id: x }] }))])
+    setFilas((fs) => [...fs, ...nuevos.filter((x) => extra[x]).map((x): FilaEditor => ({ tipo: 'producto', titulo: null, descuento: descuentoInicial, cantidadMinima: null, precioFijo: null, origen: 'manual', productos: [{ id: x }] }))])
   }
 
   function sumar(origen: 'seleccion' | 'erp') {
@@ -174,7 +181,12 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const titulo = datos.titulo || 'PROMOCIONES'
   const vigencia = textoVigencia(datos.desde, datos.hasta).toLowerCase()
 
+  // Texto del posteo: se arma solo con la promo; se puede editar o mejorar con IA
+  const nombresProductos = [...presentes].slice(0, 8).map((x) => info[x]?.nombre).filter((x): x is string => !!x)
+  const posteoAuto = textoPosteo('promo', { titulo: datos.titulo || 'PROMOCIONES', bajada: vigencia, productos: nombresProductos, contacto, hashtags })
+
   return (
+    <ContextoIA.Provider value={ia}>
     <div className="contenido">
       <Cabecera
         titulo={<>{titulo} <span className={`chip chip-titulo ${estadoVig.clase}`}>{estadoVig.texto}</span></>}
@@ -231,7 +243,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               {listas.map((l) => <option key={l.id} value={l.id}>{l.nombre}</option>)}
             </select>
           </label>
-          <p className="texto-chico">Contacto en todas las placas: tiendaonline.saboryaroma.com · WhatsApp 370 462-1563 · @saboryaroma__</p>
+          <p className="texto-chico">Contacto en todas las placas: {contacto.web} · WhatsApp {contacto.whatsapp} · {contacto.instagram} (se cambia en Configuración).</p>
           <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar esta promo? No se puede deshacer.')) empezarIr(() => borrarPromo(id)) }}>Borrar promo</button>
         </section>
 
@@ -303,9 +315,21 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               }}
             />
           ))}
+          {datos.filas.length > 0 && (
+            <div className="tarjeta panel-posteo">
+              <span className="rotulo-columna">Texto del posteo</span>
+              <textarea className="input area" rows={6} value={datos.textoPosteo ?? posteoAuto} onChange={(e) => cambiar({ textoPosteo: e.target.value })} aria-label="Texto del posteo" />
+              <div className="foto-acciones">
+                <button className="btn btn-chico" onClick={() => void navigator.clipboard?.writeText(datos.textoPosteo ?? posteoAuto)}><Icono nombre="content_copy" tamano={16} />Copiar texto</button>
+                <BotonIA texto="Mejorar con IA" pedir={() => accionMejorarTexto(`promo «${datos.titulo}» ${vigencia}`, [...presentes], datos.textoPosteo ?? posteoAuto)} alObtener={(t) => cambiar({ textoPosteo: t })} />
+                {datos.textoPosteo != null && <button className="enlace texto-chico" onClick={() => cambiar({ textoPosteo: null })}>Volver al texto automático</button>}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>
+    </ContextoIA.Provider>
   )
 }
 

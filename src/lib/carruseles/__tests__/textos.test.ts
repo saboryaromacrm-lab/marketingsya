@@ -28,7 +28,7 @@ describe('textos de las placas', () => {
     expect(textoIngrediente(almendras)).toBe('de almendra nompareil')
   })
   it('texto del posteo con la tienda, el WhatsApp y los hashtags', () => {
-    const t = textoPosteo('nutriofertas', { titulo: 'NutriOfertas', productos: ['Pasta de maní natural', 'Almendras', 'Miel'] })
+    const t = textoPosteo('nutriofertas', { titulo: 'NutriOfertas', productos: ['Pasta de maní natural', 'Almendras', 'Miel'], contacto: { web: 'tiendaonline.saboryaroma.com', whatsapp: '370 462-1563', instagram: '@saboryaroma__' } })
     expect(t).toContain('pasta de maní natural, almendras y miel')
     expect(t).toContain('tiendaonline.saboryaroma.com')
     expect(t).toContain('370 462-1563')

@@ -8,6 +8,7 @@ import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
 import { detalleBase, nombresCortos, paginar, pesosPromo, precioBase, precioPromo, separarMedida, textoOferta, textoPrecioErp, tituloComun, type Formato } from './calculo'
 import { textoVigencia } from './fechas'
 import type { BloqueFlyer, DatosFlyer, ItemFlyer } from './flyer'
+import { leerConfig } from '@/lib/configuracion'
 
 const { promos, promoFilas, productos, listas } = esquema
 
@@ -25,7 +26,8 @@ export async function cargarPromo(id: number) {
         .from(productos)
         .where(inArray(productos.id, ids))
     : []
-  return { promo, filas, productos: new Map<number, ProductoPromo>(prods.map((p) => [p.id, { ...p, foto: p.foto ? urlMedia(p.foto) : null }])) }
+  const { contacto } = await leerConfig()
+  return { promo, filas, contacto, productos: new Map<number, ProductoPromo>(prods.map((p) => [p.id, { ...p, foto: p.foto ? urlMedia(p.foto) : null }])) }
 }
 export type PromoCargada = NonNullable<Awaited<ReturnType<typeof cargarPromo>>>
 
@@ -86,7 +88,7 @@ export type Placa = { formato: Formato; pagina: number; paginas: number; datos: 
 /** Todas las placas que salen de la promo, en orden: historias, feed y uno por producto. */
 export function planDePlacas(d: PromoCargada): Placa[] {
   const { promo, filas } = d
-  const base = { titulo: promo.titulo, vigencia: textoVigencia(promo.desde, promo.hasta), diseno: promo.diseno }
+  const base = { titulo: promo.titulo, vigencia: textoVigencia(promo.desde, promo.hasta), diseno: promo.diseno, contacto: d.contacto }
   const placas: Placa[] = []
   for (const formato of ['historia', 'feed'] as const) {
     if (!promo.formatos[formato]) continue

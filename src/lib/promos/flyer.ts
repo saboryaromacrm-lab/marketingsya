@@ -4,7 +4,7 @@
 // las filas crecen (escalaDePlaca) y los textos largos se achican solos hasta entrar, sin «…».
 
 import { ALTO, altoEscalado, escalaDePlaca, MEDIDAS, POR_LINEA, type Formato } from './calculo'
-import { AJUSTE, CONTACTO, escaparHtml as e, PALETA } from '@/lib/piezas/html'
+import { AJUSTE, escaparHtml as e, PALETA } from '@/lib/piezas/html'
 
 export type ItemFlyer = {
   nombre: string
@@ -29,6 +29,7 @@ export type DatosFlyer = {
   pagina: number
   paginas: number
   borrador?: boolean
+  contacto: { web: string; whatsapp: string; instagram: string } // de Configuración › General
 }
 
 const CALENDARIO = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11zM7 11h3v3H7z"/></svg>'
@@ -83,9 +84,9 @@ function cabeza(d: DatosFlyer) {
 
 function pie(d: DatosFlyer) {
   if (d.diseno === '2') {
-    return `<div class="pie2"><img src="/marca/horizontal-blanco.svg" alt="Sabor y Aroma"><div class="datos"><span>${e(CONTACTO.web)}</span><span>${e(CONTACTO.whatsapp)} · ${e(CONTACTO.instagram)}</span></div></div>`
+    return `<div class="pie2"><img src="/marca/horizontal-blanco.svg" alt="Sabor y Aroma"><div class="datos"><span>${e(d.contacto.web)}</span><span>WhatsApp ${e(d.contacto.whatsapp)} · ${e(d.contacto.instagram)}</span></div></div>`
   }
-  return `<div class="pie"><span><i>●</i> ${e(CONTACTO.web)}</span><span><i>●</i> ${e(CONTACTO.whatsapp)}</span><span><i>●</i> ${e(CONTACTO.instagram)}</span></div>`
+  return `<div class="pie"><span><i>●</i> ${e(d.contacto.web)}</span><span><i>●</i> WhatsApp ${e(d.contacto.whatsapp)}</span><span><i>●</i> ${e(d.contacto.instagram)}</span></div>`
 }
 
 function uno(d: DatosFlyer) {
