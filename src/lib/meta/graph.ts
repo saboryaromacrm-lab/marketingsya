@@ -17,6 +17,8 @@ function limpiar(p: Parametros, token: string) {
   const u = new URLSearchParams()
   for (const [k, v] of Object.entries(p)) if (v != null && v !== '') u.set(k, String(v))
   u.set('access_token', token)
+  // Los mensajes de error para el usuario («error_user_msg») vienen en español
+  if (!u.has('locale')) u.set('locale', 'es_LA')
   return u
 }
 

@@ -8,11 +8,11 @@ import type { Config } from '@/lib/configuracion-tipos'
 import { cifrar } from '@/lib/ia/cifrado'
 import { clienteIA } from '@/lib/ia/claude'
 
-type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta'
+type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta' | 'pautas'
 
 /** Guarda una sección de Configuración (todo se valida y se corrige en limpiarConfig). */
 export async function guardarConfig<K extends Seccion>(seccion: K, valores: Partial<Config[K]>): Promise<{ ok: true; config: Config } | { error: string }> {
-  if (!['contacto', 'piezas', 'ia', 'meta'].includes(seccion)) return { error: 'Sección desconocida.' }
+  if (!['contacto', 'piezas', 'ia', 'meta', 'pautas'].includes(seccion)) return { error: 'Sección desconocida.' }
   const config = await guardarSeccion(seccion, valores)
   revalidatePath('/', 'layout')
   return { ok: true, config }

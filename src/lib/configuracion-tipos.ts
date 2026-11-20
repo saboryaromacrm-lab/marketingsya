@@ -52,6 +52,48 @@ export type Config = {
     urlPublica: string
     versionApi: string
   }
+  pautas: {
+    topeMensual: number // en pesos, sin impuestos
+    cortar: boolean
+    porDia: number
+    dias: number
+    escribirDesde: number // desde este total hay que escribir el monto para confirmar
+    iva: number // % aproximado que suma Meta
+    objetivo: ObjetivoPauta
+    ubicaciones: UbicacionesPauta
+    utm: boolean
+    publicos: PublicoPauta[]
+    publicoEntrada: string
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pautas (etapa 6)
+// ---------------------------------------------------------------------------
+export const OBJETIVOS_PAUTA = {
+  mensajes: { nombre: 'Mensajes por WhatsApp', detalle: 'Botón «Enviar mensaje» al WhatsApp. Mide cuántas conversaciones empiezan.', resultado: ['mensaje', 'mensajes'] },
+  trafico: { nombre: 'Tráfico a la tienda online', detalle: 'Botón «Comprar» a la tienda online. Mide clics.', resultado: ['clic', 'clics'] },
+  alcance: { nombre: 'Alcance', detalle: 'Que lo vea la mayor cantidad de gente de la zona. Mide personas alcanzadas.', resultado: ['persona', 'personas'] },
+} as const
+export type ObjetivoPauta = keyof typeof OBJETIVOS_PAUTA
+
+export const UBICACIONES_PAUTA = {
+  ig_fb: 'Instagram y Facebook (feed, historias y reels)',
+  ig: 'Solo Instagram (feed, historias y reels)',
+  fb: 'Solo Facebook (feed, historias y reels)',
+} as const
+export type UbicacionesPauta = keyof typeof UBICACIONES_PAUTA
+
+export type ZonaPublico = { tipo: 'radio'; nombre: string; lat: number; lng: number; km: number } | { tipo: 'region'; nombre: string }
+export type PublicoPauta = {
+  id: string
+  nombre: string
+  zona: ZonaPublico
+  edadMin: number
+  edadMax: number // 65 = 65 o más
+  generos: 'todos' | 'mujeres' | 'hombres'
+  intereses: string[] // por nombre: se buscan en Meta al lanzar
+  advantage: boolean // Meta amplía el público partiendo de esto (Advantage+)
 }
 
 /** Minutos entre un reintento y el siguiente cuando Meta falla. */
@@ -90,6 +132,22 @@ export const CONFIG_INICIAL: Config = {
     urlPublica: 'https://marketing.saboryaroma.com',
     versionApi: 'v24.0',
   },
+  pautas: {
+    topeMensual: 100000,
+    cortar: true,
+    porDia: 3000,
+    dias: 7,
+    escribirDesde: 50000,
+    iva: 21,
+    objetivo: 'mensajes',
+    ubicaciones: 'ig_fb',
+    utm: true,
+    publicos: [
+      { id: 'minorista', nombre: 'Minorista Formosa', zona: { tipo: 'radio', nombre: 'Formosa Capital', lat: -26.1775, lng: -58.1781, km: 15 }, edadMin: 18, edadMax: 65, generos: 'todos', intereses: ['Vida saludable', 'Alimentación saludable', 'Comida orgánica'], advantage: true },
+      { id: 'mayoristas', nombre: 'Mayoristas provincia', zona: { tipo: 'region', nombre: 'Formosa' }, edadMin: 25, edadMax: 65, generos: 'todos', intereses: ['Comercio minorista', 'Pequeña empresa', 'Emprendimiento'], advantage: true },
+    ],
+    publicoEntrada: 'minorista',
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +173,7 @@ export function limpiarConfig(valor: unknown): Config {
   const v = obj(valor)
   const c = obj(v.contacto), p = obj(v.piezas), ia = obj(v.ia), m = obj(v.meta)
   const md = obj(m.destinos), mf = obj(md.feed), mh = obj(md.historia)
+  const pa = obj(v.pautas)
   const d = CONFIG_INICIAL
   const f = obj(p.formatos), cal = obj(ia.calendario), cr = obj(ia.criterios)
   const hashtags = lista(ia.hashtags, d.ia.hashtags, 15, 40).map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, ''))
@@ -170,6 +229,50 @@ export function limpiarConfig(valor: unknown): Config {
       })(),
       versionApi: typeof m.versionApi === 'string' && /^v\d{1,2}\.\d$/.test(m.versionApi.trim()) ? m.versionApi.trim() : d.meta.versionApi,
     },
+    pautas: (() => {
+      const publicos = Array.isArray(pa.publicos) ? pa.publicos.map(limpiarPublico).filter((x): x is PublicoPauta => !!x).slice(0, 12) : d.pautas.publicos
+      const lista = publicos.length ? publicos : d.pautas.publicos
+      const entrada = typeof pa.publicoEntrada === 'string' && lista.some((x) => x.id === pa.publicoEntrada) ? pa.publicoEntrada : lista[0].id
+      return {
+        topeMensual: Math.round(numero(pa.topeMensual, d.pautas.topeMensual, 0, 100_000_000)),
+        cortar: booleano(pa.cortar, d.pautas.cortar),
+        porDia: Math.round(numero(pa.porDia, d.pautas.porDia, 100, 10_000_000)),
+        dias: Math.round(numero(pa.dias, d.pautas.dias, 1, 90)),
+        escribirDesde: Math.round(numero(pa.escribirDesde, d.pautas.escribirDesde, 0, 100_000_000)),
+        iva: numero(pa.iva, d.pautas.iva, 0, 100),
+        objetivo: deLista(pa.objetivo, Object.keys(OBJETIVOS_PAUTA) as ObjetivoPauta[], d.pautas.objetivo),
+        ubicaciones: deLista(pa.ubicaciones, Object.keys(UBICACIONES_PAUTA) as UbicacionesPauta[], d.pautas.ubicaciones),
+        utm: booleano(pa.utm, d.pautas.utm),
+        publicos: lista,
+        publicoEntrada: entrada,
+      }
+    })(),
+  }
+}
+
+/** Un público guardado, con sus límites (Meta exige que con Advantage+ la edad máxima quede en 65+ y la mínima hasta 25). */
+export function limpiarPublico(valor: unknown): PublicoPauta | null {
+  const p = obj(valor), z = obj(p.zona)
+  const nombre = texto(p.nombre, '', 40)
+  if (!nombre) return null
+  const zona: ZonaPublico | null =
+    z.tipo === 'region'
+      ? (texto(z.nombre, '', 60) ? { tipo: 'region', nombre: texto(z.nombre, '', 60) } : null)
+      : Number.isFinite(Number(z.lat)) && Number.isFinite(Number(z.lng))
+        ? { tipo: 'radio', nombre: texto(z.nombre, 'Zona', 60), lat: numero(z.lat, 0, -90, 90), lng: numero(z.lng, 0, -180, 180), km: Math.round(numero(z.km, 15, 1, 80)) }
+        : null
+  if (!zona) return null
+  const advantage = booleano(p.advantage, true)
+  let edadMin = Math.round(numero(p.edadMin, 18, 18, 65))
+  let edadMax = Math.round(numero(p.edadMax, 65, 18, 65))
+  if (edadMax < edadMin) edadMax = edadMin
+  if (advantage) { edadMax = 65; edadMin = Math.min(edadMin, 25) }
+  const id = typeof p.id === 'string' && /^[a-z0-9-]{1,40}$/.test(p.id) ? p.id : nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'publico'
+  return {
+    id, nombre, zona, edadMin, edadMax,
+    generos: deLista(p.generos, ['todos', 'mujeres', 'hombres'] as const, 'todos'),
+    intereses: lista(p.intereses, [], 10, 60),
+    advantage,
   }
 }
 

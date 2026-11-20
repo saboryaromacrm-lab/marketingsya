@@ -13,6 +13,7 @@ export default function LayoutConfiguracion({ children }: { children: ReactNode 
             { texto: 'Piezas', href: '/configuracion/piezas', icono: 'image' },
             { texto: 'Asesor IA', href: '/configuracion/asesor', icono: 'auto_awesome' },
             { texto: 'Meta', href: '/configuracion/meta', icono: 'share' },
+            { texto: 'Pautas', href: '/configuracion/pautas', icono: 'campaign' },
             { texto: 'Seguridad', href: '/configuracion/seguridad', icono: 'lock' },
             { texto: 'Motor de piezas', href: '/configuracion/motor', icono: 'memory' },
           ]}

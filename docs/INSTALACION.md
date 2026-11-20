@@ -90,24 +90,51 @@ El gasto del mes se ve en Inicio, en el Asesor y en Configuración. Al llegar al
 ## 6. Conectar Instagram y Facebook (una vez)
 
 Hace falta: el Instagram como cuenta de **empresa** (no de creador), vinculado a la página de Facebook,
-y las dos dentro de tu portafolio comercial (business.facebook.com).
+y las dos dentro del portafolio comercial de Sabor y Aroma (business.facebook.com).
+Así se hizo el 20/11/2026 (Meta cambia seguido los nombres de los menús).
 
-1. **Crear la app:** en **developers.facebook.com › Mis apps › Crear app**, tipo **Negocio**, asociada a tu portafolio de Sabor y Aroma.
-   En la configuración básica de la app pegá la política de privacidad: `https://marketing.saboryaroma.com/privacidad`
-   (también sirve como «instrucciones para borrar datos»). Pasá la app a modo **Activo**.
-2. **Crear el usuario del sistema:** en **business.facebook.com › Configuración del negocio › Usuarios del sistema › Agregar**,
-   nombre `Plataforma marketing`, rol **Administrador**.
-3. **Asignarle los activos** (botón «Asignar activos»), con control total: la **app**, la **página de Facebook** y la **cuenta de Instagram**.
-4. **Generar el token** (botón «Generar token»): elegí la app, vencimiento **Nunca** y marcá los permisos
-   `instagram_basic`, `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts` y `business_management`.
-   Copialo. **No lo mandes por chat ni por mail.**
-5. En la plataforma: **Configuración › Meta › Conexión con Meta**, pegalo y apretá **Probar y guardar**.
-   La página y el Instagram se detectan solos. Después tocá **Probar conexión**: tienen que salir todos los tildes verdes
-   (si la dirección pública no responde, Meta no va a poder bajar las imágenes).
-6. Antes de publicar, cambiá el PIN por uno de 6 a 8 dígitos en **Configuración › Seguridad**.
+**A. La app (developers.facebook.com)**
+1. **Mis apps › Crear app** › nombre `Plataforma marketing SyA` › caso de uso **Otro** › tipo **Negocio** ›
+   portafolio **SABOR Y AROMA**. No uses otras apps que aparezcan (por ejemplo «mi feed»): pueden ser de otro servicio.
+2. Agregá el producto **Instagram**. No hace falta tocar «Crear nueva configuración» ni la «URL de redireccionamiento».
+   Los permisos de anuncios (`ads_management`, `ads_read`) ya vienen: no hace falta agregar la API de marketing aparte.
+3. **Configuración de la app › Básica:** política de privacidad e instrucciones para borrar datos
+   `https://marketing.saboryaroma.com/privacidad`, categoría Negocios. Guardar.
+4. Pasá **App Mode** de «Development» a **Activo** (el interruptor de arriba). **Sin esto, al generar el token
+   dice «No hay permisos disponibles».**
+5. En **Revisión de la app › Permisos y funciones** alcanza con el **acceso estándar** (publicamos en cuentas propias).
+   No pidas acceso avanzado ni la revisión del «Marketing API Access Tier»: «Limited access» alcanza.
 
-Meta cambia seguido los nombres de esos menús: si algo no aparece igual, buscá «Usuarios del sistema» en la configuración del negocio.
-La primera publicación de verdad es la prueba final: conviene hacerla con una pieza sencilla.
+**B. El usuario del sistema (business.facebook.com › Configuración)**
+1. **Usuarios del sistema › Agregar** › nombre `plataforma-marketing` › rol **Administrador**.
+   Con rol «Employee» Meta no deja elegir permisos, y el rol no se puede cambiar después.
+2. Elegilo › **···** › **Asignar activos**, con **control total**: la **página**, la **cuenta de Instagram**,
+   la **cuenta publicitaria** y la **app**. Si el Instagram no deja marcarse y pide «iniciar sesión», andá a
+   **Cuentas › Cuentas de Instagram › saboryaroma__**, iniciá sesión desde ahí (tener Instagram abierto en otra pestaña no alcanza) y volvé.
+3. **Generar token** › la app › caducidad **Nunca** › marcá estos 8 (con el buscador, ninguno más):
+   `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`,
+   `business_management`, `ads_management`, `ads_read`. Copialo en el momento: Meta lo muestra una sola vez.
+4. Revisalo en **developers.facebook.com/tools/debug/accesstoken**: en «Ámbitos» tienen que estar los 8.
+   A veces Meta saca uno sin avisar (nos pasó con `pages_manage_posts`): si falta, generalo de nuevo.
+5. En la plataforma: **Configuración › Meta**, pegalo y **Probar y guardar**; después **Probar conexión**: todo en verde.
+   **No lo mandes por chat ni por mail**, y borralo del bloc de notas donde lo hayas pegado.
+6. Cambiá el PIN por uno de 6 a 8 dígitos en **Configuración › Seguridad**.
+
+**Si algo falla**
+- «No hay permisos disponibles» al generar el token: la app está en Development, o el usuario del sistema es «Employee».
+- «Faltan permisos» en Probar conexión: generá otro token revisando la lista (el viejo no hace falta revocarlo).
+- **No toques «Revocar tokens»**: borra todos los tokens de ese usuario, también el que está andando.
+
+## 7. Pautas en Meta (una vez)
+
+1. En **business.facebook.com › Configuración › Cuentas publicitarias**, la cuenta tiene que estar en **pesos argentinos**,
+   con hora de Argentina y con la tarjeta cargada (la moneda y la zona no se cambian después de creada).
+2. Poné un **límite de gasto** de la cuenta igual al tope de la plataforma (por ejemplo $100.000), como doble seguro.
+3. La cuenta publicitaria tiene que estar asignada al usuario del sistema (paso 6.B.2) y el token tiene que tener
+   `ads_management` y `ads_read` (paso 6.B.3). Si ya lo hiciste así, no hay que generar otro.
+4. Para los anuncios de mensajes, el **WhatsApp Business** tiene que estar vinculado a la página de Facebook
+   (Meta Business Suite › Configuración › WhatsApp).
+5. En la plataforma: **Configuración › Pautas** detecta la cuenta sola. Ahí ajustás el tope del mes, los valores de entrada y los públicos.
 
 ## Si te olvidás el PIN
 

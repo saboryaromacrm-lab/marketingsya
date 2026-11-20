@@ -5,6 +5,7 @@ import { cola, COLA_PUBLICAR, COLA_RENDER, COLA_SINCRONIZAR } from '@/lib/cola'
 import { ejecutarExportacion } from '@/lib/piezas/exportar'
 import { ejecutarSincronizacion } from './sincronizar'
 import { ejecutarPublicacion, recuperarAlArrancar, revisarVencidas } from '@/lib/publicaciones/motor'
+import { sincronizarPautas } from '@/lib/pautas/motor'
 
 // Arranca con el servidor (ver src/instrumentation.ts) y atiende la cola de sincronización.
 export async function arrancarTrabajador() {
@@ -35,5 +36,7 @@ export async function arrancarTrabajador() {
   const revisar = () => revisarVencidas().catch((e) => console.error('[publicar] revisión', e))
   setInterval(revisar, 20_000).unref()
   void revisar()
-  console.log('[cola] atendiendo la sincronización del catálogo, el armado de piezas y las publicaciones')
+  // Cada 15 minutos se piden a Meta el estado y los resultados de las pautas vivas (así Inicio avisa los rechazos)
+  setInterval(() => void sincronizarPautas(false).catch((e) => console.error('[pautas] sincronización', e)), 15 * 60_000).unref()
+  console.log('[cola] atendiendo la sincronización del catálogo, el armado de piezas, las publicaciones y las pautas')
 }

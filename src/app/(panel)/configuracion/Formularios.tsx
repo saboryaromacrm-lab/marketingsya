@@ -8,7 +8,7 @@ import type { EstadoIA } from '@/lib/ia/claude'
 import { dolares } from '@/lib/ia/precios'
 import { borrarClaveIA, guardarClaveIA, guardarConfig } from './acciones-config'
 
-type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta'
+type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta' | 'pautas'
 
 /** Botón «Guardar cambios» con su estado. */
 export function useGuardar<K extends Seccion>(seccion: K) {
@@ -61,7 +61,7 @@ export function Segmentado<T extends string>({ valor, opciones, alCambiar }: { v
 }
 
 /** Lista de textos editable como chips (hashtags, slogans, palabras prohibidas). */
-function ListaEditable({ valores, alCambiar, placeholder, peligro = false }: { valores: string[]; alCambiar: (v: string[]) => void; placeholder: string; peligro?: boolean }) {
+export function ListaEditable({ valores, alCambiar, placeholder, peligro = false }: { valores: string[]; alCambiar: (v: string[]) => void; placeholder: string; peligro?: boolean }) {
   const [nuevo, setNuevo] = useState('')
   const sumar = () => {
     const t = nuevo.trim()

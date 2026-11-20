@@ -24,8 +24,9 @@ const TIPICO: Record<TipoPedido, Uso> = {
   receta: { entrada: 10000, salida: 3000, cacheLectura: 0, cacheEscritura: 0 },
   texto: { entrada: 1500, salida: 700, cacheLectura: 0, cacheEscritura: 0 },
   chat: { entrada: 4000, salida: 1200, cacheLectura: 0, cacheEscritura: 0 },
+  pauta: { entrada: 3000, salida: 900, cacheLectura: 0, cacheEscritura: 0 },
 }
-export type TipoPedido = 'sugerencias' | 'semana' | 'receta' | 'texto' | 'chat'
+export type TipoPedido = 'sugerencias' | 'semana' | 'receta' | 'texto' | 'chat' | 'pauta'
 export const costoEstimado = (modelo: ModeloIA, tipo: TipoPedido) => costo(modelo, TIPICO[tipo])
 
 export const dolares = (n: number) => `US$ ${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

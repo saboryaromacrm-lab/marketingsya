@@ -96,6 +96,9 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
                           if (!dudosa || confirm('Alguna no sabemos si salió. Si ya está publicada, reintentar la va a publicar de nuevo. ¿Reintentar igual?')) accion(() => reintentar(f.id))
                         }}><Icono nombre="refresh" tamano={16} />Reintentar</button>
                       )}
+                      {f.destinos.some((d) => d.ubicacion === 'feed' && d.estado === 'ok') && (
+                        <Link className="btn btn-chico" href={`/pautas/nueva?publicacion=${f.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link>
+                      )}
                       {enlaces.map((g) => (
                         <a key={`${g.red}-${g.ubicacion}`} className="btn btn-chico" href={g.enlace!} target="_blank" rel="noreferrer">
                           Ver en {g.red === 'instagram' ? 'Instagram' : 'Facebook'}{g.ubicacion === 'historia' ? ' (historia)' : ''}
