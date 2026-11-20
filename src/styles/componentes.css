@@ -665,3 +665,50 @@ code { background: var(--superficie-sutil); border: 1px solid var(--borde); bord
   .tabla-publicaciones td:last-child:has(.acciones-publicacion:empty) { display: none; }
   .texto-error-suave { max-width: none; }
 }
+
+/* ---------- Pautas (etapa 6) ---------- */
+.promocionar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(300px, 380px); gap: 20px; align-items: start; }
+.promocionar > .tarjeta { display: grid; gap: 12px; min-width: 0; }
+.promocionar-imagen { width: 100%; max-width: 380px; justify-self: center; display: block; border: 1px solid var(--borde); border-radius: var(--radio); }
+.promocionar-texto { white-space: pre-line; font-size: 13px; color: var(--texto-suave); background: var(--superficie-sutil); border-radius: var(--radio); padding: 10px 12px; max-height: 180px; overflow: auto; }
+.promocionar-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.promocionar-total { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 12px; border-radius: 10px; background: var(--aviso-neutro); }
+.promocionar-total b { font-size: 22px; color: var(--verde); }
+.promocionar-rotulo { margin-top: 6px; }
+.objetivos { display: grid; gap: 8px; }
+.objetivo { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 10px; cursor: pointer; background: var(--superficie); }
+.objetivo input { accent-color: var(--verde); margin-top: 3px; flex: none; }
+.objetivo small { display: block; color: var(--texto-suave); font-size: 12px; }
+.objetivo-activo { border-color: var(--verde); background: #eef6f0; }
+.objetivo-apagado { opacity: .55; cursor: not-allowed; }
+.lista-pruebas li.prueba-aviso, .lista-pruebas li.prueba-aviso .material-icons { color: var(--ambar); }
+.boton-izquierda { justify-self: start; }
+.barra-gasto { height: 6px; border-radius: 3px; background: var(--borde); overflow: hidden; margin-top: 4px; width: 120px; max-width: 100%; }
+.barra-gasto div { height: 100%; background: var(--verde); }
+.medidor-aviso-ancho { width: min(320px, 100%); }
+.pautas-arriba { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.pautas-arriba > .tarjeta { display: grid; gap: 10px; }
+.lista-recientes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lista-recientes li { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sugerencia-pauta { display: grid; gap: 6px; padding: 12px; border-radius: 10px; background: var(--aviso-neutro); }
+.publico-guardado { border: 1px solid var(--borde); border-radius: 10px; padding: 10px; display: grid; gap: 10px; }
+.publico-cabeza { display: flex; gap: 12px; align-items: flex-start; }
+.publico-cabeza > .material-icons { color: var(--verde); }
+.publico-texto { flex: 1; min-width: 0; }
+.publico-editor { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--borde); }
+
+/* Cuadro de diálogo (confirmar gasto, cambiar presupuesto) */
+.dialogo-fondo { position: fixed; inset: 0; z-index: 60; background: rgba(12, 59, 34, .45); display: grid; place-items: center; padding: 16px; }
+.dialogo { background: var(--superficie); border-radius: 14px; padding: 24px; width: min(480px, 100%); display: grid; gap: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .25); max-height: calc(100vh - 32px); overflow: auto; }
+.dialogo-monto { font-size: 30px; font-weight: 700; color: var(--verde); }
+.dialogo-botones { justify-content: flex-end; }
+
+@media (max-width: 1280px) {
+  .promocionar { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+  .promocionar > .tarjeta:first-child { grid-row: span 2; }
+}
+@media (max-width: 860px) {
+  .promocionar { grid-template-columns: minmax(0, 1fr); }
+  .promocionar > .tarjeta:first-child { grid-row: auto; }
+  .publico-cabeza { flex-wrap: wrap; }
+}

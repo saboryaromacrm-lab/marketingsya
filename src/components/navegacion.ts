@@ -12,7 +12,7 @@ export const MENU: SeccionMenu[] = [
       { texto: 'Promos', href: '/promos', icono: 'sell' },
       { texto: 'Asesor IA', href: '/asesor', icono: 'auto_awesome' },
       { texto: 'Publicaciones', href: '/publicaciones', icono: 'send' },
-      { texto: 'Pautas', href: '/pautas', icono: 'campaign', etapa: 6 },
+      { texto: 'Pautas', href: '/pautas', icono: 'campaign' },
     ],
   },
   { rotulo: 'Sistema', items: [{ texto: 'Configuración', href: '/configuracion', icono: 'settings' }] },

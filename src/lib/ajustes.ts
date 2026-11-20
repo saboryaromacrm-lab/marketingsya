@@ -4,7 +4,7 @@ import { db, esquema } from '@/lib/db'
 
 const { ajustes } = esquema
 
-export type ClaveAjuste = 'clave_hash' | 'sesion_secreto' | 'logo' | 'configuracion' | 'ia_clave' | 'meta_token' | 'meta_cuentas'
+export type ClaveAjuste = 'clave_hash' | 'sesion_secreto' | 'logo' | 'configuracion' | 'ia_clave' | 'meta_token' | 'meta_cuentas' | 'meta_publicidad'
 
 export async function leerAjuste(clave: ClaveAjuste): Promise<string | null> {
   const [fila] = await db.select({ valor: ajustes.valor }).from(ajustes).where(eq(ajustes.clave, clave))

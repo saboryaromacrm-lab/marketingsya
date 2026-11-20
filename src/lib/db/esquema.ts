@@ -355,3 +355,44 @@ export const publicacionDestinos = pgTable(
   },
   (t) => [index('publicacion_destinos_pub').on(t.publicacionId)],
 )
+
+// ---------------------------------------------------------------------------
+// Pautas en Meta (etapa 6): promocionar un posteo ya publicado. El presupuesto es siempre total,
+// con fecha de fin: Meta nunca gasta más de lo que Lucas confirmó.
+// ---------------------------------------------------------------------------
+export type EstadoPauta = 'creando' | 'en_revision' | 'programada' | 'activa' | 'pausada' | 'con_problemas' | 'rechazada' | 'terminada' | 'error'
+export type ResultadosPauta = { alcance: number; impresiones: number; clics: number; mensajes: number }
+
+export const pautas = pgTable(
+  'pautas',
+  {
+    id: serial('id').primaryKey(),
+    publicacionId: integer('publicacion_id').references(() => publicaciones.id, { onDelete: 'set null' }),
+    titulo: text('titulo').notNull(),
+    objetivo: text('objetivo').notNull(), // mensajes, trafico, alcance
+    publicoNombre: text('publico_nombre').notNull(),
+    // Copia del público y de las ubicaciones al momento de lanzar
+    publico: jsonb('publico').$type<Record<string, unknown>>().notNull(),
+    ubicaciones: text('ubicaciones').notNull(),
+    // De qué red sale el anuncio (el posteo de Instagram o el de Facebook)
+    origen: text('origen').$type<'instagram' | 'facebook'>().notNull(),
+    porDia: numeric('por_dia', { precision: 14, scale: 2, mode: 'number' }).notNull(),
+    desde: text('desde').notNull(), // AAAA-MM-DD (Formosa)
+    hasta: text('hasta').notNull(),
+    total: numeric('total', { precision: 14, scale: 2, mode: 'number' }).notNull(), // lo máximo que puede gastar (sin impuestos)
+    // Mes al que se carga en el tope (AAAA-MM, el de su inicio)
+    mes: text('mes').notNull(),
+    estado: text('estado').$type<EstadoPauta>().notNull(),
+    motivo: text('motivo'),
+    metaCampana: text('meta_campana'),
+    metaConjunto: text('meta_conjunto'),
+    metaCreativo: text('meta_creativo'),
+    metaAnuncio: text('meta_anuncio'),
+    gastado: numeric('gastado', { precision: 14, scale: 2, mode: 'number' }).notNull().default(0),
+    resultados: jsonb('resultados').$type<ResultadosPauta>(),
+    sincronizadoEn: timestamp('sincronizado_en', { withTimezone: true }),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    terminadoEn: timestamp('terminado_en', { withTimezone: true }),
+  },
+  (t) => [index('pautas_estado').on(t.estado), index('pautas_mes').on(t.mes)],
+)

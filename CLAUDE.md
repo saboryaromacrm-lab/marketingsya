@@ -141,7 +141,7 @@ Poner contador visible y corte automático al llegar al tope.
 
 - **Interfaz:** fuente Nunito Sans (vía `next/font`) e íconos Material Icons rellenos, como el ERP.
   Solo modo claro, con vista para celular (la barra lateral pasa a ser un cajón).
-- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n».
+- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n» (desde el 20/11/2026 están todas habilitadas).
 - **Precio en piezas:** Minorista (lista 3) por defecto, con opción de elegir otra lista.
 - **Sucursales:** la id 3 (Express 2) cerró; son solo las 4 del catálogo.
 - **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
@@ -292,6 +292,40 @@ Poner contador visible y corte automático al llegar al tope.
   - **Pruebas sin Meta real:** un servidor que imita la Graph API (`META_GRAPH_URL`) y descarga las imágenes como Meta. La prueba final
     es la primera publicación de verdad. Fuera de alcance por ahora: etiquetar productos, ubicación, colaboradores y comentarios.
 
+- **Etapa 6 (pautas en Meta), hecha el 20/11/2026:**
+  - **Qué se pauta:** solo posteos del **feed ya publicados** desde la plataforma (botón «Promocionar» en Publicaciones y en `/pautas`).
+    El anuncio usa el mismo posteo de Instagram (`source_instagram_media_id`, se muestra también en Facebook) y suma sus me gusta;
+    si salió solo en Facebook, se usa ese posteo y solo se puede «Alcance» (a un posteo de Facebook no se le suma botón).
+  - **Objetivos:** Mensajes por WhatsApp (de entrada; `OUTCOME_ENGAGEMENT`, conversaciones, destino WhatsApp, botón «Enviar mensaje»),
+    Tráfico a la tienda (`OUTCOME_TRAFFIC`, clics, botón «Comprar» con `utm_source=meta&utm_medium=pauta&utm_campaign=…`) y Alcance.
+  - **Presupuesto siempre total con fecha de fin** (`lifetime_budget` en el conjunto, en centavos): Meta nunca gasta más de lo confirmado.
+    Por día × días (de entrada $3.000 × 7), mínimo diario que informa la cuenta (`min_daily_budget`), hasta 90 días.
+  - **Confirmación del monto:** cuadro «Vas a gastar como máximo $X» con el IVA aproximado aparte (21 %, configurable). Desde $50.000 hay que
+    escribir el monto. El servidor recalcula el total y lo compara con el confirmado (si la pantalla quedó vieja, pide confirmar de nuevo).
+    Cambiar el presupuesto también se confirma igual.
+  - **Tope del mes** ($100.000 sin impuestos, corte automático configurable): las pautas que todavía pueden gastar cuentan por su total; las
+    terminadas, rechazadas o fallidas, por lo gastado. Cada pauta se carga al mes de su inicio. Se recomienda el mismo límite en la cuenta de Meta.
+  - **Lanzar:** campaña en pausa → conjunto → creativo → anuncio → recién al final se activa la campaña. Si algo falla en el medio, se borra
+    la campaña (nunca queda una a medias gastando). Los errores de Meta vienen en español (`locale=es_LA` en todos los pedidos).
+  - **Seguimiento:** estado del anuncio (en revisión, programada, activa, pausada, con problemas, rechazada con el motivo, terminada) y resultados
+    (gastado, alcance, clics, conversaciones de WhatsApp, costo por resultado) desde los insights. Se piden a Meta al abrir `/pautas` si pasaron
+    15 minutos, cada 2 minutos mientras haya pautas en revisión, cada 15 minutos desde el servidor, y con «Actualizar ahora». Lo gastado nunca baja.
+    Pausar, reanudar, terminar (la campaña se archiva) y cambiar presupuesto. Inicio muestra el gasto del mes y los rechazos.
+  - **Públicos guardados** en Configuración › Pautas: «Minorista Formosa» (Formosa Capital + 15 km, 18 a 65+, Advantage+, intereses de vida sana)
+    y «Mayoristas provincia» (provincia de Formosa, 25 a 65+). Radio alrededor de un punto o provincia (se busca en Meta al lanzar), edades,
+    géneros, intereses por nombre (se buscan en Meta) y Advantage+ (con él Meta exige edad máxima 65+ y mínima hasta 25). «Probar en Meta» los valida.
+    Ubicaciones: Instagram y Facebook (feed, historias y reels), o solo una de las dos.
+  - **Cuenta publicitaria** detectada sola con el mismo token (`me/adaccounts`, ajuste `meta_publicidad`): tiene que estar en pesos.
+    El WhatsApp vinculado a la página se intenta leer; si no se puede, se avisa pero no frena.
+  - **IA «¿Qué pauto?»:** mira los me gusta y comentarios de los posteos de Instagram, las pautas anteriores y lo que queda del tope, y propone
+    posteo, objetivo y monto (se revisa y se ajusta al tope). Solo sugiere: lanzar sigue pidiendo confirmación. Cuesta unos centavos.
+  - Tabla `pautas`; código en `src/lib/pautas/` (reglas puras con pruebas, motor e IA) y `src/lib/meta/anuncios.ts`.
+  - **Pruebas sin gastar:** el servidor que imita a Meta suma la API de anuncios. Fuera de esta etapa: anuncios con texto o imagen nuevos,
+    pruebas A/B, públicos de visitantes de la tienda (necesitan el píxel) y catálogo de productos en Meta.
+  - **Conexión real hecha el 20/11/2026** (todo en verde en Probar conexión). Lo que hizo falta está en `docs/INSTALACION.md`, pasos 6 y 7:
+    app propia «Plataforma marketing SyA» (tipo Negocio) en modo **Activo**, usuario del sistema **administrador** con la página, el Instagram,
+    la cuenta publicitaria y la app asignados, y el token revisado en el depurador de Meta (una vez se cayó `pages_manage_posts`).
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
@@ -318,4 +352,4 @@ Poner contador visible y corte automático al llegar al tope.
 - [ ] Backup fuera del servidor: ¿el de Hostinger (24.799 ARS/mes) o uno gratuito hacia Google Drive? (la copia diaria local ya está)
 - [x] DNS: registro A `marketing` creado; la plataforma ya anda en `marketing.saboryaroma.com`
 - [ ] ¿Qué servicio de IA de imágenes?
-- [ ] Credenciales de Meta: el token de publicación lo carga Lucas en Configuración › Meta (guía en `docs/INSTALACION.md`, paso 6); la cuenta publicitaria hace falta en la etapa 6
+- [x] Credenciales de Meta: token del usuario del sistema cargado en Configuración › Meta el 20/11/2026, con publicación y anuncios (guía en `docs/INSTALACION.md`, pasos 6 y 7)

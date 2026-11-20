@@ -8,9 +8,11 @@ import { estadoIA } from '@/lib/ia/claude'
 import { dolares } from '@/lib/ia/precios'
 import { resumenPublicaciones } from '@/lib/publicaciones/resumen'
 import { textoCuando } from '@/lib/publicaciones/reglas'
+import { resumenPautas } from '@/lib/pautas/motor'
+import { pesos } from '@/lib/pautas/reglas'
 
 export default async function Inicio() {
-  const [r, ultima, ia, pub] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), estadoIA(), resumenPublicaciones()])
+  const [r, ultima, ia, pub, pau] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), estadoIA(), resumenPublicaciones(), resumenPautas()])
   const irAlCatalogo = <Link className="btn btn-pri btn-chico" href="/catalogo">Ir al catálogo</Link>
   return (
     <div className="contenido">
@@ -49,6 +51,16 @@ export default async function Inicio() {
       ) : (
         <Aviso tono="verde" dato="Nada programado para publicar." accion={<Link className="btn btn-chico" href="/carruseles">Ir a carruseles</Link>}>
           Abrí un carrusel o una promo y tocá «Publicar».
+        </Aviso>
+      )}
+      {pau.rechazadas.length > 0 && (
+        <Aviso tono="ambar" dato={`Meta rechazó o frenó ${pau.rechazadas.length === 1 ? 'una pauta' : `${pau.rechazadas.length} pautas`}:`} accion={<Link className="btn btn-chico" href="/pautas?ver=rechazadas">Ver</Link>}>
+          «{pau.rechazadas[0].titulo}»{pau.rechazadas[0].motivo ? `. ${pau.rechazadas[0].motivo}` : ''}
+        </Aviso>
+      )}
+      {pub.metaConectada && (
+        <Aviso tono={pau.tope > 0 && pau.comprometido >= pau.tope * 0.8 ? 'ambar' : 'verde'} dato={`Pautas: ${pesos(pau.gastado)} gastados este mes`} accion={<Link className="btn btn-chico" href="/pautas">Ir a pautas</Link>}>
+          {pau.conectada ? `${pesos(pau.comprometido)} comprometidos de ${pesos(pau.tope)} · ${pau.activas} ${pau.activas === 1 ? 'activa' : 'activas'}${pau.enRevision ? ` · ${pau.enRevision} en revisión` : ''}.` : 'Falta detectar la cuenta publicitaria en Configuración › Pautas.'}
         </Aviso>
       )}
       {ultima && r.sinFoto > 0 && (
