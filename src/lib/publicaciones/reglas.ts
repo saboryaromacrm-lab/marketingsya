@@ -136,4 +136,20 @@ export const ETIQUETA_ESTADO: Record<EstadoPublicacion, { texto: string; clase: 
   cancelada: { texto: 'CANCELADA', clase: '' },
 }
 
-export const NOMBRE_DESTINO = (red: RedSocial, ubicacion: UbicacionDestino) => `${red === 'instagram' ? 'Instagram' : 'Facebook'} · ${ubicacion === 'feed' ? (red === 'instagram' ? 'feed' : 'página') : 'historia'}`
+export const NOMBRE_DESTINO = (red: RedSocial, ubicacion: UbicacionDestino) => `${red === 'instagram' ? 'Instagram' : 'Facebook'} · ${ubicacion === 'feed' ? (red === 'instagram' ? 'feed' : 'página') : ubicacion === 'reel' ? 'reel' : 'historia'}`
+
+// ---------------------------------------------------------------------------
+// Videos: un solo archivo por publicación
+// ---------------------------------------------------------------------------
+export type QuePublicar = 'imagenes' | 'reel' | 'historiaVideo' | 'videoFeed'
+export type RedesElegidas = { instagram: boolean; facebook: boolean }
+
+/** Reel → reels de Instagram y de Facebook; historia en video → historias; video de feed → reel en el feed de Instagram y video en la página. */
+export function planDestinosVideo(que: Exclude<QuePublicar, 'imagenes'>, redes: RedesElegidas): FilaDestino[] {
+  const filas: FilaDestino[] = []
+  if (redes.instagram) filas.push({ red: 'instagram', ubicacion: que === 'historiaVideo' ? 'historia' : 'reel', placas: [0] })
+  if (redes.facebook) filas.push({ red: 'facebook', ubicacion: que === 'historiaVideo' ? 'historia' : que === 'reel' ? 'reel' : 'feed', placas: [0] })
+  return filas
+}
+
+export const NOMBRE_QUE: Record<QuePublicar, string> = { imagenes: 'Carrusel e historias', reel: 'Reel', historiaVideo: 'Historia en video', videoFeed: 'Video de feed' }

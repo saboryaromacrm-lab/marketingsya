@@ -11,6 +11,8 @@ import type { BaseProducto, DatosEditor, FilaEditor, InfoProducto } from '@/lib/
 import { borrarPromo, buscarParaPromo, duplicarPromo, exportarPromo, filasParaSumar, guardarPromo, infoParaSumar } from '../acciones'
 import { Buscador, EstadoGuardado, Exportar, MiniPlaca, VistaPlaca, type Exportacion } from '@/components/piezas/Editor'
 import { BotonIA, ContextoIA, type DisponibilidadIA } from '@/components/piezas/IA'
+import { CasillasFormatos, PanelVideo, type Tema } from '@/components/piezas/Formatos'
+import { FORMATOS_VIDEO, videosDe, type FormatoVideo } from '@/lib/video/tipos'
 import { textoPosteo, type ContactoTexto } from '@/lib/carruseles/textos'
 import { accionMejorarTexto } from '../../asesor/acciones'
 
@@ -29,6 +31,7 @@ type Props = {
   contacto: ContactoTexto
   hashtags: string[]
   ia: DisponibilidadIA
+  musica: Tema[]
 }
 
 const FORMATOS = [
@@ -60,7 +63,7 @@ type Revision = { bloquean: ReactNode[]; avisos: ReactNode[] }
 function revisar(d: DatosEditor, info: Record<number, InfoProducto>, erpSinFoto: Props['erpSinFoto'], nombreLista: string): Revision {
   const bloquean: ReactNode[] = []
   const avisos: ReactNode[] = []
-  if (d.filas.length && !d.formatos.historia && !d.formatos.feed && !d.formatos.uno) bloquean.push('Elegí al menos un formato.')
+  if (d.filas.length && !d.formatos.historia && !d.formatos.feed && !d.formatos.uno && !videosDe(d.formatos).length) bloquean.push('Elegí al menos un formato.')
   const sinFoto = d.filas.flatMap((f) => f.productos).filter((p) => info[p.id] && !info[p.id].foto)
   for (const p of sinFoto) bloquean.push(<>«{info[p.id].nombre}» no tiene foto: sacalo de la promo o <Link href={`/catalogo/${p.id}`} target="_blank">subile una</Link>.</>)
   for (const p of erpSinFoto) avisos.push(<>«{p.nombre}» (promo del ERP) no se sumó porque no tiene foto. <Link href={`/catalogo/${p.id}`} target="_blank">Subir foto</Link></>)
@@ -76,12 +79,13 @@ function revisar(d: DatosEditor, info: Record<number, InfoProducto>, erpSinFoto:
   return { bloquean, avisos }
 }
 
-export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes, erpSinFoto, descuentoInicial, contacto, hashtags, ia }: Props) {
+export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, erpFaltantes, erpSinFoto, descuentoInicial, contacto, hashtags, ia, musica }: Props) {
   const [datos, setDatos] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
   const [placas, setPlacas] = useState(placasIniciales)
   const [elegida, setElegida] = useState(0)
   const [version, setVersion] = useState(0)
+  const [ver, setVer] = useState<'placas' | FormatoVideo>('placas')
   const [estado, setEstado] = useState<'guardado' | 'cambios' | 'guardando' | { error: string }>('guardado')
   const [quedanElegidos, setQuedanElegidos] = useState(elegidos)
   const [quedanErp, setQuedanErp] = useState(erpFaltantes)
@@ -175,6 +179,8 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
   const [sobre, setSobre] = useState<number | null>(null)
 
   const placa = placas[Math.min(elegida, placas.length - 1)]
+  const hayImagenes = datos.formatos.historia || datos.formatos.feed || datos.formatos.uno
+  const verVideo = ver !== 'placas' && datos.filas.length && videosDe(datos.formatos).includes(ver) ? ver : null
   const totalProductos = presentes.size
   const estadoVig = ESTADO[estadoPromo(datos.desde, datos.hasta)]
   const lista = listas.find((l) => l.id === datos.listaId)
@@ -198,7 +204,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
           <>
             <EstadoGuardado estado={estado} />
             <button className="btn" disabled={yendo} onClick={() => empezarIr(async () => { await guardarYa(); await duplicarPromo(id) })}><Icono nombre="content_copy" />Duplicar</button>
-            <Exportar exportar={() => exportarPromo(id)} inicial={exportacionInicial} antes={guardarYa} habilitado={placas.length > 0 && !rev.bloquean.length} motivo={!totalProductos ? 'Sumá productos primero' : rev.bloquean.length ? 'Revisá lo que falta (a la derecha)' : ''} />
+            <Exportar exportar={() => exportarPromo(id)} inicial={exportacionInicial} antes={guardarYa} habilitado={hayImagenes && placas.length > 0 && !rev.bloquean.length} motivo={!totalProductos ? 'Sumá productos primero' : !hayImagenes ? 'Marcá historia, feed o uno por producto para exportar imágenes' : rev.bloquean.length ? 'Revisá lo que falta (a la derecha)' : ''} />
             <button className="btn" disabled={yendo || placas.length === 0 || rev.bloquean.length > 0} title={placas.length === 0 || rev.bloquean.length > 0 ? 'Revisá lo que falta (a la derecha)' : 'Publicar en Instagram y Facebook'} onClick={() => empezarIr(async () => { await guardarYa(); router.push(`/publicaciones/nueva?promo=${id}`) })}><Icono nombre="send" />Publicar</button>
           </>
         }
@@ -229,6 +235,16 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
               </label>
             ))}
           </div>
+          <CasillasFormatos
+            opciones={[
+              { clave: 'reel', nombre: 'Reel', detalle: 'video animado 9:16' },
+              { clave: 'historiaVideo', nombre: 'Historia en video', detalle: 'animada · 8 s' },
+              { clave: 'videoFeed', nombre: 'Video de feed', detalle: 'animado 4:5' },
+            ]}
+            valores={datos.formatos}
+            alCambiar={(k, v) => cambiar({ formatos: { ...datos.formatos, [k]: v } })}
+          />
+          <PanelVideo tipo="promo" id={id} animacion={datos.animacion} alCambiar={(a) => cambiar({ animacion: a })} musica={musica} formatos={videosDe(datos.formatos)} antes={guardarYa} version={version} />
           <div className="campo">
             <span className="rotulo-columna">Diseño</span>
             <div className="opciones-diseno" role="radiogroup" aria-label="Diseño">
@@ -251,9 +267,15 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
         </section>
 
         {/* ---------- vista previa ---------- */}
-        {placa ? (
+        {placa || verVideo ? (
           <section className="editor-vista" aria-label="Vista previa">
-            <VistaPlaca ruta={`${placa.ruta}&v=${version}`} formato={placa.formato} />
+            {videosDe(datos.formatos).length > 0 && (
+              <div className="segmentado selector-vista" role="tablist" aria-label="Qué ver">
+                {([['placas', 'Placas'], ...videosDe(datos.formatos).map((f) => [f, FORMATOS_VIDEO[f].nombre])] as ['placas' | FormatoVideo, string][]).map(([k, t]) => <button key={k} type="button" role="tab" aria-selected={(verVideo ?? 'placas') === k} className={(verVideo ?? 'placas') === k ? 'segmentado-activo' : ''} onClick={() => setVer(k)}>{t}</button>)}
+              </div>
+            )}
+            {verVideo ? <VistaPlaca ruta={`/render/video/promo/${id}?formato=${verVideo}&vista=1&v=${version}`} formato={FORMATOS_VIDEO[verVideo].alto === 1920 ? 'historia' : 'feed'} />
+              : placa && <VistaPlaca ruta={`${placa.ruta}&v=${version}`} formato={placa.formato} />}
             <div className="tira-placas" role="tablist" aria-label="Placas">
               {placas.map((p, i) => (
                 <button key={p.ruta} role="tab" aria-selected={p === placa} className={`tira-placa ${p === placa ? 'tira-placa-activa' : ''}`} onClick={() => setElegida(i)}>

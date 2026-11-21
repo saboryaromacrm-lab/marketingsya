@@ -1,6 +1,6 @@
 import 'server-only'
 import { graph, type Graph } from './graph'
-import { ErrorMeta } from './errores'
+import { ErrorMeta, traducirError } from './errores'
 import { tokenDePagina, type CuentasMeta } from './conexion'
 
 // Las cuatro formas de publicar: feed y historia, en Instagram y en Facebook.
@@ -28,19 +28,19 @@ function instagramDe(cuentas: CuentasMeta): string {
   return cuentas.instagramId
 }
 
-/** Espera a que Instagram termine de procesar el contenedor (con imágenes suele ser al toque). */
-async function esperarContenedor(g: Graph, id: string) {
-  for (let i = 0; i < 20; i++) {
+/** Espera a que Instagram termine de procesar el contenedor (con imágenes suele ser al toque; un video, hasta unos minutos). */
+async function esperarContenedor(g: Graph, id: string, intentos = 20) {
+  for (let i = 0; i < intentos; i++) {
     const r = await g.get<{ status_code?: string }>(id, { fields: 'status_code' })
     if (r.status_code === 'FINISHED' || r.status_code === 'PUBLISHED') return
     if (r.status_code === 'ERROR' || r.status_code === 'EXPIRED') throw new ErrorMeta({ mensaje: 'Instagram no pudo procesar la imagen.', reintentable: true })
     await esperar(PAUSA)
   }
-  throw new ErrorMeta({ mensaje: 'Instagram tardó demasiado en procesar las imágenes.', reintentable: true })
+  throw new ErrorMeta({ mensaje: 'Instagram tardó demasiado en procesar el contenido.', reintentable: true })
 }
 
-async function publicarContenedor(g: Graph, ig: string, contenedor: string): Promise<Publicado> {
-  await esperarContenedor(g, contenedor)
+async function publicarContenedor(g: Graph, ig: string, contenedor: string, intentos = 20): Promise<Publicado> {
+  await esperarContenedor(g, contenedor, intentos)
   const { id } = await g.post<{ id: string }>(`${ig}/media_publish`, { creation_id: contenedor }, { final: true })
   const enlace = await g.get<{ permalink?: string }>(id, { fields: 'permalink' }).then((r) => r.permalink ?? null).catch(() => null)
   return { metaId: id, enlace }
@@ -104,4 +104,66 @@ export async function facebookHistoria(b: Base, url: string): Promise<Publicado>
   if (r.success === false) throw new ErrorMeta({ mensaje: 'Facebook no aceptó la historia.', reintentable: true })
   const postId = r.post_id ?? foto.id
   return { metaId: postId, enlace: `https://www.facebook.com/${postId}` }
+}
+
+// ---------------------------------------------------------------------------
+// Videos
+// ---------------------------------------------------------------------------
+const ESPERA_VIDEO = 100 // contenedores de video: Instagram puede tardar unos minutos en procesarlos
+
+/** Reel de Instagram (y, si se pide, también en el feed). La portada es una imagen pública (el cuadro elegido). */
+export async function instagramReel(b: Base, url: string, texto: string, portada: string | null, compartirFeed: boolean): Promise<Publicado> {
+  const ig = instagramDe(b.cuentas)
+  const { id } = await b.g.post<{ id: string }>(`${ig}/media`, { media_type: 'REELS', video_url: url, caption: texto, share_to_feed: compartirFeed, cover_url: portada })
+  return publicarContenedor(b.g, ig, id, ESPERA_VIDEO)
+}
+
+/** Historia de Instagram en video. */
+export async function instagramHistoriaVideo(b: Base, url: string): Promise<Publicado> {
+  const ig = instagramDe(b.cuentas)
+  const { id } = await b.g.post<{ id: string }>(`${ig}/media`, { media_type: 'STORIES', video_url: url })
+  const r = await publicarContenedor(b.g, ig, id, ESPERA_VIDEO)
+  return { ...r, enlace: r.enlace ?? (b.cuentas.instagramUsuario ? `https://www.instagram.com/stories/${b.cuentas.instagramUsuario}/` : null) }
+}
+
+/** Facebook sube los videos en 3 pasos: se pide un lugar, se le pasa la dirección del archivo y se termina. */
+async function subirVideoFacebook(b: Base, borde: 'video_reels' | 'video_stories', url: string): Promise<{ g: Graph; videoId: string }> {
+  const token = await tokenDePagina(b.g, b.cuentas.paginaId)
+  const g = graph(token, b.version)
+  const inicio = await g.post<{ video_id: string; upload_url: string }>(`${b.cuentas.paginaId}/${borde}`, { upload_phase: 'start' })
+  let res: Response
+  try {
+    res = await fetch(inicio.upload_url, { method: 'POST', headers: { Authorization: `OAuth ${token}`, file_url: url }, signal: AbortSignal.timeout(120_000) })
+  } catch {
+    throw new ErrorMeta({ mensaje: 'No se pudo subir el video a Facebook.', reintentable: true })
+  }
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => null)
+    throw new ErrorMeta(traducirError(cuerpo, res.status))
+  }
+  return { g, videoId: inicio.video_id }
+}
+
+/** Reel de la página de Facebook. */
+export async function facebookReel(b: Base, url: string, texto: string): Promise<Publicado> {
+  const { g, videoId } = await subirVideoFacebook(b, 'video_reels', url)
+  const r = await g.post<{ success?: boolean; post_id?: string }>(`${b.cuentas.paginaId}/video_reels`, { upload_phase: 'finish', video_id: videoId, video_state: 'PUBLISHED', description: texto }, { final: true })
+  if (r.success === false) throw new ErrorMeta({ mensaje: 'Facebook no aceptó el reel.', reintentable: true })
+  return { metaId: r.post_id ?? videoId, enlace: `https://www.facebook.com/reel/${videoId}` }
+}
+
+/** Historia de la página de Facebook en video. */
+export async function facebookHistoriaVideo(b: Base, url: string): Promise<Publicado> {
+  const { g, videoId } = await subirVideoFacebook(b, 'video_stories', url)
+  const r = await g.post<{ success?: boolean; post_id?: string }>(`${b.cuentas.paginaId}/video_stories`, { upload_phase: 'finish', video_id: videoId }, { final: true })
+  if (r.success === false) throw new ErrorMeta({ mensaje: 'Facebook no aceptó la historia.', reintentable: true })
+  const postId = r.post_id ?? videoId
+  return { metaId: postId, enlace: `https://www.facebook.com/${postId}` }
+}
+
+/** Video en el feed de la página de Facebook. */
+export async function facebookVideo(b: Base, url: string, texto: string): Promise<Publicado> {
+  const g = await paginaG(b)
+  const { id } = await g.post<{ id: string }>(`${b.cuentas.paginaId}/videos`, { file_url: url, description: texto }, { final: true })
+  return { metaId: id, enlace: `https://www.facebook.com/${id}` }
 }

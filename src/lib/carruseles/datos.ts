@@ -9,6 +9,7 @@ import { htmlPlaca, type PrecioPieza, type ProductoPieza } from './plantillas'
 import { leerConfig } from '@/lib/configuracion'
 import { qrDataUri } from '@/lib/piezas/qr'
 import { idsDe, limpiarDatos, placasDe, type DatosCarrusel, type ProductoNutri } from './tipos'
+import { limpiarFormatosCarrusel } from '@/lib/video/tipos'
 
 const { carruseles, productos, marcas } = esquema
 
@@ -61,9 +62,23 @@ export function precioNutri(p: ProductoCarrusel | undefined, it: Pick<ProductoNu
 }
 
 export const rutaPlaca = (id: number, n: number) => `/render/carrusel/${id}?placa=${n}`
+// Historia: la misma placa en 1080×1920 («formato» y «pagina» dan el nombre del archivo: historia-2.jpg)
+export const rutaHistoria = (id: number, n: number) => `/render/carrusel/${id}?formato=historia&pagina=${n}&placa=${n}`
 
 export function planDePlacas(c: CarruselCargado) {
   return placasDe(c.carrusel.estilo, c.datos).map((p, i) => ({ ...p, numero: i + 1, ruta: rutaPlaca(c.carrusel.id, i + 1) }))
+}
+
+export const formatosDe = (c: CarruselCargado) => limpiarFormatosCarrusel(c.carrusel.formatos)
+
+/** Todo lo que se exporta como imagen: las placas del carrusel y, si está marcada, su versión historia. */
+export function placasExportar(c: CarruselCargado): { numero: number; nombre: string; ruta: string; grupo: 'feed' | 'historia' }[] {
+  const f = formatosDe(c)
+  const plan = planDePlacas(c)
+  return [
+    ...(f.carrusel ? plan.map((p) => ({ numero: p.numero, nombre: p.nombre, ruta: p.ruta, grupo: 'feed' as const })) : []),
+    ...(f.historia ? plan.map((p) => ({ numero: p.numero, nombre: p.nombre, ruta: rutaHistoria(c.carrusel.id, p.numero), grupo: 'historia' as const })) : []),
+  ]
 }
 
 export function htmlDePlaca(c: CarruselCargado, numero: number): string | null {

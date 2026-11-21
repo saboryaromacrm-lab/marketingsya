@@ -1,5 +1,6 @@
 // Menú de la barra lateral. Lo que todavía no existe se ve en gris con su etapa.
-export type ItemMenu = { texto: string; href: string; icono: string; etapa?: number }
+// «rutas»: otras direcciones que también marcan el ítem como activo (Creación incluye carruseles y promos)
+export type ItemMenu = { texto: string; href: string; icono: string; etapa?: number; rutas?: string[] }
 export type SeccionMenu = { rotulo: string; items: ItemMenu[] }
 
 export const MENU: SeccionMenu[] = [
@@ -8,8 +9,7 @@ export const MENU: SeccionMenu[] = [
     rotulo: 'Módulo',
     items: [
       { texto: 'Catálogo', href: '/catalogo', icono: 'inventory_2' },
-      { texto: 'Carruseles', href: '/carruseles', icono: 'view_carousel' },
-      { texto: 'Promos', href: '/promos', icono: 'sell' },
+      { texto: 'Creación', href: '/creacion', icono: 'palette', rutas: ['/carruseles', '/promos'] },
       { texto: 'Asesor IA', href: '/asesor', icono: 'auto_awesome' },
       { texto: 'Publicaciones', href: '/publicaciones', icono: 'send' },
       { texto: 'Pautas', href: '/pautas', icono: 'campaign' },

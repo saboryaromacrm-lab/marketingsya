@@ -8,9 +8,11 @@ import { MINUTOS_ENTRE_REINTENTOS } from '@/lib/configuracion-tipos'
 import { encolarExportacion } from '@/lib/piezas/exportar'
 import { clienteMeta, estadoMeta } from '@/lib/meta/conexion'
 import { ErrorMeta } from '@/lib/meta/errores'
-import { facebookFeed, facebookHistoria, instagramFeed, instagramHistoria } from '@/lib/meta/publicar'
+import { facebookFeed, facebookHistoria, facebookHistoriaVideo, facebookReel, facebookVideo, instagramFeed, instagramHistoria, instagramHistoriaVideo, instagramReel } from '@/lib/meta/publicar'
+import { videoAlDia } from '@/lib/video/exportar'
+import { esFormatoVideo } from '@/lib/video/tipos'
 import { cargarPieza, exportacionDe, type PiezaPublicar, type TipoPieza } from './piezas'
-import { estadoGeneral, llevaTexto, MAX_DIAS_PROGRAMAR, planDestinos, problemasDelTexto, problemasDePlan, type DestinosElegidos } from './reglas'
+import { estadoGeneral, llevaTexto, MAX_DIAS_PROGRAMAR, NOMBRE_QUE, planDestinos, planDestinosVideo, problemasDelTexto, problemasDePlan, type DestinosElegidos, type QuePublicar, type RedesElegidas } from './reglas'
 
 const { publicaciones, publicacionDestinos, exportaciones, carruseles, promos } = esquema
 
@@ -25,6 +27,10 @@ export type NuevaPublicacion = {
   elegidas: number[]
   destinos: DestinosElegidos
   cuando: Date | null // null = ahora
+  // Qué se publica: las imágenes (carrusel e historias) o uno de los videos
+  que?: QuePublicar
+  redes?: RedesElegidas // para videos
+  compartirFeed?: boolean // reel: también en el feed de Instagram
 }
 
 /** Exportación al día de la pieza: si la última sigue igual se reusa; si no, se arma una nueva. */
@@ -45,6 +51,7 @@ export async function crearPublicacion(n: NuevaPublicacion): Promise<{ id: numbe
   if (pieza.sinFoto.length) return { error: `No se puede publicar: ${pieza.sinFoto.map((x) => `«${x}»`).join(', ')} sin foto.` }
   if (pieza.bajas.length) return { error: `No se puede publicar: ${pieza.bajas.map((x) => `«${x}»`).join(', ')} ${pieza.bajas.length === 1 ? 'está dado' : 'están dados'} de baja en el ERP.` }
 
+  if (n.que && n.que !== 'imagenes') return crearPublicacionVideo(n, pieza, meta.cuentas.instagramId)
   const indices = new Set(pieza.placas.map((p) => p.indice))
   const elegidas = [...new Set((Array.isArray(n.elegidas) ? n.elegidas : []).filter((x) => Number.isInteger(x) && indices.has(x)))].sort((a, b) => a - b)
   const destinos: DestinosElegidos = {
@@ -90,6 +97,42 @@ export async function crearPublicacion(n: NuevaPublicacion): Promise<{ id: numbe
     }
     return id
   })
+  if (!n.cuando) await despachar(id)
+  return { id }
+}
+
+/** Publicación de un video (reel, historia en video o video de feed): un solo archivo, armado al día. */
+async function crearPublicacionVideo(n: NuevaPublicacion, pieza: PiezaPublicar, instagramId: string | null): Promise<{ id: number } | { error: string }> {
+  const que = n.que as Exclude<QuePublicar, 'imagenes'>
+  if (!esFormatoVideo(que)) return { error: 'Formato de video desconocido.' }
+  const redes = { instagram: !!n.redes?.instagram, facebook: !!n.redes?.facebook }
+  const filas = planDestinosVideo(que, redes)
+  if (!filas.length) return { error: 'Elegí dónde publicarlo.' }
+  if (redes.instagram && !instagramId) return { error: 'La página no tiene un Instagram de empresa vinculado: sacá Instagram o vinculalo en Meta.' }
+  const conTexto = que !== 'historiaVideo'
+  const texto = typeof n.texto === 'string' ? n.texto.trim() : ''
+  if (conTexto) {
+    const p = problemasDelTexto(texto)
+    if (p.length) return { error: p[0] }
+  }
+  const ahora = Date.now()
+  if (n.cuando) {
+    const t = n.cuando.getTime()
+    if (Number.isNaN(t)) return { error: 'Revisá el día y la hora.' }
+    if (t < ahora + 2 * 60_000) return { error: 'Para programar, elegí una hora de acá a por lo menos 2 minutos (o publicá ahora).' }
+    if (t > ahora + MAX_DIAS_PROGRAMAR * 864e5) return { error: `Se puede programar hasta ${MAX_DIAS_PROGRAMAR} días adelante.` }
+  }
+  const exportacionId = await videoAlDia(pieza.tipo, pieza.id, que)
+  if (!exportacionId) return { error: 'No se pudo armar el video. Revisá la pieza y probá de nuevo.' }
+  const [{ id }] = await db
+    .insert(publicaciones)
+    .values({ tipo: pieza.tipo, referenciaId: pieza.id, titulo: `${pieza.titulo} · ${NOMBRE_QUE[que]}`, texto: conTexto ? texto : '', exportacionId, programadaPara: n.cuando ?? new Date(), estado: 'programada', formato: que, opciones: { compartirFeed: n.compartirFeed !== false } })
+    .returning({ id: publicaciones.id })
+  await db.insert(publicacionDestinos).values(filas.map((f) => ({ ...f, publicacionId: id })))
+  if (conTexto && texto !== pieza.texto.trim()) {
+    if (pieza.tipo === 'carrusel') await db.update(carruseles).set({ textoPosteo: texto }).where(eq(carruseles.id, pieza.id))
+    else await db.update(promos).set({ textoPosteo: texto }).where(eq(promos.id, pieza.id))
+  }
   if (!n.cuando) await despachar(id)
   return { id }
 }
@@ -160,8 +203,9 @@ export async function ejecutarPublicacion(id: number) {
     await db.update(publicacionDestinos).set({ estado: 'publicando' }).where(eq(publicacionDestinos.id, d.id))
     try {
       const listas = urls as string[]
-      const r =
-        d.red === 'instagram'
+      const r = pub.formato !== 'imagenes'
+        ? await publicarVideo(base, d.red, d.ubicacion, listas[0], url(1), pub.texto, pub.formato === 'videoFeed' || pub.opciones?.compartirFeed !== false)
+        : d.red === 'instagram'
           ? d.ubicacion === 'feed' ? await instagramFeed(base, listas, pub.texto, pub.textoAlt) : await instagramHistoria(base, listas[0])
           : d.ubicacion === 'feed' ? await facebookFeed(base, listas, pub.texto, pub.textoAlt) : await facebookHistoria(base, listas[0])
       await db.update(publicacionDestinos).set({ estado: 'ok', error: null, metaId: r.metaId, enlace: r.enlace, publicadoEn: new Date() }).where(eq(publicacionDestinos.id, d.id))
@@ -176,6 +220,12 @@ export async function ejecutarPublicacion(id: number) {
     }
   }
   await cerrar(id)
+}
+
+type BaseMeta = Parameters<typeof instagramReel>[0]
+function publicarVideo(b: BaseMeta, red: string, ubicacion: string, video: string, portada: string | null, texto: string, compartirFeed: boolean) {
+  if (red === 'instagram') return ubicacion === 'historia' ? instagramHistoriaVideo(b, video) : instagramReel(b, video, texto, portada, compartirFeed)
+  return ubicacion === 'historia' ? facebookHistoriaVideo(b, video) : ubicacion === 'reel' ? facebookReel(b, video, texto) : facebookVideo(b, video, texto)
 }
 
 /** Calcula el estado general; si quedan destinos pendientes, agenda el próximo reintento. */
@@ -244,7 +294,8 @@ export async function reintentarPublicacion(id: number): Promise<{ ok: true } | 
     const pieza = await cargarPieza(pub.tipo, pub.referenciaId)
     if (!pieza) return { error: 'La pieza ya no existe.' }
     if (pieza.sinFoto.length) return { error: `No se puede publicar: ${pieza.sinFoto.map((x) => `«${x}»`).join(', ')} sin foto.` }
-    exportacionId = await prepararExportacion(pieza)
+    exportacionId = esFormatoVideo(pub.formato) ? await videoAlDia(pub.tipo, pub.referenciaId, pub.formato) : await prepararExportacion(pieza)
+    if (!exportacionId) return { error: 'No se pudo armar el video.' }
   }
   await db.transaction(async (tx) => {
     await tx.update(publicacionDestinos).set({ estado: 'pendiente', error: null }).where(and(eq(publicacionDestinos.publicacionId, id), eq(publicacionDestinos.estado, 'error')))

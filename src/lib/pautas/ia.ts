@@ -21,7 +21,7 @@ export async function sugerirPauta(): Promise<SugerenciaPauta> {
   const [c, publicidad, tope] = await Promise.all([leerConfig(), leerPublicidad(), topeDelMes()])
   const desde = new Date(Date.now() - 45 * 864e5)
   const pubs = await db.select({ id: publicaciones.id, titulo: publicaciones.titulo, texto: publicaciones.texto }).from(publicaciones).where(and(inArray(publicaciones.estado, ['publicada', 'parcial']), gte(publicaciones.creadoEn, desde))).orderBy(desc(publicaciones.id)).limit(20)
-  const ds = pubs.length ? await db.select().from(publicacionDestinos).where(and(inArray(publicacionDestinos.publicacionId, pubs.map((p) => p.id)), eq(publicacionDestinos.ubicacion, 'feed'), eq(publicacionDestinos.estado, 'ok'))) : []
+  const ds = pubs.length ? await db.select().from(publicacionDestinos).where(and(inArray(publicacionDestinos.publicacionId, pubs.map((p) => p.id)), inArray(publicacionDestinos.ubicacion, ['feed', 'reel']), eq(publicacionDestinos.estado, 'ok'))) : []
   const candidatas = pubs.filter((p) => ds.some((d) => d.publicacionId === p.id))
   if (!candidatas.length) throw new ErrorIA('Todavía no hay posteos del feed publicados en los últimos 45 días para pautar.')
   const queda = Math.max(0, tope.tope - tope.comprometido)

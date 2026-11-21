@@ -1,4 +1,6 @@
 import 'server-only'
+import { formatosNuevaPromo } from '@/lib/video/formatos'
+import { ANIMACION_INICIAL } from '@/lib/video/tipos'
 import { and, asc, desc, eq, inArray } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { leerConfig } from '@/lib/configuracion'
@@ -112,7 +114,7 @@ export async function armarBorrador(lunes: string, indice: number): Promise<Borr
     borrador = { tipo: 'promo', id: await crearPromo(c, idea) }
   } else if (idea.tipo === 'nutriofertas' || idea.tipo === 'lanzamiento') {
     const datos = datosIniciales(idea.tipo, idea.productos)
-    const [{ id }] = await db.insert(carruseles).values({ estilo: idea.tipo, titulo: idea.titulo.slice(0, 80), listaId: c.piezas.listaId, datos: datos as unknown as Record<string, unknown> }).returning({ id: carruseles.id })
+    const [{ id }] = await db.insert(carruseles).values({ estilo: idea.tipo, titulo: idea.titulo.slice(0, 80), listaId: c.piezas.listaId, datos: datos as unknown as Record<string, unknown>, formatos: c.creacion.formatos, animacion: { ...ANIMACION_INICIAL, ...c.creacion.animacion } }).returning({ id: carruseles.id })
     borrador = { tipo: 'carrusel', id }
   } else {
     throw new ErrorIA('Las ideas para historia no tienen borrador: son para que las grabes o subas vos.')
@@ -125,7 +127,7 @@ export async function armarBorrador(lunes: string, indice: number): Promise<Borr
 async function crearPromo(c: Config, idea: IdeaDia): Promise<number> {
   const desde = idea.dia < hoyFormosa() ? hoyFormosa() : idea.dia
   const titulo = idea.titulo.toUpperCase().slice(0, 24)
-  const [{ id }] = await db.insert(promos).values({ titulo, desde, hasta: sumarDias(desde, c.piezas.vigenciaDias), listaId: c.piezas.listaId, formatos: c.piezas.formatos }).returning({ id: promos.id })
+  const [{ id }] = await db.insert(promos).values({ titulo, desde, hasta: sumarDias(desde, c.piezas.vigenciaDias), listaId: c.piezas.listaId, formatos: formatosNuevaPromo(c), animacion: { ...ANIMACION_INICIAL, ...c.creacion.animacion } }).returning({ id: promos.id })
   if (idea.productos.length) await db.insert(promoFilas).values(idea.productos.map((pid, orden) => ({ promoId: id, orden, tipo: 'producto' as const, descuento: c.piezas.descuento, productos: [{ id: pid }] })))
   return id
 }
@@ -182,7 +184,7 @@ Proponé una receta saludable, rica y fácil para un carrusel de Instagram. ${pe
   const porQue = json.porQue.filter((x) => usados.has(x.id)).slice(0, MAX.porQue)
   if (porQue.length) d.porQue.items = porQue.map((x) => ({ id: x.id, nombre: x.nombre.slice(0, 30) || null, texto: x.texto.slice(0, 160) || null }))
   const titulo = d.portada.titulo.replace(/\s*\/\s*/g, ' ')
-  const [{ id }] = await db.insert(carruseles).values({ estilo: 'recetas', titulo: `Receta: ${titulo}`.slice(0, 80), listaId: c.piezas.listaId, datos: d as unknown as Record<string, unknown> }).returning({ id: carruseles.id })
+  const [{ id }] = await db.insert(carruseles).values({ estilo: 'recetas', titulo: `Receta: ${titulo}`.slice(0, 80), listaId: c.piezas.listaId, datos: d as unknown as Record<string, unknown>, formatos: c.creacion.formatos, animacion: { ...ANIMACION_INICIAL, ...c.creacion.animacion } }).returning({ id: carruseles.id })
   return id
 }
 

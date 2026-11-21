@@ -65,6 +65,11 @@ export type Config = {
     publicos: PublicoPauta[]
     publicoEntrada: string
   }
+  creacion: {
+    // Formatos marcados de entrada en una pieza nueva
+    formatos: { carrusel: boolean; historia: boolean; reel: boolean; historiaVideo: boolean; videoFeed: boolean }
+    animacion: { duracion: number; ritmo: 'suave' | 'dinamico' }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -148,6 +153,10 @@ export const CONFIG_INICIAL: Config = {
     ],
     publicoEntrada: 'minorista',
   },
+  creacion: {
+    formatos: { carrusel: true, historia: true, reel: true, historiaVideo: false, videoFeed: false },
+    animacion: { duracion: 15, ritmo: 'suave' },
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -174,6 +183,7 @@ export function limpiarConfig(valor: unknown): Config {
   const c = obj(v.contacto), p = obj(v.piezas), ia = obj(v.ia), m = obj(v.meta)
   const md = obj(m.destinos), mf = obj(md.feed), mh = obj(md.historia)
   const pa = obj(v.pautas)
+  const cre = obj(v.creacion), crf = obj(cre.formatos), cra = obj(cre.animacion)
   const d = CONFIG_INICIAL
   const f = obj(p.formatos), cal = obj(ia.calendario), cr = obj(ia.criterios)
   const hashtags = lista(ia.hashtags, d.ia.hashtags, 15, 40).map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, ''))
@@ -247,6 +257,19 @@ export function limpiarConfig(valor: unknown): Config {
         publicoEntrada: entrada,
       }
     })(),
+    creacion: {
+      formatos: {
+        carrusel: booleano(crf.carrusel, d.creacion.formatos.carrusel),
+        historia: booleano(crf.historia, d.creacion.formatos.historia),
+        reel: booleano(crf.reel, d.creacion.formatos.reel),
+        historiaVideo: booleano(crf.historiaVideo, d.creacion.formatos.historiaVideo),
+        videoFeed: booleano(crf.videoFeed, d.creacion.formatos.videoFeed),
+      },
+      animacion: {
+        duracion: [8, 15, 20, 30].includes(Number(cra.duracion)) ? Number(cra.duracion) : d.creacion.animacion.duracion,
+        ritmo: deLista(cra.ritmo, ['suave', 'dinamico'] as const, d.creacion.animacion.ritmo),
+      },
+    },
   }
 }
 

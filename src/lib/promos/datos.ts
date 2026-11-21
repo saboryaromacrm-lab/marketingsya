@@ -57,7 +57,7 @@ function itemFlyer(p: ProductoPromo | undefined, item: ItemFila, fila: FilaPromo
 }
 
 /** Cada fila de la promo pasada a lo que dibuja el flyer (los productos [desde, hasta)). */
-function bloque(d: PromoCargada, i: number, desde: number, hasta: number): BloqueFlyer {
+export function bloque(d: PromoCargada, i: number, desde: number, hasta: number): BloqueFlyer {
   const fila = d.filas[i]
   const lista = d.promo.listaId
   const prods = fila.productos.map((it) => d.productos.get(it.id))

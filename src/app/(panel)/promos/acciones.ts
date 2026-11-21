@@ -14,6 +14,8 @@ import { urlMedia } from '@/lib/media'
 import { disenoSiguiente, infoProductos, placasDe, type DatosEditor, type FilaEditor } from '@/lib/promos/editor'
 import { esFecha, hoyFormosa, sumarDias } from '@/lib/promos/fechas'
 import { leerConfig } from '@/lib/configuracion'
+import { ANIMACION_INICIAL, limpiarAnimacion } from '@/lib/video/tipos'
+import { formatosNuevaPromo } from '@/lib/video/formatos'
 
 const { promos, promoFilas, seleccion, listas, productos } = esquema
 const MAX_FILAS = 60
@@ -59,7 +61,8 @@ async function validar(d: DatosEditor): Promise<DatosEditor | string> {
     hasta: d.hasta,
     listaId: lista.id,
     diseno: d.diseno === '2' ? '2' : '1',
-    formatos: { historia: !!d.formatos?.historia, feed: !!d.formatos?.feed, uno: !!d.formatos?.uno },
+    formatos: { historia: !!d.formatos?.historia, feed: !!d.formatos?.feed, uno: !!d.formatos?.uno, reel: !!d.formatos?.reel, historiaVideo: !!d.formatos?.historiaVideo, videoFeed: !!d.formatos?.videoFeed },
+    animacion: limpiarAnimacion(d.animacion),
     textoPosteo: typeof d.textoPosteo === 'string' && d.textoPosteo.trim() ? d.textoPosteo.slice(0, 2200) : null,
     filas,
   }
@@ -86,7 +89,7 @@ export async function crearPromoDesdeSeleccion() {
     ...erp.map((f): FilaEditor => ({ ...f, titulo: null, descuento: null, origen: 'erp' })),
   ]
   const hoy = hoyFormosa()
-  const [{ id }] = await db.insert(promos).values({ desde: hoy, hasta: sumarDias(hoy, config.piezas.vigenciaDias), diseno: await disenoSiguiente(), listaId: config.piezas.listaId, formatos: config.piezas.formatos }).returning({ id: promos.id })
+  const [{ id }] = await db.insert(promos).values({ desde: hoy, hasta: sumarDias(hoy, config.piezas.vigenciaDias), diseno: await disenoSiguiente(), listaId: config.piezas.listaId, formatos: formatosNuevaPromo(config), animacion: { ...ANIMACION_INICIAL, ...config.creacion.animacion } }).returning({ id: promos.id })
   await guardarFilas(id, filas)
   await db.delete(seleccion)
   revalidatePath('/', 'layout')

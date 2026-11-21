@@ -7,6 +7,8 @@ import { leerConfig } from '@/lib/configuracion'
 import { estadoIA } from '@/lib/ia/claude'
 import { disponibilidad } from '@/lib/ia/disponibilidad'
 import { aprox, costoEstimado } from '@/lib/ia/precios'
+import { listarMusica } from '@/lib/video/musica'
+import { ANIMACION_INICIAL, limpiarAnimacion } from '@/lib/video/tipos'
 
 export const metadata = { title: 'Promo' }
 
@@ -17,12 +19,12 @@ export default async function PaginaPromo({ params }: { params: Promise<{ id: st
   if (!d) notFound()
   const ids = [...d.productos.keys()]
   const config = await leerConfig()
-  const [info, placas, listas, exportacion, elegidos, erp, sinFoto, estado] = await Promise.all([
-    infoProductos(ids), placasDe(id), listasDisponibles(), ultimaExportacion(d.promo.exportacionId), cantidadElegidos(), filasDelErp(), erpSinFoto(), estadoIA(config),
+  const [info, placas, listas, exportacion, elegidos, erp, sinFoto, estado, musica] = await Promise.all([
+    infoProductos(ids), placasDe(id), listasDisponibles(), ultimaExportacion(d.promo.exportacionId), cantidadElegidos(), filasDelErp(), erpSinFoto(), estadoIA(config), listarMusica(),
   ])
   const { promo } = d
   const datos: DatosEditor = {
-    titulo: promo.titulo, desde: promo.desde, hasta: promo.hasta, listaId: promo.listaId, diseno: promo.diseno, formatos: promo.formatos, textoPosteo: promo.textoPosteo,
+    titulo: promo.titulo, desde: promo.desde, hasta: promo.hasta, listaId: promo.listaId, diseno: promo.diseno, formatos: promo.formatos, textoPosteo: promo.textoPosteo, animacion: limpiarAnimacion(promo.animacion, { ...ANIMACION_INICIAL, ...config.creacion.animacion }),
     filas: d.filas.map((f) => ({ tipo: f.tipo, titulo: f.titulo, descuento: f.descuento, cantidadMinima: f.cantidadMinima, precioFijo: f.precioFijo, origen: f.origen, productos: f.productos })),
   }
   const presentes = new Set(ids)
@@ -41,6 +43,7 @@ export default async function PaginaPromo({ params }: { params: Promise<{ id: st
       contacto={config.contacto}
       hashtags={config.ia.hashtags}
       ia={disponibilidad(estado, aprox(costoEstimado(config.ia.modelo, 'texto')))}
+      musica={musica}
     />
   )
 }

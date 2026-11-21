@@ -52,14 +52,14 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<{
     db
       .selectDistinct({ id: publicaciones.id, titulo: publicaciones.titulo, creadoEn: publicaciones.creadoEn })
       .from(publicaciones)
-      .innerJoin(publicacionDestinos, and(eq(publicacionDestinos.publicacionId, publicaciones.id), eq(publicacionDestinos.ubicacion, 'feed'), eq(publicacionDestinos.estado, 'ok')))
+      .innerJoin(publicacionDestinos, and(eq(publicacionDestinos.publicacionId, publicaciones.id), inArray(publicacionDestinos.ubicacion, ['feed', 'reel']), eq(publicacionDestinos.estado, 'ok')))
       .orderBy(desc(publicaciones.creadoEn))
       .limit(6),
   ])
   // Miniatura: la primera imagen de la exportación de cada publicación
   const pubIds = [...new Set(filas.map((f) => f.publicacionId).filter((x): x is number => x != null))]
   const pubs = pubIds.length ? await db.select({ id: publicaciones.id, archivos: exportaciones.archivos }).from(publicaciones).leftJoin(exportaciones, eq(exportaciones.id, publicaciones.exportacionId)).where(inArray(publicaciones.id, pubIds)) : []
-  const miniatura = new Map(pubs.map((p) => [p.id, p.archivos?.[0] ? urlMedia(p.archivos[0]) : null]))
+  const miniatura = new Map(pubs.map((p) => { const a = p.archivos?.find((x) => !x.endsWith('.mp4')); return [p.id, a ? urlMedia(a) : null] }))
   const cuenta = (estados: readonly EstadoPauta[] | null) => conteos.filter((c) => !estados || estados.includes(c.estado)).reduce((s, c) => s + c.n, 0)
 
   const lista: FilaPauta[] = filas.map((p) => {

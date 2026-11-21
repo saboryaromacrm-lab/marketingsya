@@ -3,7 +3,7 @@ import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
 import { urlMedia } from '@/lib/media'
-import type { DisenoPromo, FormatosPromo, ItemFila, TipoFila } from '@/lib/db/esquema'
+import type { AnimacionPieza, DisenoPromo, FormatosPromo, ItemFila, TipoFila } from '@/lib/db/esquema'
 import { detalleBase } from './calculo'
 import { cargarPromo, planDePlacas, rutaPlaca } from './datos'
 
@@ -34,7 +34,7 @@ export async function infoProductos(ids: number[]): Promise<Record<number, InfoP
 }
 
 export type FilaEditor = { tipo: TipoFila; titulo: string | null; descuento: number | null; cantidadMinima: number | null; precioFijo: number | null; origen: 'manual' | 'erp'; productos: ItemFila[] }
-export type DatosEditor = { titulo: string; desde: string; hasta: string; listaId: number; diseno: DisenoPromo; formatos: FormatosPromo; textoPosteo: string | null; filas: FilaEditor[] }
+export type DatosEditor = { titulo: string; desde: string; hasta: string; listaId: number; diseno: DisenoPromo; formatos: FormatosPromo; textoPosteo: string | null; animacion: AnimacionPieza; filas: FilaEditor[] }
 
 /** Placas que salen (para la vista previa) con su dirección. */
 export async function placasDe(id: number) {

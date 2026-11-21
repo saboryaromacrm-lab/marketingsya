@@ -1,7 +1,8 @@
 import 'server-only'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
-import { cargarCarrusel, htmlDePlaca, planDePlacas as placasCarrusel } from '@/lib/carruseles/datos'
+import { cargarCarrusel, htmlDePlaca, placasExportar } from '@/lib/carruseles/datos'
+import { envolverHistoria } from '@/lib/carruseles/historia'
 import { idsDe } from '@/lib/carruseles/tipos'
 import { posteoCarrusel } from '@/lib/carruseles/posteo'
 import { textoPosteo } from '@/lib/carruseles/textos'
@@ -40,17 +41,17 @@ export async function cargarPieza(tipo: TipoPieza, id: number): Promise<PiezaPub
   if (tipo === 'carrusel') {
     const c = await cargarCarrusel(id)
     if (!c) return null
-    const plan = placasCarrusel(c)
+    const plan = placasExportar(c)
     const ids = idsDe(c.carrusel.estilo, c.datos)
     const prods = ids.map((x) => c.productos.get(x)).filter((p) => !!p)
     const info = Object.fromEntries([...c.productos.values()].map((p) => [p.id, p]))
     return {
       tipo, id,
       titulo: c.carrusel.titulo,
-      subtitulo: `Carrusel · ${plan.length} placas`,
+      subtitulo: `Carrusel · ${plan.filter((p) => p.grupo === 'feed').length} placas${plan.some((p) => p.grupo === 'historia') ? ' + historias' : ''}`,
       editar: `/carruseles/${id}`,
-      placas: plan.map((p, i) => ({ indice: i, ruta: p.ruta, grupo: 'feed', formato: 'carrusel', etiqueta: `${i + 1}` })),
-      huella: huellaDe(plan.map((p) => htmlDePlaca(c, p.numero) ?? '')),
+      placas: plan.map((p, i) => ({ indice: i, ruta: p.ruta, grupo: p.grupo, formato: p.grupo === 'historia' ? 'historia' : 'carrusel', etiqueta: p.grupo === 'historia' ? `Historia ${p.numero}` : `${p.numero}` })),
+      huella: huellaDe(plan.map((p) => { const h = htmlDePlaca(c, p.numero) ?? ''; return p.grupo === 'historia' ? envolverHistoria(h, c.carrusel.estilo, c.contacto) : h })),
       texto: c.carrusel.textoPosteo ?? posteoCarrusel(c.carrusel.estilo, c.datos, info, config.contacto, config.ia.hashtags),
       nombres: [...new Set(prods.map((p) => p.nombre))],
       productos: [...new Set(ids)],
@@ -86,7 +87,7 @@ export async function exportacionDe(pieza: PiezaPublicar) {
   const [x] = await db
     .select()
     .from(exportaciones)
-    .where(and(eq(exportaciones.tipo, pieza.tipo), eq(exportaciones.referenciaId, pieza.id)))
+    .where(and(eq(exportaciones.tipo, pieza.tipo), eq(exportaciones.referenciaId, pieza.id), isNull(exportaciones.formato)))
     .orderBy(desc(exportaciones.id))
     .limit(1)
   if (!x) return null

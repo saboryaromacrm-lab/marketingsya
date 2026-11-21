@@ -7,7 +7,8 @@ import { db, esquema } from '@/lib/db'
 import type { EstiloCarrusel } from '@/lib/db/esquema'
 import { encolarExportacion } from '@/lib/piezas/exportar'
 import { cargarPieza } from '@/lib/publicaciones/piezas'
-import { cargarCarrusel, planDePlacas, precioNutri, productosPieza } from '@/lib/carruseles/datos'
+import { ANIMACION_INICIAL, limpiarAnimacion, limpiarFormatosCarrusel } from '@/lib/video/tipos'
+import { cargarCarrusel, planDePlacas, placasExportar, precioNutri, productosPieza } from '@/lib/carruseles/datos'
 import { datosIniciales, ESTILOS, idsDe, limpiarDatos, type DatosCarrusel, type DatosNutriofertas, type DatosRecetas } from '@/lib/carruseles/tipos'
 import { hoyFormosa } from '@/lib/promos/fechas'
 import { leerConfig } from '@/lib/configuracion'
@@ -40,9 +41,10 @@ export async function crearCarrusel(estilo: string) {
   const elegidos = await db.select({ id: seleccion.productoId }).from(seleccion).orderBy(asc(seleccion.agregadoEn))
   const ids = elegidos.map((e) => e.id)
   const hoy = hoyFormosa()
+  const config = await leerConfig()
   const [{ id }] = await db
     .insert(carruseles)
-    .values({ estilo, listaId: (await leerConfig()).piezas.listaId, titulo: `${ESTILOS[estilo].nombre} ${hoy.slice(8, 10)}/${hoy.slice(5, 7)}`, datos: datosIniciales(estilo, ids) as unknown as Record<string, unknown> })
+    .values({ estilo, listaId: config.piezas.listaId, titulo: `${ESTILOS[estilo].nombre} ${hoy.slice(8, 10)}/${hoy.slice(5, 7)}`, datos: datosIniciales(estilo, ids) as unknown as Record<string, unknown>, formatos: config.creacion.formatos, animacion: { ...ANIMACION_INICIAL, ...config.creacion.animacion } })
     .returning({ id: carruseles.id })
   if (ids.length) {
     await db.delete(seleccion)
@@ -51,7 +53,7 @@ export async function crearCarrusel(estilo: string) {
   redirect(`/carruseles/${id}`)
 }
 
-type Guardar = { titulo: string; listaId: number; estilo: EstiloCarrusel; datos: unknown; textoPosteo: string | null }
+type Guardar = { titulo: string; listaId: number; estilo: EstiloCarrusel; datos: unknown; textoPosteo: string | null; formatos?: unknown; animacion?: unknown }
 
 export async function guardarCarrusel(id: number, g: Guardar): Promise<Resultado<{ placas: { numero: number; nombre: string; ruta: string }[] }>> {
   if (!esEstilo(g.estilo)) return { error: 'Estilo desconocido.' }
@@ -66,7 +68,7 @@ export async function guardarCarrusel(id: number, g: Guardar): Promise<Resultado
   const textoPosteo = typeof g.textoPosteo === 'string' && g.textoPosteo.trim() ? g.textoPosteo.slice(0, 2200) : null
   const [c] = await db
     .update(carruseles)
-    .set({ estilo: g.estilo, titulo, listaId: lista.id, datos: limpio, textoPosteo, actualizadoEn: new Date() })
+    .set({ estilo: g.estilo, titulo, listaId: lista.id, datos: limpio, textoPosteo, formatos: limpiarFormatosCarrusel(g.formatos), animacion: limpiarAnimacion(g.animacion), actualizadoEn: new Date() })
     .where(eq(carruseles.id, id))
     .returning({ id: carruseles.id })
   if (!c) return { error: 'Ese carrusel ya no existe.' }
@@ -89,7 +91,7 @@ export async function duplicarCarrusel(id: number) {
   if (!c) return
   const [{ id: nuevo }] = await db
     .insert(carruseles)
-    .values({ estilo: c.estilo, titulo: `${c.titulo} (copia)`.slice(0, 80), listaId: c.listaId, datos: c.datos, textoPosteo: c.textoPosteo })
+    .values({ estilo: c.estilo, titulo: `${c.titulo} (copia)`.slice(0, 80), listaId: c.listaId, datos: c.datos, textoPosteo: c.textoPosteo, formatos: c.formatos, animacion: c.animacion })
     .returning({ id: carruseles.id })
   redirect(`/carruseles/${nuevo}`)
 }
@@ -106,7 +108,8 @@ export async function exportarCarrusel(id: number): Promise<Resultado<{ exportac
   const ids = idsDe(c.carrusel.estilo, c.datos)
   const sinFoto = ids.map((x) => c.productos.get(x)).filter((p) => p && !p.foto)
   if (sinFoto.length) return { error: `No se puede exportar: ${sinFoto.map((p) => `«${p!.nombre}»`).join(', ')} no ${sinFoto.length === 1 ? 'tiene' : 'tienen'} foto.` }
-  const placas = planDePlacas(c)
+  const placas = placasExportar(c)
+  if (!placas.length) return { error: 'Marcá al menos «Carrusel» o «Historia» en los formatos para exportar imágenes.' }
   try {
     const exportacionId = await encolarExportacion('carrusel', placas.map((p) => p.ruta), id, (await cargarPieza('carrusel', id))?.huella ?? null)
     await db.update(carruseles).set({ exportacionId }).where(eq(carruseles.id, id))

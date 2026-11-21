@@ -67,12 +67,13 @@ export type Promocionable = {
 export async function promocionable(publicacionId: number): Promise<Promocionable | null> {
   const [pub] = await db.select().from(publicaciones).where(eq(publicaciones.id, publicacionId))
   if (!pub) return null
-  const ds = await db.select().from(publicacionDestinos).where(and(eq(publicacionDestinos.publicacionId, publicacionId), eq(publicacionDestinos.ubicacion, 'feed'), eq(publicacionDestinos.estado, 'ok')))
+  // Feed o reel de Instagram (los reels también se pueden promocionar); de Facebook, solo posteos del feed
+  const ds = await db.select().from(publicacionDestinos).where(and(eq(publicacionDestinos.publicacionId, publicacionId), inArray(publicacionDestinos.ubicacion, ['feed', 'reel']), eq(publicacionDestinos.estado, 'ok')))
   const ig = ds.find((d) => d.red === 'instagram' && d.metaId)
-  const fb = ds.find((d) => d.red === 'facebook' && d.metaId)
+  const fb = ds.find((d) => d.red === 'facebook' && d.ubicacion === 'feed' && d.metaId && pub.formato === 'imagenes')
   if (!ig && !fb) return null
   const [exp] = pub.exportacionId ? await db.select({ archivos: exportaciones.archivos }).from(exportaciones).where(eq(exportaciones.id, pub.exportacionId)) : []
-  const primera = (ig ?? fb)!.placas[0] ?? 0
+  const primera = pub.formato !== 'imagenes' ? 1 : (ig ?? fb)!.placas[0] ?? 0
   return {
     id: pub.id,
     titulo: pub.titulo,

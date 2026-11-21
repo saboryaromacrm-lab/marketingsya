@@ -20,7 +20,7 @@ export type FilaPublicacion = {
 }
 
 const ICONO_DESTINO: Record<EstadoDestino, string> = { pendiente: 'schedule', publicando: 'sync', ok: 'check_circle', error: 'error', cancelado: 'block' }
-const CORTO = (red: RedSocial, u: UbicacionDestino) => `${red === 'instagram' ? 'IG' : 'FB'} ${u === 'feed' ? (red === 'instagram' ? 'feed' : 'página') : 'historia'}`
+const CORTO = (red: RedSocial, u: UbicacionDestino) => `${red === 'instagram' ? 'IG' : 'FB'} ${u === 'feed' ? (red === 'instagram' ? 'feed' : 'página') : u === 'reel' ? 'reel' : 'historia'}`
 
 /** Agrupa los destinos iguales (cada historia es un destino aparte): «IG historia ×2». */
 function agrupar(ds: FilaPublicacion['destinos']) {
@@ -96,12 +96,12 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
                           if (!dudosa || confirm('Alguna no sabemos si salió. Si ya está publicada, reintentar la va a publicar de nuevo. ¿Reintentar igual?')) accion(() => reintentar(f.id))
                         }}><Icono nombre="refresh" tamano={16} />Reintentar</button>
                       )}
-                      {f.destinos.some((d) => d.ubicacion === 'feed' && d.estado === 'ok') && (
+                      {f.destinos.some((d) => (d.ubicacion === 'feed' || (d.ubicacion === 'reel' && d.red === 'instagram')) && d.estado === 'ok') && (
                         <Link className="btn btn-chico" href={`/pautas/nueva?publicacion=${f.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link>
                       )}
                       {enlaces.map((g) => (
                         <a key={`${g.red}-${g.ubicacion}`} className="btn btn-chico" href={g.enlace!} target="_blank" rel="noreferrer">
-                          Ver en {g.red === 'instagram' ? 'Instagram' : 'Facebook'}{g.ubicacion === 'historia' ? ' (historia)' : ''}
+                          Ver en {g.red === 'instagram' ? 'Instagram' : 'Facebook'}{g.ubicacion === 'historia' ? ' (historia)' : g.ubicacion === 'reel' ? ' (reel)' : ''}
                         </a>
                       ))}
                     </div>

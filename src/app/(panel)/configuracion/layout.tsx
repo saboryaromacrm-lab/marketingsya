@@ -11,6 +11,7 @@ export default function LayoutConfiguracion({ children }: { children: ReactNode 
           items={[
             { texto: 'General', href: '/configuracion', icono: 'tune', exacto: true },
             { texto: 'Piezas', href: '/configuracion/piezas', icono: 'image' },
+            { texto: 'Creación', href: '/configuracion/creacion', icono: 'movie' },
             { texto: 'Asesor IA', href: '/configuracion/asesor', icono: 'auto_awesome' },
             { texto: 'Meta', href: '/configuracion/meta', icono: 'share' },
             { texto: 'Pautas', href: '/configuracion/pautas', icono: 'campaign' },

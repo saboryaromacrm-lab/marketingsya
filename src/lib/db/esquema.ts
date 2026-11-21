@@ -186,6 +186,8 @@ export const exportaciones = pgTable('exportaciones', {
   error: text('error'),
   // Huella del HTML de las placas al exportar: si la pieza (o el catálogo) cambió, ya no coincide y hay que exportar de nuevo
   huella: text('huella'),
+  // null = imágenes (placas JPEG); si no, el video que se armó: reel, historiaVideo o videoFeed
+  formato: text('formato'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   terminadoEn: timestamp('terminado_en', { withTimezone: true }),
 })
@@ -204,7 +206,9 @@ export const seleccion = pgTable('seleccion', {
 // Promos (flyer de promociones). Solo diseñan: nunca tocan precios en el ERP.
 // ---------------------------------------------------------------------------
 
-export type FormatosPromo = { historia: boolean; feed: boolean; uno: boolean }
+export type FormatosPromo = { historia: boolean; feed: boolean; uno: boolean; reel?: boolean; historiaVideo?: boolean; videoFeed?: boolean }
+// Cómo se anima una pieza en video (reel, historia en video, video de feed)
+export type AnimacionPieza = { duracion: number; ritmo: 'suave' | 'dinamico'; variante: 'auto' | '1' | '2' | '3'; musicaId: number | null; portada: number }
 export type DisenoPromo = '1' | '2'
 
 export const promos = pgTable('promos', {
@@ -219,6 +223,7 @@ export const promos = pgTable('promos', {
   exportacionId: integer('exportacion_id'),
   // Texto del posteo editado a mano (null = se arma solo)
   textoPosteo: text('texto_posteo'),
+  animacion: jsonb('animacion').$type<AnimacionPieza>(),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
 })
@@ -252,6 +257,7 @@ export const promoFilas = pgTable(
 // (ver src/lib/carruseles/tipos.ts); los productos se guardan por id y se leen del catálogo al dibujar.
 // ---------------------------------------------------------------------------
 export type EstiloCarrusel = 'lanzamiento' | 'nutriofertas' | 'recetas'
+export type FormatosCarrusel = { carrusel: boolean; historia: boolean; reel: boolean; historiaVideo: boolean; videoFeed: boolean }
 export const carruseles = pgTable('carruseles', {
   id: serial('id').primaryKey(),
   estilo: text('estilo').$type<EstiloCarrusel>().notNull(),
@@ -260,6 +266,9 @@ export const carruseles = pgTable('carruseles', {
   datos: jsonb('datos').$type<Record<string, unknown>>().notNull(),
   // Texto del posteo editado a mano (null = se arma solo)
   textoPosteo: text('texto_posteo'),
+  // Un contenido, varios formatos: carrusel, historia (imagen), reel, historia en video y video de feed
+  formatos: jsonb('formatos').$type<FormatosCarrusel>(),
+  animacion: jsonb('animacion').$type<AnimacionPieza>(),
   exportacionId: integer('exportacion_id'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
@@ -313,7 +322,7 @@ export const iaChat = pgTable('ia_chat', {
 export type EstadoPublicacion = 'programada' | 'publicando' | 'reintentando' | 'publicada' | 'parcial' | 'error' | 'cancelada'
 export type EstadoDestino = 'pendiente' | 'publicando' | 'ok' | 'error' | 'cancelado'
 export type RedSocial = 'instagram' | 'facebook'
-export type UbicacionDestino = 'feed' | 'historia'
+export type UbicacionDestino = 'feed' | 'historia' | 'reel'
 
 export const publicaciones = pgTable(
   'publicaciones',
@@ -324,6 +333,10 @@ export const publicaciones = pgTable(
     titulo: text('titulo').notNull(),
     texto: text('texto').notNull().default(''),
     textoAlt: text('texto_alt'),
+    // imagenes (carrusel e historias) o un video: reel, historiaVideo, videoFeed
+    formato: text('formato').notNull().default('imagenes'),
+    // Opciones del video: el reel también sale en el feed de Instagram
+    opciones: jsonb('opciones').$type<{ compartirFeed?: boolean }>(),
     // Las imágenes salen de esta exportación (si estaba al día se reusa; si no, se arma una nueva al aprobar)
     exportacionId: integer('exportacion_id').references(() => exportaciones.id, { onDelete: 'set null' }),
     programadaPara: timestamp('programada_para', { withTimezone: true }).notNull(),
@@ -396,3 +409,14 @@ export const pautas = pgTable(
   },
   (t) => [index('pautas_estado').on(t.estado), index('pautas_mes').on(t.mes)],
 )
+
+// ---------------------------------------------------------------------------
+// Biblioteca de música para los videos (temas libres de derechos que sube Lucas)
+// ---------------------------------------------------------------------------
+export const musica = pgTable('musica', {
+  id: serial('id').primaryKey(),
+  nombre: text('nombre').notNull(),
+  archivo: text('archivo').notNull(), // ruta dentro de MEDIA_DIR
+  duracion: numeric('duracion', { precision: 8, scale: 2, mode: 'number' }).notNull(),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+})
