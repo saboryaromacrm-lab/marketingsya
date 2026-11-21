@@ -14,7 +14,7 @@ import { esFormatoVideo } from '@/lib/video/tipos'
 import { cargarPieza, exportacionDe, type PiezaPublicar, type TipoPieza } from './piezas'
 import { estadoGeneral, llevaTexto, MAX_DIAS_PROGRAMAR, NOMBRE_QUE, planDestinos, planDestinosVideo, problemasDelTexto, problemasDePlan, type DestinosElegidos, type QuePublicar, type RedesElegidas } from './reglas'
 
-const { publicaciones, publicacionDestinos, exportaciones, carruseles, promos } = esquema
+const { publicaciones, publicacionDestinos, exportaciones, carruseles, promos, piezasVideo } = esquema
 
 // ---------------------------------------------------------------------------
 // Crear (cuando Lucas aprueba en «Publicar»)
@@ -39,7 +39,7 @@ async function prepararExportacion(pieza: PiezaPublicar): Promise<number> {
   if (exp?.alDia) return exp.id
   const id = await encolarExportacion(pieza.tipo, pieza.placas.map((p) => p.ruta), pieza.id, pieza.huella)
   if (pieza.tipo === 'carrusel') await db.update(carruseles).set({ exportacionId: id }).where(eq(carruseles.id, pieza.id))
-  else await db.update(promos).set({ exportacionId: id }).where(eq(promos.id, pieza.id))
+  else if (pieza.tipo === 'promo') await db.update(promos).set({ exportacionId: id }).where(eq(promos.id, pieza.id))
   return id
 }
 
@@ -52,6 +52,7 @@ export async function crearPublicacion(n: NuevaPublicacion): Promise<{ id: numbe
   if (pieza.bajas.length) return { error: `No se puede publicar: ${pieza.bajas.map((x) => `«${x}»`).join(', ')} ${pieza.bajas.length === 1 ? 'está dado' : 'están dados'} de baja en el ERP.` }
 
   if (n.que && n.que !== 'imagenes') return crearPublicacionVideo(n, pieza, meta.cuentas.instagramId)
+  if (pieza.tipo === 'video') return { error: 'Elegí qué video publicar.' }
   const indices = new Set(pieza.placas.map((p) => p.indice))
   const elegidas = [...new Set((Array.isArray(n.elegidas) ? n.elegidas : []).filter((x) => Number.isInteger(x) && indices.has(x)))].sort((a, b) => a - b)
   const destinos: DestinosElegidos = {
@@ -93,7 +94,7 @@ export async function crearPublicacion(n: NuevaPublicacion): Promise<{ id: numbe
     // El texto editado acá queda también en la pieza (la próxima vez sale igual)
     if (conTexto && texto !== pieza.texto.trim()) {
       if (pieza.tipo === 'carrusel') await tx.update(carruseles).set({ textoPosteo: texto }).where(eq(carruseles.id, pieza.id))
-      else await tx.update(promos).set({ textoPosteo: texto }).where(eq(promos.id, pieza.id))
+      else if (pieza.tipo === 'promo') await tx.update(promos).set({ textoPosteo: texto }).where(eq(promos.id, pieza.id))
     }
     return id
   })
@@ -131,7 +132,8 @@ async function crearPublicacionVideo(n: NuevaPublicacion, pieza: PiezaPublicar, 
   await db.insert(publicacionDestinos).values(filas.map((f) => ({ ...f, publicacionId: id })))
   if (conTexto && texto !== pieza.texto.trim()) {
     if (pieza.tipo === 'carrusel') await db.update(carruseles).set({ textoPosteo: texto }).where(eq(carruseles.id, pieza.id))
-    else await db.update(promos).set({ textoPosteo: texto }).where(eq(promos.id, pieza.id))
+    else if (pieza.tipo === 'promo') await db.update(promos).set({ textoPosteo: texto }).where(eq(promos.id, pieza.id))
+    else await db.update(piezasVideo).set({ textoPosteo: texto }).where(eq(piezasVideo.id, pieza.id))
   }
   if (!n.cuando) await despachar(id)
   return { id }

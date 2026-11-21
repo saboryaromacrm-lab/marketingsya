@@ -13,10 +13,11 @@ import { leerConfig } from '@/lib/configuracion'
 import { huellaDe } from '@/lib/piezas/huella'
 import { urlMedia } from '@/lib/media'
 import type { Grupo } from './reglas'
+import { cargarPiezaVideo, posteoVideo } from '@/lib/video/propios/datos'
 
 // Lo que hace falta saber de una pieza (carrusel o promo) para publicarla.
 
-export type TipoPieza = 'carrusel' | 'promo'
+export type TipoPieza = 'carrusel' | 'promo' | 'video'
 export type PlacaPublicar = { indice: number; ruta: string; grupo: Grupo; formato: 'carrusel' | 'historia' | 'feed' | 'uno'; etiqueta: string }
 
 export type PiezaPublicar = {
@@ -57,6 +58,25 @@ export async function cargarPieza(tipo: TipoPieza, id: number): Promise<PiezaPub
       productos: [...new Set(ids)],
       sinFoto: [...new Set(prods.filter((p) => !p.foto).map((p) => p.nombre))],
       bajas: [...new Set(prods.filter((p) => p.dadoDeBaja).map((p) => p.nombre))],
+    }
+  }
+  if (tipo === 'video') {
+    const v = await cargarPiezaVideo(id)
+    if (!v) return null
+    const prods = [...v.productos.values()]
+    return {
+      tipo, id,
+      titulo: v.pieza.titulo,
+      subtitulo: `Video propio · ${v.contenido.clips.length} ${v.contenido.clips.length === 1 ? 'clip' : 'clips'}`,
+      editar: `/creacion/videos/${id}`,
+      placas: [],
+      huella: '',
+      texto: v.pieza.textoPosteo ?? posteoVideo(v),
+      nombres: prods.map((p) => p.nombre),
+      productos: prods.map((p) => p.id),
+      // Las franjas no necesitan foto: sin foto, el producto sale sin el círculo
+      sinFoto: [],
+      bajas: prods.filter((p) => p.dadoDeBaja).map((p) => p.nombre),
     }
   }
   const d = await cargarPromo(id)

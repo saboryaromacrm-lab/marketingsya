@@ -16,12 +16,12 @@ import { NOMBRE_QUE, type QuePublicar } from '@/lib/publicaciones/reglas'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Publicar' }
 
-type Q = { carrusel?: string; promo?: string; fecha?: string; que?: string }
+type Q = { carrusel?: string; promo?: string; video?: string; fecha?: string; que?: string }
 
 export default async function NuevaPublicacion({ searchParams }: { searchParams: Promise<Q> }) {
   const q = await searchParams
-  const tipo: TipoPieza | null = q.carrusel ? 'carrusel' : q.promo ? 'promo' : null
-  const pieza = tipo ? await cargarPieza(tipo, Number(q.carrusel ?? q.promo)) : null
+  const tipo: TipoPieza | null = q.carrusel ? 'carrusel' : q.promo ? 'promo' : q.video ? 'video' : null
+  const pieza = tipo ? await cargarPieza(tipo, Number(q.carrusel ?? q.promo ?? q.video)) : null
   if (!pieza) notFound()
   const config = await leerConfig()
   const [exp, meta, idea, ia, videos] = await Promise.all([exportacionDe(pieza), estadoMeta(), esFecha(q.fecha) ? Promise.resolve(q.fecha) : diaDeLaIdea(pieza.tipo, pieza.id), estadoIA(config), estadoVideos(pieza.tipo, pieza.id)])
@@ -45,7 +45,7 @@ export default async function NuevaPublicacion({ searchParams }: { searchParams:
       placas={v ? [] : pieza.placas.map((p) => ({ ...p, imagen: exp?.alDia ? exp.imagenes[p.indice] ?? null : null }))}
       exportacion={exp ? { alDia: exp.alDia, cuando: exp.terminadoEn ? cuando(exp.terminadoEn) : null } : null}
       textoInicial={pieza.texto}
-      altInicial={config.meta.textoAlt ? textoAlternativo(pieza.tipo, pieza.titulo, pieza.nombres) : null}
+      altInicial={config.meta.textoAlt && pieza.tipo !== 'video' ? textoAlternativo(pieza.tipo, pieza.titulo, pieza.nombres) : null}
       destinosIniciales={config.meta.destinos}
       sugerencia={{ modo: conIdea ? 'programar' : 'ahora', fecha, hora, deLaIdea: conIdea }}
       horas={{ feed: config.meta.horaFeed, historia: config.meta.horaHistoria }}
@@ -53,7 +53,7 @@ export default async function NuevaPublicacion({ searchParams }: { searchParams:
       ia={disponibilidad(ia, aprox(costoEstimado(config.ia.modelo, 'texto')))}
       que={que}
       opcionesQue={disponibles.map((x) => ({ que: x, nombre: NOMBRE_QUE[x], href: enlace(x) }))}
-      video={v ? { nombre: FORMATOS_VIDEO[v.formato].nombre, url: v.alDia ? v.exportacion?.video ?? null : null, vista: `/render/video/${pieza.tipo}/${pieza.id}?formato=${v.formato}&vista=1`, alto: FORMATOS_VIDEO[v.formato].alto, total: v.total } : null}
+      video={v ? { nombre: FORMATOS_VIDEO[v.formato].nombre, url: v.alDia ? v.exportacion?.video ?? null : null, vista: pieza.tipo === 'video' ? null : `/render/video/${pieza.tipo}/${pieza.id}?formato=${v.formato}&vista=1`, portada: v.exportacion?.portada ?? null, alto: FORMATOS_VIDEO[v.formato].alto, total: v.total } : null}
     />
   )
 }

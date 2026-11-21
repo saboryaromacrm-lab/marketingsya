@@ -13,26 +13,30 @@ import { MenuCreacion } from '../MenuCreacion'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Mis piezas' }
 
-const { carruseles, promos, exportaciones, publicaciones } = esquema
+const { carruseles, promos, exportaciones, publicaciones, piezasVideo, videos: biblioteca } = esquema
 
-const VER = { todas: 'Todas', carruseles: 'Carruseles', historias: 'Historias', reels: 'Reels', promos: 'Promos' } as const
+const VER = { todas: 'Todas', carruseles: 'Carruseles', historias: 'Historias', reels: 'Reels', promos: 'Promos', videos: 'Videos propios' } as const
 type Ver = keyof typeof VER
 const ESTADOS = { todos: 'Cualquier estado', borrador: 'Borrador', lista: 'Lista', programada: 'Programada', publicada: 'Publicada' } as const
 type Estado = Exclude<keyof typeof ESTADOS, 'todos'>
 const CLASE: Record<Estado, string> = { borrador: 'chip-en_cola', lista: '', programada: 'chip-en_cola', publicada: 'chip-ok' }
 
-type Pieza = { tipo: 'carrusel' | 'promo'; id: number; titulo: string; detalle: string; formatos: string[]; historia: boolean; reel: boolean; actualizado: Date; exportacionId: number | null }
+type Pieza = { tipo: 'carrusel' | 'promo' | 'video'; id: number; titulo: string; detalle: string; formatos: string[]; historia: boolean; reel: boolean; actualizado: Date; exportacionId: number | null; miniatura?: string | null }
 
 export default async function MisPiezas({ searchParams }: { searchParams: Promise<{ ver?: string; q?: string; estado?: string }> }) {
   const q = await searchParams
   const ver: Ver = q.ver && q.ver in VER ? (q.ver as Ver) : 'todas'
   const estadoFiltro = q.estado && q.estado in ESTADOS && q.estado !== 'todos' ? (q.estado as Estado) : null
   const buscar = (q.q ?? '').trim().toLowerCase()
-  const [cs, ps, pubs] = await Promise.all([
+  const [cs, ps, pubs, vs] = await Promise.all([
     db.select().from(carruseles).orderBy(desc(carruseles.actualizadoEn)).limit(200),
     db.select().from(promos).orderBy(desc(promos.actualizadoEn)).limit(200),
     db.select({ tipo: publicaciones.tipo, ref: publicaciones.referenciaId, estado: publicaciones.estado }).from(publicaciones),
+    db.select().from(piezasVideo).orderBy(desc(piezasVideo.actualizadoEn)).limit(200),
   ])
+  // Videos propios: de miniatura, la del primer clip (hasta que haya un video armado)
+  const primeros = [...new Set(vs.map((v) => v.contenido.clips?.[0]?.videoId).filter((x): x is number => Number.isInteger(x)))]
+  const minis = primeros.length ? await db.select({ id: biblioteca.id, miniatura: biblioteca.miniatura }).from(biblioteca).where(inArray(biblioteca.id, primeros)) : []
   const piezas: Pieza[] = [
     ...cs.map((c): Pieza => {
       const f = limpiarFormatosCarrusel(c.formatos)
@@ -47,6 +51,15 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
       formatos: [p.formatos.historia && 'Historia', p.formatos.feed && 'Feed', p.formatos.uno && 'Uno por producto', p.formatos.reel && 'Reel', p.formatos.historiaVideo && 'Historia en video', p.formatos.videoFeed && 'Video de feed'].filter((x): x is string => !!x),
       historia: !!p.formatos.historia || !!p.formatos.historiaVideo, reel: !!p.formatos.reel,
     })),
+    ...vs.map((v): Pieza => {
+      const f = v.formatos
+      const mini = minis.find((m) => m.id === v.contenido.clips?.[0]?.videoId)?.miniatura
+      return {
+        tipo: 'video', id: v.id, titulo: v.titulo, detalle: `${v.contenido.clips?.length ?? 0} ${v.contenido.clips?.length === 1 ? 'clip' : 'clips'}`, actualizado: v.actualizadoEn, exportacionId: null,
+        formatos: [f.reel && 'Reel', f.historiaVideo && 'Historia en video', f.videoFeed && 'Video de feed'].filter((x): x is string => !!x),
+        historia: !!f.historiaVideo, reel: !!f.reel, miniatura: mini ? urlMedia(mini) : null,
+      }
+    }),
   ].sort((a, b) => b.actualizado.getTime() - a.actualizado.getTime())
 
   const expIds = piezas.map((p) => p.exportacionId).filter((x): x is number => x != null)
@@ -62,9 +75,9 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
   const miniatura = (p: Pieza) => {
     const a = exps.find((e) => e.id === p.exportacionId && e.estado === 'ok')?.archivos.find((x) => !x.endsWith('.mp4'))
     const v = videos.find((x) => x.tipo === p.tipo && x.ref === p.id)?.archivos[1]
-    return a ? urlMedia(a) : v ? urlMedia(v) : null
+    return a ? urlMedia(a) : v ? urlMedia(v) : p.miniatura ?? null
   }
-  const pasaVer = (p: Pieza, v: Ver) => v === 'todas' || (v === 'carruseles' && p.tipo === 'carrusel') || (v === 'promos' && p.tipo === 'promo') || (v === 'historias' && p.historia) || (v === 'reels' && p.reel)
+  const pasaVer = (p: Pieza, v: Ver) => v === 'todas' || (v === 'carruseles' && p.tipo === 'carrusel') || (v === 'promos' && p.tipo === 'promo') || (v === 'historias' && p.historia) || (v === 'reels' && p.reel) || (v === 'videos' && p.tipo === 'video')
   const conBusqueda = piezas.filter((p) => !buscar || p.titulo.toLowerCase().includes(buscar)).map((p) => ({ ...p, estado: estadoDe(p) })).filter((p) => !estadoFiltro || p.estado === estadoFiltro)
   const lista = conBusqueda.filter((p) => pasaVer(p, ver))
   const enlace = (v: Ver) => `/creacion/piezas?${new URLSearchParams({ ...(v !== 'todas' ? { ver: v } : {}), ...(q.q ? { q: q.q } : {}), ...(estadoFiltro ? { estado: estadoFiltro } : {}) })}`
@@ -90,16 +103,16 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
             <div className="grilla-piezas">
               {lista.map((p) => {
                 const img = miniatura(p)
-                const editar = p.tipo === 'carrusel' ? `/carruseles/${p.id}` : `/promos/${p.id}`
+                const editar = p.tipo === 'carrusel' ? `/carruseles/${p.id}` : p.tipo === 'promo' ? `/promos/${p.id}` : `/creacion/videos/${p.id}`
                 return (
                   <article key={`${p.tipo}-${p.id}`} className="tarjeta-pieza">
                     <Link href={editar} className="tarjeta-pieza-imagen">
-                      {img ? <img src={img} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={p.tipo === 'promo' ? 'sell' : 'view_carousel'} tamano={36} /></span>}
+                      {img ? <img src={img} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={p.tipo === 'promo' ? 'sell' : p.tipo === 'video' ? 'videocam' : 'view_carousel'} tamano={36} /></span>}
                       {p.reel && <span className="tarjeta-pieza-video"><Icono nombre="play_arrow" tamano={14} />Reel</span>}
                     </Link>
                     <div className="tarjeta-pieza-cuerpo">
                       <Link href={editar}><b>{p.titulo}</b></Link>
-                      <span className="texto-chico">{p.tipo === 'carrusel' ? 'Carrusel' : 'Promo'} · {p.detalle}</span>
+                      <span className="texto-chico">{p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio'} · {p.detalle}</span>
                       <div className="chips">{p.formatos.map((f) => <span key={f} className="chip chip-mini">{f}</span>)}</div>
                       <div className="fila-separada">
                         <span className={`chip ${CLASE[p.estado]}`}>{ESTADOS[p.estado].toUpperCase()}</span>

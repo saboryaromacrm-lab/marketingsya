@@ -143,6 +143,11 @@ Así se hizo el 20/11/2026 (Meta cambia seguido los nombres de los menús).
 - Los videos se arman de a uno y usan 2 núcleos del servidor; un reel de 15 segundos tarda alrededor de 1 minuto.
 - La música se sube en **Configuración › Creación › Biblioteca de música**. Usá solo temas libres de derechos (biblioteca de audio de YouTube
   con «No se requiere atribución», o Pixabay Music): Instagram silencia o bloquea los videos con música con derechos.
+- **Tus videos (Creación › Mis videos):** se suben desde la computadora o el celular, en pedazos de 8 MB (si se corta la conexión,
+  sigue desde donde quedó). Hasta 300 MB y 3 minutos. El servidor guarda una copia en 1080p (un video de 25 MB queda en 2 o 3 MB)
+  y borra el original. Los videos sin usar se borran solos a los 90 días (se avisa 14 días antes; «Conservar» lo evita).
+  Todo queda en el volumen de Dokploy (`/data/media/videos`): no hace falta configurar nada.
+- Un video propio de 20 segundos con apertura, franjas y cierre tarda alrededor de 1 minuto en armarse.
 
 ## Si te olvidás el PIN
 

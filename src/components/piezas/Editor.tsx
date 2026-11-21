@@ -21,10 +21,12 @@ export function EstadoGuardado({ estado }: { estado: 'guardado' | 'cambios' | 'g
 // ---------------------------------------------------------------------------
 // Buscador: sumar productos sin ir al catálogo
 // ---------------------------------------------------------------------------
-export function Buscador({ listaId, presentes, alSumar, enfocar = false, buscar, textoBoton = 'Agregar', placeholder = 'Buscar productos para agregar…' }: {
+export function Buscador({ listaId, presentes, alSumar, enfocar = false, buscar, textoBoton = 'Agregar', placeholder = 'Buscar productos para agregar…', cerrarAlSumar = false }: {
   listaId: number; presentes: Set<number>; alSumar: (ids: number[]) => Promise<void>; enfocar?: boolean
   buscar: (q: string, listaId: number) => Promise<{ resultados: ResultadoBusqueda[]; aproximada: boolean }>
   textoBoton?: string; placeholder?: string
+  // En un cuadro chico la lista taparía los botones: se cierra y se limpia al sumar
+  cerrarAlSumar?: boolean
 }) {
   const [q, setQ] = useState('')
   const [res, setRes] = useState<{ q: string; resultados: ResultadoBusqueda[]; aproximada: boolean } | null>(null)
@@ -47,6 +49,7 @@ export function Buscador({ listaId, presentes, alSumar, enfocar = false, buscar,
     setSumando(pid)
     await alSumar([pid])
     setSumando(null)
+    if (cerrarAlSumar) { setAbierto(false); setQ('') }
   }
   const buscando = q.trim().length >= 2 && res?.q !== q.trim()
 

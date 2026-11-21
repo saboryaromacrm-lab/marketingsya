@@ -57,9 +57,9 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
       id: p.id,
       titulo: p.titulo,
       detalle: p.formato !== 'imagenes'
-        ? [p.tipo === 'carrusel' ? 'Carrusel' : 'Promo', NOMBRE_QUE[p.formato as QuePublicar] ?? 'Video'].join(' · ')
-        : [p.tipo === 'carrusel' ? 'Carrusel' : 'Promo', feed ? `${feed.placas.length} ${feed.placas.length === 1 ? 'imagen' : 'imágenes'}` : null, historias ? `${historias} ${historias === 1 ? 'historia' : 'historias'}` : null].filter(Boolean).join(' · '),
-      pieza: p.tipo === 'carrusel' ? `/carruseles/${p.referenciaId}` : `/promos/${p.referenciaId}`,
+        ? [p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio', NOMBRE_QUE[p.formato as QuePublicar] ?? 'Video'].join(' · ')
+        : [p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio', feed ? `${feed.placas.length} ${feed.placas.length === 1 ? 'imagen' : 'imágenes'}` : null, historias ? `${historias} ${historias === 1 ? 'historia' : 'historias'}` : null].filter(Boolean).join(' · '),
+      pieza: p.tipo === 'carrusel' ? `/carruseles/${p.referenciaId}` : p.tipo === 'promo' ? `/promos/${p.referenciaId}` : `/creacion/videos/${p.referenciaId}`,
       miniatura: arch?.[primera] ? urlMedia(arch[primera]) : null,
       estado: p.estado,
       cuando: EN_CURSO.includes(p.estado) ? textoCuando(p.proximoIntento ?? p.programadaPara, ahora) : cuando(p.terminadoEn ?? p.programadaPara, ahora),
