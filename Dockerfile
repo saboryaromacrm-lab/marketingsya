@@ -32,7 +32,9 @@ COPY --from=compilacion --chown=node:node /app/public ./public
 # Chromium sin pantalla para pasar las placas a JPEG, con las librerías y fuentes del sistema que necesita.
 # Se instala con el mismo playwright-core que usa la app, así la versión siempre coincide.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# ffmpeg arma los videos (reels e historias animadas) a partir de los cuadros que saca Chromium.
 RUN node node_modules/playwright-core/cli.js install --with-deps --only-shell chromium \
+ && apt-get update && apt-get install -y --no-install-recommends ffmpeg \
  && rm -rf /var/lib/apt/lists/*
 # La carpeta de fotos es un volumen: se crea con el dueño correcto para que la app pueda escribir.
 RUN mkdir -p /app/media && chown node:node /app/media

@@ -8,7 +8,7 @@ import type { EstadoIA } from '@/lib/ia/claude'
 import { dolares } from '@/lib/ia/precios'
 import { borrarClaveIA, guardarClaveIA, guardarConfig } from './acciones-config'
 
-type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta' | 'pautas'
+type Seccion = 'contacto' | 'piezas' | 'ia' | 'meta' | 'pautas' | 'creacion'
 
 /** Botón «Guardar cambios» con su estado. */
 export function useGuardar<K extends Seccion>(seccion: K) {

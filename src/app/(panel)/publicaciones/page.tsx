@@ -7,7 +7,7 @@ import type { EstadoPublicacion } from '@/lib/db/esquema'
 import { cuando } from '@/lib/formato'
 import { urlMedia } from '@/lib/media'
 import { estadoMeta } from '@/lib/meta/conexion'
-import { textoCuando } from '@/lib/publicaciones/reglas'
+import { NOMBRE_QUE, textoCuando, type QuePublicar } from '@/lib/publicaciones/reglas'
 import { ListaPublicaciones, type FilaPublicacion } from './ListaPublicaciones'
 
 export const dynamic = 'force-dynamic'
@@ -48,14 +48,17 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
   const ahora = new Date()
   const lista: FilaPublicacion[] = ordenadas.map((p) => {
     const ds = destinos.filter((d) => d.publicacionId === p.id)
-    const primera = ds[0]?.placas[0] ?? 0
     const arch = p.exportacionId ? archivos.get(p.exportacionId) : undefined
+    // Videos: la miniatura es la portada (el segundo archivo)
+    const primera = p.formato !== 'imagenes' ? 1 : ds[0]?.placas[0] ?? 0
     const feed = ds.find((d) => d.ubicacion === 'feed')
     const historias = new Set(ds.filter((d) => d.ubicacion === 'historia').flatMap((d) => d.placas)).size
     return {
       id: p.id,
       titulo: p.titulo,
-      detalle: [p.tipo === 'carrusel' ? 'Carrusel' : 'Promo', feed ? `${feed.placas.length} ${feed.placas.length === 1 ? 'imagen' : 'imágenes'}` : null, historias ? `${historias} ${historias === 1 ? 'historia' : 'historias'}` : null].filter(Boolean).join(' · '),
+      detalle: p.formato !== 'imagenes'
+        ? [p.tipo === 'carrusel' ? 'Carrusel' : 'Promo', NOMBRE_QUE[p.formato as QuePublicar] ?? 'Video'].join(' · ')
+        : [p.tipo === 'carrusel' ? 'Carrusel' : 'Promo', feed ? `${feed.placas.length} ${feed.placas.length === 1 ? 'imagen' : 'imágenes'}` : null, historias ? `${historias} ${historias === 1 ? 'historia' : 'historias'}` : null].filter(Boolean).join(' · '),
       pieza: p.tipo === 'carrusel' ? `/carruseles/${p.referenciaId}` : `/promos/${p.referenciaId}`,
       miniatura: arch?.[primera] ? urlMedia(arch[primera]) : null,
       estado: p.estado,

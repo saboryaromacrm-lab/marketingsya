@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { cancelarPublicacion, crearPublicacion, reintentarPublicacion } from '@/lib/publicaciones/motor'
-import { aInstante, type DestinosElegidos } from '@/lib/publicaciones/reglas'
+import { aInstante, type DestinosElegidos, type QuePublicar } from '@/lib/publicaciones/reglas'
 import { cuotaInstagram } from '@/lib/meta/conexion'
 
 type Aprobar = {
@@ -14,6 +14,9 @@ type Aprobar = {
   destinos: DestinosElegidos
   // null = ahora; si no, fecha y hora de Formosa
   programar: { fecha: string; hora: string } | null
+  que?: QuePublicar
+  redes?: { instagram: boolean; facebook: boolean }
+  compartirFeed?: boolean
 }
 
 /** Lucas aprobó: se publica ahora o queda programada (programarla ya es la aprobación). */
@@ -24,7 +27,8 @@ export async function aprobarPublicacion(a: Aprobar): Promise<{ ok: true; id: nu
     cuando = aInstante(String(a.programar.fecha ?? ''), String(a.programar.hora ?? ''))
     if (!cuando) return { error: 'Revisá el día y la hora.' }
   }
-  const r = await crearPublicacion({ tipo: a.tipo, id: Number(a.id), texto: String(a.texto ?? ''), alt: a.alt == null ? null : String(a.alt), elegidas: a.elegidas, destinos: a.destinos, cuando })
+  const que = (['imagenes', 'reel', 'historiaVideo', 'videoFeed'] as const).find((x) => x === a.que) ?? 'imagenes'
+  const r = await crearPublicacion({ tipo: a.tipo, id: Number(a.id), texto: String(a.texto ?? ''), alt: a.alt == null ? null : String(a.alt), elegidas: Array.isArray(a.elegidas) ? a.elegidas : [], destinos: a.destinos, cuando, que, redes: a.redes, compartirFeed: a.compartirFeed !== false })
   if ('error' in r) return r
   revalidatePath('/publicaciones')
   revalidatePath('/')

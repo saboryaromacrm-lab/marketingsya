@@ -136,6 +136,14 @@ Así se hizo el 20/11/2026 (Meta cambia seguido los nombres de los menús).
    (Meta Business Suite › Configuración › WhatsApp).
 5. En la plataforma: **Configuración › Pautas** detecta la cuenta sola. Ahí ajustás el tope del mes, los valores de entrada y los públicos.
 
+## 8. Videos y música
+
+- La imagen ya trae **ffmpeg** (arma los reels y las historias animadas): no hay que instalar nada. En **Configuración › Creación**
+  tiene que decir «Listo: ffmpeg version…».
+- Los videos se arman de a uno y usan 2 núcleos del servidor; un reel de 15 segundos tarda alrededor de 1 minuto.
+- La música se sube en **Configuración › Creación › Biblioteca de música**. Usá solo temas libres de derechos (biblioteca de audio de YouTube
+  con «No se requiere atribución», o Pixabay Music): Instagram silencia o bloquea los videos con música con derechos.
+
 ## Si te olvidás el PIN
 
 1. En Dokploy › Environment agregá `REINICIAR_CLAVE=si` y apretá **Deploy**.

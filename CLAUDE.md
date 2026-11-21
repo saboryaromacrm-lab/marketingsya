@@ -141,7 +141,7 @@ Poner contador visible y corte automático al llegar al tope.
 
 - **Interfaz:** fuente Nunito Sans (vía `next/font`) e íconos Material Icons rellenos, como el ERP.
   Solo modo claro, con vista para celular (la barra lateral pasa a ser un cajón).
-- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n» (desde el 20/11/2026 están todas habilitadas).
+- **Menú:** las etapas que todavía no existen se muestran en gris con «ETAPA n» (desde el 20/11/2026 están todas habilitadas). Desde el 21/11, «Creación» agrupa Carruseles y Promos.
 - **Precio en piezas:** Minorista (lista 3) por defecto, con opción de elegir otra lista.
 - **Sucursales:** la id 3 (Express 2) cerró; son solo las 4 del catálogo.
 - **Cola de tareas:** `pg-boss`, guardada en el mismo PostgreSQL (sin Redis).
@@ -325,6 +325,36 @@ Poner contador visible y corte automático al llegar al tope.
   - **Conexión real hecha el 20/11/2026** (todo en verde en Probar conexión). Lo que hizo falta está en `docs/INSTALACION.md`, pasos 6 y 7:
     app propia «Plataforma marketing SyA» (tipo Negocio) en modo **Activo**, usuario del sistema **administrador** con la página, el Instagram,
     la cuenta publicitaria y la app asignados, y el token revisado en el depurador de Meta (una vez se cayó `pages_manage_posts`).
+
+- **Creación (fase 1), hecha el 21/11/2026:**
+  - **Menú «Creación»** (`/creacion`) en lugar de Carruseles y Promos (que siguen en sus páginas y se llegan desde ahí):
+    «Nueva pieza» (asistente), «Mis piezas» (todo junto, con pestañas Todas / Carruseles / Historias / Reels / Promos, búsqueda y estado
+    borrador / lista / programada / publicada), Carruseles y Promos. En el catálogo, la barra de elegidos suma «Seguir en Creación».
+  - **Un contenido, varios formatos:** cada carrusel guarda `formatos` (carrusel, historia en imagen, reel, historia en video, video de feed)
+    y cada promo suma reel, historia en video y video de feed a sus formatos. Los de entrada se eligen en Configuración › Creación.
+  - **Asistente:** qué comunicás (NutriOfertas, Lanzamiento, Receta, Promo, Producto destacado = NutriOfertas con 1 producto, Fecha especial =
+    Lanzamiento con la próxima fecha), dónde sale (formatos) y qué productos (la selección del catálogo o «Que la IA elija», con las sugerencias del asesor).
+  - **Historias en imagen de los carruseles:** la placa en el medio de 1080×1920, con franja arriba (qué es) y abajo (WhatsApp y tienda)
+    (`src/lib/carruseles/historia.ts`, `/render/carrusel/N?formato=historia`). Se exportan junto con las placas (`historia-N.jpg`).
+  - **Videos con motion graphics** (`src/lib/video/`): las escenas salen del mismo contenido (portada → un producto por escena, o lista de
+    ingredientes y pasos en Recetas, o una fila por escena en Promos → cierre con QR, tienda, WhatsApp e Instagram), con los 4 estilos
+    (NutriOfertas, Recetas, Lanzamiento y la cinta verde de Promos). Animaciones CSS en pausa en una sola línea de tiempo: el motor las mueve
+    cuadro por cuadro (30 por segundo) en Chromium y le pasa cada cuadro a **ffmpeg** (instalado en la imagen), que arma el MP4 H.264 + AAC
+    (2 hilos, el servidor se comparte con el ERP). Reel e historia en video 1080×1920, video de feed 1080×1350. Un reel de ~12 s tarda ~50 s.
+  - **Ajustes del video:** duración máxima 8/15/20/30 s (si no entra, las escenas del medio se acortan hasta un mínimo y después quedan afuera
+    los últimos productos, con aviso; la historia en video dura hasta 8 s), ritmo suave o dinámico, variante automática o 1/2/3 (de qué lado
+    va la foto y cómo entra la escena), música y segundo de la portada. Vista previa en vivo en el editor (`/render/video/...&vista=1`).
+    «Armar videos» arma los que no están al día (huella del HTML + música + portada), con avance y descarga del MP4.
+  - **Biblioteca de música** (tabla `musica`, Configuración › Creación): Lucas sube temas libres de derechos (MP3, M4A, AAC, WAV u OGG, hasta
+    15 MB; se revisan con ffprobe). Va con fundido al empezar y al terminar. Ayuda en pantalla para bajar de la biblioteca de YouTube o Pixabay.
+    Sin tema elegido, el video lleva una pista de audio en silencio.
+  - **Publicar videos:** en «Publicar» se elige qué: «Carrusel e historias», «Reel», «Historia en video» o «Video de feed».
+    Reel → reel de Instagram (con «también en el feed» y la portada) + reel de la página de Facebook (subida en 3 pasos con el token de la página);
+    historia en video → historias de Instagram y Facebook; video de feed → reel en el feed de Instagram + video en la página. Si el video no
+    está al día se arma solo antes de publicar. Los reels de Instagram se pueden promocionar en Pautas.
+  - `/media` ahora sirve MP4 y audios, con pedidos por pedazos (Range, 206), como piden los reproductores del celular.
+  - **Pruebas:** servidor que imita a Meta con reels, historias en video y la subida de Facebook; la prueba de punta a punta arma videos de
+    verdad con ffmpeg (38 de 38). Fases que siguen: videos propios de Lucas con la marca encima (fase 2) y voz en off / extras de IA (fase 3).
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 

@@ -9,7 +9,9 @@ import { Buscador, EstadoGuardado, Exportar, MiniPlaca, VistaPlaca, type Exporta
 import { BotonIA, ContextoIA, type DisponibilidadIA } from '@/components/piezas/IA'
 import type { ContactoTexto } from '@/lib/carruseles/textos'
 import { accionMejorarTexto, accionSugerirCampo } from '../../asesor/acciones'
-import type { EstiloCarrusel } from '@/lib/db/esquema'
+import type { AnimacionPieza, EstiloCarrusel, FormatosCarrusel } from '@/lib/db/esquema'
+import { CasillasFormatos, PanelVideo, type Tema } from '@/components/piezas/Formatos'
+import { FORMATOS_VIDEO, videosDe, type FormatoVideo } from '@/lib/video/tipos'
 import { pesosPromo, precioPromo } from '@/lib/promos/calculo'
 import { etiquetaDeCategoria, fraseSugerida, lineaChica, nombreCorto, nombreEnPlaca, textoIngrediente } from '@/lib/carruseles/textos'
 import { posteoCarrusel } from '@/lib/carruseles/posteo'
@@ -17,10 +19,10 @@ import { datosIniciales, ESTILOS, idsDe, MAX, placasDe, type DatosCarrusel, type
 import { buscarParaPromo } from '../../promos/acciones'
 import { borrarCarrusel, duplicarCarrusel, exportarCarrusel, guardarCarrusel, infoProductosCarrusel, type InfoCarrusel } from '../acciones'
 
-type Form = { titulo: string; estilo: EstiloCarrusel; listaId: number; datos: DatosCarrusel; textoPosteo: string | null }
+type Form = { titulo: string; estilo: EstiloCarrusel; listaId: number; datos: DatosCarrusel; textoPosteo: string | null; formatos: FormatosCarrusel; animacion: AnimacionPieza }
 type PlacaVista = { numero: number; nombre: string; ruta: string }
 type Info = Record<number, InfoCarrusel>
-type Props = { id: number; inicial: Form; infoInicial: Info; placasIniciales: PlacaVista[]; listas: { id: number; nombre: string }[]; exportacionInicial: Exportacion; elegidos: number; contacto: ContactoTexto; hashtags: string[]; ia: DisponibilidadIA }
+type Props = { id: number; inicial: Form; infoInicial: Info; placasIniciales: PlacaVista[]; listas: { id: number; nombre: string }[]; exportacionInicial: Exportacion; elegidos: number; contacto: ContactoTexto; hashtags: string[]; ia: DisponibilidadIA; musica: Tema[] }
 type Ruta = (string | number)[]
 
 /** Copia con un cambio en la ruta indicada (sin tocar el original). */
@@ -71,12 +73,13 @@ function revisar(f: Form, info: Info): { bloquean: string[]; avisos: string[] } 
   return { bloquean, avisos }
 }
 
-export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, contacto, hashtags, ia }: Props) {
+export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, listas, exportacionInicial, elegidos, contacto, hashtags, ia, musica }: Props) {
   const [form, setForm] = useState(inicial)
   const [info, setInfo] = useState(infoInicial)
   const [placas, setPlacas] = useState(placasIniciales)
   const [elegida, setElegida] = useState(0)
   const [version, setVersion] = useState(0)
+  const [ver, setVer] = useState<'placas' | 'historia' | FormatoVideo>('placas')
   const [estado, setEstado] = useState<'guardado' | 'cambios' | 'guardando' | { error: string }>('guardado')
   const [yendo, empezarIr] = useTransition()
   const router = useRouter()
@@ -141,6 +144,9 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
   const auto = posteoCarrusel(form.estilo, form.datos, info, contacto, hashtags)
   const descripcion = `carrusel ${ESTILOS[form.estilo].nombre} «${form.titulo}»`
   const exportado = exportacionInicial?.estado === 'ok'
+  const videos = videosDe(form.formatos)
+  const vistas: ['placas' | 'historia' | FormatoVideo, string][] = [['placas', 'Carrusel'], ...(form.formatos.historia ? [['historia', 'Historia'] as ['historia', string]] : []), ...videos.map((f) => [f, FORMATOS_VIDEO[f].nombre] as [FormatoVideo, string])]
+  const verActual = vistas.some(([k]) => k === ver) ? ver : 'placas'
 
   return (
     <ContextoIA.Provider value={ia}>
@@ -177,6 +183,18 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
               ))}
             </div>
           </div>
+          <CasillasFormatos
+            opciones={[
+              { clave: 'carrusel', nombre: 'Carrusel', detalle: 'feed · 1080×1350' },
+              { clave: 'historia', nombre: 'Historia', detalle: 'imagen · 1080×1920' },
+              { clave: 'reel', nombre: 'Reel', detalle: 'video animado 9:16' },
+              { clave: 'historiaVideo', nombre: 'Historia en video', detalle: 'animada · 8 s' },
+              { clave: 'videoFeed', nombre: 'Video de feed', detalle: 'animado 4:5' },
+            ]}
+            valores={form.formatos}
+            alCambiar={(k, v) => setForm((f) => ({ ...f, formatos: { ...f.formatos, [k]: v } }))}
+          />
+          <PanelVideo tipo="carrusel" id={id} animacion={form.animacion} alCambiar={(a) => setForm((f) => ({ ...f, animacion: a }))} musica={musica} formatos={videos} antes={guardarYa} version={version} />
           <AjustesPlacas form={form} set={set} />
           {form.estilo === 'nutriofertas' && (
             <>
@@ -203,7 +221,14 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
 
         {/* ---------- vista previa ---------- */}
         <section className="editor-vista" aria-label="Vista previa">
-          {vista && <VistaPlaca ruta={`${vista.ruta}&v=${version}`} formato="carrusel" />}
+          {vistas.length > 1 && (
+            <div className="segmentado selector-vista" role="tablist" aria-label="Qué ver">
+              {vistas.map(([k, t]) => <button key={k} type="button" role="tab" aria-selected={verActual === k} className={verActual === k ? 'segmentado-activo' : ''} onClick={() => setVer(k)}>{t}</button>)}
+            </div>
+          )}
+          {verActual === 'placas' && vista && <VistaPlaca ruta={`${vista.ruta}&v=${version}`} formato="carrusel" />}
+          {verActual === 'historia' && vista && <VistaPlaca ruta={`/render/carrusel/${id}?formato=historia&pagina=${vista.numero}&placa=${vista.numero}&v=${version}`} formato="historia" />}
+          {verActual !== 'placas' && verActual !== 'historia' && <VistaPlaca ruta={`/render/video/carrusel/${id}?formato=${verActual}&vista=1&v=${version}`} formato={FORMATOS_VIDEO[verActual].alto === 1920 ? 'historia' : 'feed'} />}
           <div className="tira-placas" role="tablist" aria-label="Placas">
             {placas.map((p, i) => (
               <button key={p.ruta} role="tab" aria-selected={i === indice} className={`tira-placa ${i === indice ? 'tira-placa-activa' : ''}`} onClick={() => setElegida(i)}>

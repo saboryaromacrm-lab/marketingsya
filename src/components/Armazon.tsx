@@ -69,7 +69,7 @@ export function Armazon({ plegadaInicial, contadores, avisos, logo, children }: 
                     <small>ETAPA {item.etapa}</small>
                   </span>
                 ) : (
-                  <Link key={item.href} href={item.href} className={`barra-item ${activo(item.href) ? 'barra-item-activo' : ''}`}>
+                  <Link key={item.href} href={item.href} className={`barra-item ${activo(item.href) || item.rutas?.some(activo) ? 'barra-item-activo' : ''}`}>
                     <Icono nombre={item.icono} />
                     {item.texto}
                     {!!contadores?.[item.href] && <span className="contador">{contadores[item.href]}</span>}
