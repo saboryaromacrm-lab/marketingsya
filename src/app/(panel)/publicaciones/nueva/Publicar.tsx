@@ -16,7 +16,7 @@ import {
 
 type Placa = { indice: number; ruta: string; grupo: Grupo; formato: 'carrusel' | 'historia' | 'feed' | 'uno'; etiqueta: string; imagen: string | null }
 type Props = {
-  pieza: { tipo: 'carrusel' | 'promo'; id: number; titulo: string; subtitulo: string; editar: string; productos: number[]; sinFoto: string[]; bajas: string[] }
+  pieza: { tipo: 'carrusel' | 'promo' | 'video'; id: number; titulo: string; subtitulo: string; editar: string; productos: number[]; sinFoto: string[]; bajas: string[] }
   placas: Placa[]
   exportacion: { alDia: boolean; cuando: string | null } | null
   textoInicial: string
@@ -29,7 +29,7 @@ type Props = {
   // Qué se publica: las imágenes o uno de los videos de la pieza
   que: QuePublicar
   opcionesQue: { que: QuePublicar; nombre: string; href: string }[]
-  video: { nombre: string; url: string | null; vista: string; alto: number; total: number } | null
+  video: { nombre: string; url: string | null; vista: string | null; portada?: string | null; alto: number; total: number } | null
 }
 
 type Chequeo = { ok: boolean | null; texto: React.ReactNode }
@@ -124,7 +124,7 @@ export function Publicar({ pieza, placas, exportacion, textoInicial, altInicial,
     <ContextoIA.Provider value={ia}>
       <div className="contenido">
         <Cabecera
-          titulo={<>Publicar · {pieza.titulo} <span className="chip chip-titulo">{pieza.tipo === 'carrusel' ? 'CARRUSEL' : 'PROMO'}</span></>}
+          titulo={<>Publicar · {pieza.titulo} <span className="chip chip-titulo">{pieza.tipo === 'carrusel' ? 'CARRUSEL' : pieza.tipo === 'promo' ? 'PROMO' : 'VIDEO PROPIO'}</span></>}
           subtitulo="Revisá exactamente lo que va a salir. Nada se publica sin tu confirmación."
           miga={[{ texto: 'Publicaciones', href: '/publicaciones' }, { texto: `Publicar · ${pieza.titulo}` }]}
           acciones={<Link className="btn" href={pieza.editar}><Icono nombre="edit" />Volver a la pieza</Link>}
@@ -140,7 +140,9 @@ export function Publicar({ pieza, placas, exportacion, textoInicial, altInicial,
           <section className="tarjeta publicar-imagenes" aria-label="Imágenes">
             {video && (
               <div className="publicar-grande">
-                {video.url ? <video className="publicar-video" style={{ aspectRatio: `1080 / ${video.alto}` }} src={video.url} controls playsInline loop muted autoPlay /> : <VistaPlaca ruta={video.vista} formato={video.alto === 1920 ? 'historia' : 'feed'} />}
+                {video.url ? <video className="publicar-video" style={{ aspectRatio: `1080 / ${video.alto}` }} src={video.url} controls playsInline loop muted autoPlay />
+                  : video.vista ? <VistaPlaca ruta={video.vista} formato={video.alto === 1920 ? 'historia' : 'feed'} />
+                    : <div className="publicar-sin-armar" style={{ aspectRatio: `1080 / ${video.alto}` }}>{video.portada && <img src={video.portada} alt="" />}<span><Icono nombre="movie" />El video se arma al confirmar (1 o 2 minutos).</span></div>}
               </div>
             )}
             {!video && placaVista && (

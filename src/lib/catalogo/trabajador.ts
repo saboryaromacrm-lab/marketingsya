@@ -6,6 +6,7 @@ import { ejecutarExportacion } from '@/lib/piezas/exportar'
 import { ejecutarSincronizacion } from './sincronizar'
 import { ejecutarPublicacion, recuperarAlArrancar, revisarVencidas } from '@/lib/publicaciones/motor'
 import { sincronizarPautas } from '@/lib/pautas/motor'
+import { limpiarBiblioteca, procesarVideo, recuperarVideos } from '@/lib/video/propios/biblioteca'
 
 // Arranca con el servidor (ver src/instrumentation.ts) y atiende la cola de sincronización.
 export async function arrancarTrabajador() {
@@ -26,9 +27,12 @@ export async function arrancarTrabajador() {
   await boss.work<{ id: number }>(COLA_SINCRONIZAR, async ([trabajo]) => {
     await ejecutarSincronizacion(trabajo.data.id)
   })
-  await boss.work<{ id: number }>(COLA_RENDER, async ([trabajo]) => {
-    await ejecutarExportacion(trabajo.data.id)
+  // Una sola cola para todo lo pesado (de a uno por vez): armar piezas y videos, y comprimir los videos que sube Lucas
+  await boss.work<{ id?: number; video?: number }>(COLA_RENDER, async ([trabajo]) => {
+    if (trabajo.data.video) await procesarVideo(trabajo.data.video)
+    else if (trabajo.data.id) await ejecutarExportacion(trabajo.data.id)
   })
+  await recuperarVideos().catch((e) => console.error('[videos] recuperar', e))
   await boss.work<{ id: number }>(COLA_PUBLICAR, async ([trabajo]) => {
     await ejecutarPublicacion(trabajo.data.id)
   })
@@ -38,5 +42,8 @@ export async function arrancarTrabajador() {
   void revisar()
   // Cada 15 minutos se piden a Meta el estado y los resultados de las pautas vivas (así Inicio avisa los rechazos)
   setInterval(() => void sincronizarPautas(false).catch((e) => console.error('[pautas] sincronización', e)), 15 * 60_000).unref()
+  // Cada hora: se borran los videos sin usar de más de 90 días (y las subidas que quedaron a medias)
+  setInterval(() => void limpiarBiblioteca().catch((e) => console.error('[videos] limpieza', e)), 60 * 60_000).unref()
+  void limpiarBiblioteca().catch((e) => console.error('[videos] limpieza', e))
   console.log('[cola] atendiendo la sincronización del catálogo, el armado de piezas, las publicaciones y las pautas')
 }

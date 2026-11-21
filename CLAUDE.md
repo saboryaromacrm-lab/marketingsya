@@ -356,6 +356,34 @@ Poner contador visible y corte automático al llegar al tope.
   - **Pruebas:** servidor que imita a Meta con reels, historias en video y la subida de Facebook; la prueba de punta a punta arma videos de
     verdad con ffmpeg (38 de 38). Fases que siguen: videos propios de Lucas con la marca encima (fase 2) y voz en off / extras de IA (fase 3).
 
+- **Creación (fase 2: videos propios con la marca encima), hecha el 21/11/2026:**
+  - **Mis videos** (`/creacion/videos`, tabla `videos`): Lucas sube MP4, MOV o WEBM desde la computadora o el celular (galería o cámara),
+    hasta 300 MB y 3 minutos. Subida en pedazos de 8 MB (`POST /api/videos` → `PUT /api/videos/N?desde=…` → `POST /api/videos/N`); un pedazo
+    fuera de orden se rechaza y dice desde dónde seguir. A medias queda en `MEDIA_DIR/tmp/subidas/*.part` (no se sirve). En la cola (la misma
+    del render, de a uno) se revisa con ffprobe, se comprime a 1080p H.264 (lado largo hasta 1920, 30 cuadros, tono corregido si viene en HDR
+    del iPhone con zscale) con miniatura, y se borra el original. Cada video: nombre, productos que aparecen (para buscar y para sugerir las
+    franjas), «Conservar», en cuántas piezas está. Sin usar 90 días → se borra solo (limpieza cada hora; aviso desde 14 días antes). Un video
+    que está en una pieza no se puede borrar.
+  - **La pieza** (tabla `piezas_video`, editor en `/creacion/videos/N`, guardado automático): hasta 5 clips recortados (desde/hasta) unidos
+    con un corte suave de 0,3 s; video con otra forma: fondo desenfocado (de entrada) o recortar al centro; sonido original, música o los dos
+    (música al 25 %); estilo de la marca (NutriOfertas, Recetas, Lanzamiento o Promo); apertura animada de 2,4 s (título, «/» corta el renglón)
+    y cierre con QR de 2,8 s (las mismas escenas de los reels de la fase 1); logo y tienda siempre visibles; hasta 3 franjas de producto
+    (nombre, línea chica, precio de la lista menos el %, «antes» tachado, sello «-10 %» u «Oferta», granel por kilo o fraccionado) y hasta
+    3 textos cortos, cada uno en los segundos que se elijan (cuentan desde el comienzo de los clips; «desde acá» toma el momento de la
+    vista previa). Se revisa que no se pisen. Formatos: reel (hasta 90 s), historia en video (hasta 60 s) y video de feed 4:5 (hasta 90 s).
+  - **Vista previa en vivo** (`ReproductorPropio`): los clips en un `<video>`, el fondo desenfocado en un canvas, y la apertura, el cierre y
+    las capas en iframes (`/render/video/propio/N?formato=…&parte=apertura|cierre|capas[&vista=1]`) cuyas animaciones mueve la pantalla.
+  - **Armado** (`src/lib/video/propios/armar.ts`): Chromium graba la apertura y el cierre, saca cada capa como PNG transparente en su lugar
+    final, y **ffmpeg** une todo en un solo comando (`argumentosFfmpeg`, pura y probada): clips con xfade y acrossfade, capas animadas con
+    expresiones (franjas desde la izquierda, textos desde arriba, sellos que aparecen), apertura y cierre con xfade, audio original corrido
+    después de la apertura. El reel y la historia en video tienen la misma huella: si uno está armado, el otro se copia. Un video de 20 s con
+    dos clips tarda ~75 s (el 4:5 aparte, ~40 s).
+  - **Publicar y pautar:** `/publicaciones/nueva?video=N` (tipo `video` en `publicaciones`), igual que los reels de la fase 1; los reels de
+    Instagram se pueden promocionar en Pautas. En Mis piezas, pestaña «Videos propios». La IA sugiere el título de la apertura y los textos.
+  - **Pruebas:** 29 de reglas puras (tiempos, límites, revisión, limpieza y el comando de ffmpeg) y una de punta a punta (50 de 50): sube dos
+    videos de más de 8 MB (uno 4K vertical), los etiqueta, arma la pieza con dos clips y música, arma reel, historia (copiada) y feed, y la
+    publica contra el servidor que imita a Meta.
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.

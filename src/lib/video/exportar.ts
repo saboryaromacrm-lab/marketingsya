@@ -12,15 +12,15 @@ import { videoDe } from './piezas'
 
 const { exportaciones } = esquema
 
-export type TipoPieza = 'carrusel' | 'promo'
+export type TipoPieza = 'carrusel' | 'promo' | 'video'
 
 /** Dirección del video (la música y el segundo de la portada van en la dirección: la firma los cubre). */
-export const rutaVideo = (tipo: TipoPieza, id: number, formato: FormatoVideo, musicaId: number | null, portada: number) =>
+export const rutaVideo = (tipo: Exclude<TipoPieza, 'video'>, id: number, formato: FormatoVideo, musicaId: number | null, portada: number) =>
   `/render/video/${tipo}/${id}?formato=${formato}${musicaId ? `&musica=${musicaId}` : ''}&portada=${portada}`
 
 type Pieza = { formatos: FormatoVideo[]; sinFoto: string[]; animacion: ReturnType<typeof limpiarAnimacion> }
 
-async function pieza(tipo: TipoPieza, id: number): Promise<Pieza | null> {
+async function pieza(tipo: Exclude<TipoPieza, 'video'>, id: number): Promise<Pieza | null> {
   const config = await leerConfig()
   const base = { ...ANIMACION_INICIAL, ...config.creacion.animacion }
   if (tipo === 'carrusel') {
@@ -45,6 +45,7 @@ export type EstadoVideo = {
 
 /** Cada video marcado en la pieza: su último armado y si sigue al día con la pieza. */
 export async function estadoVideos(tipo: TipoPieza, id: number): Promise<EstadoVideo[]> {
+  if (tipo === 'video') return (await import('./propios/armar')).estadoVideosPropio(id)
   const p = await pieza(tipo, id)
   if (!p) return []
   const r: EstadoVideo[] = []
@@ -64,6 +65,7 @@ export async function estadoVideos(tipo: TipoPieza, id: number): Promise<EstadoV
 
 /** Arma los videos marcados que no estén al día (o el que se pida). Devuelve el id de cada exportación. */
 export async function armarVideos(tipo: TipoPieza, id: number, solo?: FormatoVideo): Promise<{ ok: true; exportaciones: { formato: FormatoVideo; id: number }[] } | { error: string }> {
+  if (tipo === 'video') return (await import('./propios/armar')).armarVideosPropio(id, solo)
   const p = await pieza(tipo, id)
   if (!p) return { error: 'Esa pieza ya no existe.' }
   if (p.sinFoto.length) return { error: `No se puede armar el video: ${p.sinFoto.map((x) => `«${x}»`).join(', ')} sin foto.` }

@@ -16,7 +16,7 @@ const { exportaciones } = esquema
 const base = () => `http://127.0.0.1:${process.env.PORT || 3000}`
 
 /** Crea la exportación y la pone en la cola. Devuelve su id. */
-export async function encolarExportacion(tipo: 'prueba' | 'carrusel' | 'promo', placas: string[], referenciaId: number | null = null, huella: string | null = null, formato: string | null = null) {
+export async function encolarExportacion(tipo: 'prueba' | 'carrusel' | 'promo' | 'video', placas: string[], referenciaId: number | null = null, huella: string | null = null, formato: string | null = null) {
   const [{ id }] = await db.insert(exportaciones).values({ tipo, referenciaId, placas, estado: 'en_cola', huella, formato }).returning({ id: exportaciones.id })
   try {
     await (await cola()).send(COLA_RENDER, { id })
@@ -33,6 +33,12 @@ export async function ejecutarExportacion(id: number) {
   try {
     await db.update(exportaciones).set({ estado: 'corriendo', avance: 5 }).where(eq(exportaciones.id, id))
     const secreto = process.env.SESION_SECRETO ?? ''
+    // Video propio (Mis videos con la marca encima): clips + apertura + cierre + capas, con ffmpeg
+    if (exp.tipo === 'video') {
+      const { ejecutarVideoPropio } = await import('@/lib/video/propios/armar')
+      await ejecutarVideoPropio(exp)
+      return
+    }
     if (exp.formato) {
       await ejecutarVideo(exp, secreto)
       return

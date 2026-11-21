@@ -6,7 +6,7 @@ import { aInstante, type DestinosElegidos, type QuePublicar } from '@/lib/public
 import { cuotaInstagram } from '@/lib/meta/conexion'
 
 type Aprobar = {
-  tipo: 'carrusel' | 'promo'
+  tipo: 'carrusel' | 'promo' | 'video'
   id: number
   texto: string
   alt: string | null
@@ -21,7 +21,7 @@ type Aprobar = {
 
 /** Lucas aprobó: se publica ahora o queda programada (programarla ya es la aprobación). */
 export async function aprobarPublicacion(a: Aprobar): Promise<{ ok: true; id: number } | { error: string }> {
-  if (a.tipo !== 'carrusel' && a.tipo !== 'promo') return { error: 'Pieza desconocida.' }
+  if (a.tipo !== 'carrusel' && a.tipo !== 'promo' && a.tipo !== 'video') return { error: 'Pieza desconocida.' }
   let cuando: Date | null = null
   if (a.programar) {
     cuando = aInstante(String(a.programar.fecha ?? ''), String(a.programar.hora ?? ''))

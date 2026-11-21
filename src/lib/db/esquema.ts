@@ -1,4 +1,4 @@
-import { pgTable, bigserial, text, timestamp, boolean, index, integer, jsonb, numeric, uniqueIndex, serial } from 'drizzle-orm/pg-core'
+import { pgTable, bigserial, bigint, text, timestamp, boolean, index, integer, jsonb, numeric, uniqueIndex, serial } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import type { ProductoNormalizado } from '@/lib/catalogo/tipos'
 
@@ -328,7 +328,7 @@ export const publicaciones = pgTable(
   'publicaciones',
   {
     id: serial('id').primaryKey(),
-    tipo: text('tipo').$type<'carrusel' | 'promo'>().notNull(),
+    tipo: text('tipo').$type<'carrusel' | 'promo' | 'video'>().notNull(),
     referenciaId: integer('referencia_id').notNull(),
     titulo: text('titulo').notNull(),
     texto: text('texto').notNull().default(''),
@@ -419,4 +419,71 @@ export const musica = pgTable('musica', {
   archivo: text('archivo').notNull(), // ruta dentro de MEDIA_DIR
   duracion: numeric('duracion', { precision: 8, scale: 2, mode: 'number' }).notNull(),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
+// Videos propios (Creación, fase 2): Lucas sube sus videos y les pone la marca encima.
+// «videos» es la biblioteca (Mis videos); «piezas_video» es cada video armado con la marca.
+// ---------------------------------------------------------------------------
+export type EstadoVideoSubido = 'subiendo' | 'procesando' | 'listo' | 'error'
+
+export const videos = pgTable(
+  'videos',
+  {
+    id: serial('id').primaryKey(),
+    nombre: text('nombre').notNull(),
+    // La copia comprimida (1080p, H.264) y su miniatura, dentro de MEDIA_DIR. El original se borra al terminar.
+    archivo: text('archivo'),
+    miniatura: text('miniatura'),
+    // Mientras sube: el archivo a medias (fuera de lo que sirve /media) y cuánto llegó
+    temporal: text('temporal'),
+    tamano: bigint('tamano', { mode: 'number' }).notNull().default(0),
+    recibido: bigint('recibido', { mode: 'number' }).notNull().default(0),
+    duracion: numeric('duracion', { precision: 8, scale: 2, mode: 'number' }),
+    ancho: integer('ancho'),
+    alto: integer('alto'),
+    conAudio: boolean('con_audio').notNull().default(false),
+    estado: text('estado').$type<EstadoVideoSubido>().notNull(),
+    avance: integer('avance').notNull().default(0),
+    error: text('error'),
+    // Productos que aparecen (para buscar y para sugerir las franjas)
+    productos: jsonb('productos').$type<number[]>().notNull().default([]),
+    // Conservar: no se borra aunque no se use
+    conservar: boolean('conservar').notNull().default(false),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    // La última vez que se usó en una pieza (la limpieza cuenta los 90 días desde acá o desde que se subió)
+    usadoEn: timestamp('usado_en', { withTimezone: true }),
+  },
+  (t) => [index('videos_estado').on(t.estado)],
+)
+
+export type ClipVideo = { videoId: number; desde: number; hasta: number }
+export type ProductoEnVideo = { id: number; desde: number; hasta: number; descuento: number; sello: boolean; presentacion: string | null }
+export type TextoEnVideo = { texto: string; desde: number; hasta: number }
+export type ContenidoVideo = {
+  clips: ClipVideo[]
+  // Video que no tiene la forma del formato: con el mismo video desenfocado de fondo, o recortado al centro
+  encuadre: 'desenfoque' | 'recorte'
+  sonido: { modo: 'original' | 'musica' | 'ambos'; musicaId: number | null }
+  estilo: 'nutriofertas' | 'recetas' | 'lanzamiento' | 'promo'
+  apertura: { activa: boolean; kicker: string; titulo: string }
+  cierre: { activa: boolean; titulo: string; bajada: string }
+  listaId: number
+  // Los segundos de productos y textos cuentan desde el comienzo de los clips (sin la apertura)
+  productos: ProductoEnVideo[]
+  textos: TextoEnVideo[]
+  // Segundo del video terminado que se usa de portada del reel
+  portada: number
+}
+export type FormatosVideoPropio = { reel: boolean; historiaVideo: boolean; videoFeed: boolean }
+
+export const piezasVideo = pgTable('piezas_video', {
+  id: serial('id').primaryKey(),
+  titulo: text('titulo').notNull(),
+  contenido: jsonb('contenido').$type<ContenidoVideo>().notNull(),
+  formatos: jsonb('formatos').$type<FormatosVideoPropio>().notNull(),
+  // Texto del posteo editado a mano (null = se arma solo)
+  textoPosteo: text('texto_posteo'),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
 })

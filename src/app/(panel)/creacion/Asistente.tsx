@@ -58,6 +58,11 @@ export function Asistente({ elegidos, formatos, fecha, ia }: Props) {
 
   return (
     <>
+      <Link href="/creacion/videos" className="aviso aviso-verde asistente-video-propio">
+        <Icono nombre="videocam" />
+        <span><b>¿Filmaste un video?</b> Subilo en «Mis videos» y le ponemos la marca encima: apertura, franjas con precio y cierre con QR.</span>
+        <Icono nombre="chevron_right" />
+      </Link>
       <section className="tarjeta asistente-paso">
         <div className="paso-titulo"><span className="paso-num">1</span><h2 className="titulo-seccion">¿Qué querés comunicar?</h2></div>
         <div className="asistente-tipos" role="radiogroup" aria-label="Tipo de pieza">

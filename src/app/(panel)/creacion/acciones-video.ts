@@ -3,7 +3,7 @@
 import { armarVideos, estadoVideos, type TipoPieza } from '@/lib/video/exportar'
 import { esFormatoVideo } from '@/lib/video/tipos'
 
-const tipoValido = (t: unknown): t is TipoPieza => t === 'carrusel' || t === 'promo'
+const tipoValido = (t: unknown): t is TipoPieza => t === 'carrusel' || t === 'promo' || t === 'video'
 
 export async function accionEstadoVideos(tipo: TipoPieza, id: number) {
   if (!tipoValido(tipo)) return []
