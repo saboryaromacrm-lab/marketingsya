@@ -9,19 +9,19 @@ const { productos, marcas, listas } = esquema
 
 // Por debajo de esto, un nombre no se considera «parecido» (probado con el catálogo real:
 // «aseite» → aceite 0,44 · «yerva» → yerba 0,50 · «quinua» → quinoa 0,57).
-const SIMILITUD_MINIMA = 0.4
+export const SIMILITUD_MINIMA = 0.4
 
 const escaparLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`)
 const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // Palabras de 3 letras o menos se buscan enteras: si no, «te» encuentra «aceite» y «chocolate».
-function coincideExacta(w: string): SQL {
+export function coincideExacta(w: string): SQL {
   return w.length <= 3
     ? sql`${productos.busqueda} ~ ${`\\m${escaparRegex(w)}\\M`}`
     : sql`${productos.busqueda} like ${`%${escaparLike(w)}%`}`
 }
 
-const parecido = (w: string) => sql`word_similarity(${w}, ${productos.busqueda})`
+export const parecido = (w: string) => sql`word_similarity(${w}, ${productos.busqueda})`
 // Para ordenar (probado con el catálogo real):
 // - la similitud estricta compara palabras enteras: sin ella, «yerva» pone primero «conservas» (comparte «erva»);
 // - suma si la palabra está en el nombre y no solo en la categoría: «yerba mate» antes que «mate cocido»;

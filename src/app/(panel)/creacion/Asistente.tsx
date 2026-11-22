@@ -6,12 +6,17 @@ import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import type { DisponibilidadIA } from '@/lib/ia/disponibilidad'
 import { crearDesdeAsistente, elegirConIA, sacarElegido, type TipoNueva } from './acciones'
+import { ListaProductos } from './ListaProductos'
+import type { ListaPiezas, OpcionesListaPiezas } from '@/lib/catalogo/lista-piezas'
+import { TOPE_POR_TIPO, type FiltrosLista } from '@/lib/catalogo/lista-piezas-reglas'
 
 type Props = {
   elegidos: { id: number; nombre: string; foto: string | null }[]
   formatos: { carrusel: boolean; historia: boolean; reel: boolean; historiaVideo: boolean; videoFeed: boolean }
   fecha: string | null
   ia: DisponibilidadIA
+  tipoInicial: TipoNueva
+  listaProductos: { filtros: FiltrosLista; inicial: ListaPiezas; opciones: OpcionesListaPiezas; listaNombre: string; aviso: string | null }
 }
 
 const TIPOS: { clave: TipoNueva; nombre: string; icono: string; detalle: string }[] = [
@@ -40,9 +45,9 @@ const FORMATOS_PROMO: Formato[] = [
   { clave: 'videoFeed', nombre: 'Video de feed', detalle: 'Animado 4:5', icono: 'smart_display', ancho: 64 },
 ]
 
-export function Asistente({ elegidos, formatos, fecha, ia }: Props) {
+export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaProductos }: Props) {
   const router = useRouter()
-  const [tipo, setTipo] = useState<TipoNueva>('nutriofertas')
+  const [tipo, setTipo] = useState<TipoNueva>(tipoInicial)
   const [fc, setFc] = useState<Record<string, boolean>>({ ...formatos })
   const [fp, setFp] = useState<Record<string, boolean>>({ historia: true, feed: true, uno: false, reel: formatos.reel, historiaVideo: formatos.historiaVideo, videoFeed: formatos.videoFeed })
   const [error, setError] = useState<string | null>(null)
@@ -102,7 +107,7 @@ export function Asistente({ elegidos, formatos, fecha, ia }: Props) {
             ))}
           </div>
         ) : (
-          <p className="texto-suave">Todavía no elegiste productos. Marcalos con las casillas del catálogo o pedile a la IA que elija.</p>
+          <p className="texto-suave">Todavía no elegiste productos. Marcalos en la lista de abajo, en el catálogo o pedile a la IA que elija.</p>
         )}
         <div className="fila-chips">
           <Link className="btn btn-chico" href="/catalogo"><Icono nombre="inventory_2" tamano={16} />Elegir en el catálogo</Link>
@@ -117,6 +122,18 @@ export function Asistente({ elegidos, formatos, fecha, ia }: Props) {
           </button>
           {tipo === 'destacado' && elegidos.length > 1 && <span className="texto-chico">Se usa el primero: {elegidos[0].nombre}.</span>}
         </div>
+        <ListaProductos
+          tipo={tipo}
+          filtrosIniciales={listaProductos.filtros}
+          inicial={listaProductos.inicial}
+          opciones={listaProductos.opciones}
+          elegidos={elegidos.length}
+          elegidosClave={elegidos.map((e) => e.id).join(',')}
+          tope={TOPE_POR_TIPO[tipo]}
+          listaNombre={listaProductos.listaNombre}
+          avisoInicial={listaProductos.aviso}
+          alCambiar={() => router.refresh()}
+        />
         <button type="button" className="btn btn-pri boton-izquierda" disabled={pendiente || !marcados.length || (!elegidos.length && !esPromo)} onClick={() => empezar(async () => {
           setError(null)
           const r = await crearDesdeAsistente(tipo, valores)

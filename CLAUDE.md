@@ -44,7 +44,7 @@ Imágenes bajo `api.saboryaroma.com/api/tienda/imagenes/` con parámetro `?v=`. 
 - Muchos productos **no tienen imagen** y varias marcas no tienen logo. Las fotos las sube el cliente.
 - Los stocks son **unidades reales**.
 - Los productos a granel **no tienen marca**: se usan igual.
-- No filtrar por stock, el cliente pidió ignorarlo.
+- Stock: al principio se ignoraba; desde el 22/11/2026 se guarda para **ordenar** la lista de Creación (de entrada no se filtra).
 - Solo productos **saludables** en las piezas: excluir gaseosas y golosinas comunes.
 - Marcas sin logo en el catálogo: La Serenísima, Arcor, Saint Gottard.
 
@@ -383,6 +383,22 @@ Poner contador visible y corte automático al llegar al tope.
   - **Pruebas:** 29 de reglas puras (tiempos, límites, revisión, limpieza y el comando de ffmpeg) y una de punta a punta (50 de 50): sube dos
     videos de más de 8 MB (uno 4K vertical), los etiqueta, arma la pieza con dos clips y música, arma reel, historia (copiada) y feed, y la
     publica contra el servidor que imita a Meta.
+
+- **Lista de productos en Creación › Nueva pieza, hecha el 22/11/2026** (paso «¿Qué productos?», pedido de Lucas):
+  - **Stock guardado:** la sincronización ahora guarda `productos.stock` (por sucursal) y `stock_total` (las 4 juntas). En granel suma el
+    suyo y los fraccionados pasados a kilos (3 de 500 g = 1,5 kg). Va aparte de la huella: no cuenta como cambio del producto ni llena el
+    historial. `VERSION_NORMALIZACION` 4 (así la primera sincronización después de publicar reprocesa todo y trae el stock).
+  - **Lista** (`src/lib/catalogo/lista-piezas.ts`, reglas puras en `lista-piezas-reglas.ts`): solo los que sirven para piezas (con foto, activos,
+    no excluidos), 20 por página con páginas numeradas, tarjetas con casilla, foto, marca, nombre, precio de la lista de Configuración (granel
+    «el kg» o «x1 kg») y stock («48 u.», «6,75 kg», «sin stock» en rojo). Marcar usa la misma selección del catálogo (aparece arriba en «elegidos»).
+  - **Filtros:** buscador (el del catálogo; buscando, primero los que tienen las palabras en el nombre), marca con búsqueda adentro, categoría,
+    sucursal (las 4 o una), orden (mayor stock, nombre, precio, más nuevos), «Nuevos» (altas de los últimos 30 días sin la primera importación),
+    «Bajaron de precio» (30 días, compara el Minorista), «Solo con stock», Todos / Envasados / A granel. Los sin stock siempre al final.
+    Quedan en la dirección de la página (`/creacion?tipo=…&marca=…`): si salís y volvés, siguen. En el celular, botón «Filtros (n)».
+  - **Según el tipo:** Lanzamiento y Fecha especial arrancan con «Nuevos» (si no hay, avisa y muestra los de mayor stock); Receta, a granel;
+    el resto, mayor stock. Topes: NutriOfertas 6, Lanzamiento 6, Receta 5, Producto destacado 1, Promo sin tope (también en el servidor).
+  - Abajo: «hay N sin foto que no se pueden usar» con enlace al catálogo. Arriba: «Stock al … (última sincronización)».
+  - Pruebas: 15 de reglas y una de punta a punta (26 de 26) con el stock real del ERP.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
