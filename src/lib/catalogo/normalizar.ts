@@ -2,6 +2,7 @@
 // Es una función pura: no toca la base ni la red, así se puede probar entera.
 
 import { arreglarCodificacion } from './codificacion'
+import { stockPorSucursal } from './lista-piezas-reglas'
 import { nombreSugerido } from './nombres'
 import type { CatalogoApi, CatalogoNormalizado, MarcaNormalizada, Precio, PrecioApi, ProductoApi, ProductoNormalizado } from './tipos'
 
@@ -9,7 +10,7 @@ export class CatalogoInvalido extends Error {}
 
 // Subir este número cuando cambien las reglas de limpieza (etiquetas, nombres, codificación):
 // la próxima sincronización reprocesa todo aunque el ERP diga que no cambió nada.
-export const VERSION_NORMALIZACION = 3 // 2: búsqueda y precios por lista · 3: también en dados de baja
+export const VERSION_NORMALIZACION = 4 // 2: búsqueda y precios por lista · 3: también en dados de baja · 4: stock
 
 const texto = (v: unknown) => (typeof v === 'string' ? arreglarCodificacion(v.trim().replace(/\s+/g, ' ')) : '')
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
@@ -76,7 +77,7 @@ function validar(api: unknown): asserts api is CatalogoApi {
   }
 }
 
-export function normalizarCatalogo(api: unknown): CatalogoNormalizado & { descartados: number } {
+export function normalizarCatalogo(api: unknown): CatalogoNormalizado & { descartados: number; stocks: Record<number, Record<string, number>> } {
   validar(api)
   let descartados = 0
   const crudos = api.productos.filter((p): p is ProductoApi => {
@@ -145,6 +146,8 @@ export function normalizarCatalogo(api: unknown): CatalogoNormalizado & { descar
     listas: api.listas.map((l) => ({ id: l.id, nombre: texto(l.nombre), modalidad: texto(l.modalidad), orden: num(l.orden) })),
     marcas,
     productos,
+    // El stock va aparte (no entra en la huella: cambia todos los días y no es un «cambio» del producto)
+    stocks: Object.fromEntries(crudos.map((p) => [p.id, stockPorSucursal(p)])),
     descartados,
   }
 }

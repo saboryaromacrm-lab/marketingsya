@@ -166,6 +166,9 @@ Así se hizo el 20/11/2026 (Meta cambia seguido los nombres de los menús).
 
 ## Cosas que conviene saber
 
+- **Stock:** se trae con el botón «Sincronizar» del Catálogo (no es automático). Después de publicar la versión del 22/11/2026, sincronizá
+  una vez para que aparezca el stock en Creación › Nueva pieza.
+
 - **Memoria:** con el catálogo cargado la plataforma usa unos 110 MB y la base unos 55 MB.
   En la etapa 2 (carruseles) se sube el tope de `app`, porque el navegador que arma las piezas necesita más.
 - **Publicar una versión nueva:** se aprueba el cambio en GitHub (pull request a `main`) y Dokploy lo publica solo.

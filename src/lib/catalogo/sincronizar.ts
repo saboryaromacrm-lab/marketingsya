@@ -1,4 +1,5 @@
 import 'server-only'
+import { stockTotal } from './lista-piezas-reglas'
 import { and, desc, eq, inArray, isNotNull, lt, notInArray, sql } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { borrarMedia, descargarImagen, ErrorDeDescarga } from '@/lib/media'
@@ -222,6 +223,13 @@ async function aplicarCatalogo(sincronizacionId: number, cat: ReturnType<typeof 
     for (const { id, ...d } of soloDerivados) await tx.update(productos).set(d).where(eq(productos.id, id))
 
     for (const tanda of enTandas(cambios, 500)) await tx.insert(sincronizacionCambios).values(tanda)
+
+    // Stock: se escribe siempre (no cuenta como cambio del producto)
+    const conStock = cat.productos.map((p) => ({ id: p.id, stock: cat.stocks[p.id] ?? {} }))
+    for (const tanda of enTandas(conStock, 500)) {
+      const valores = sql.join(tanda.map((x) => sql`(${x.id}::int, ${JSON.stringify(x.stock)}::jsonb, ${stockTotal(x.stock)}::numeric)`), sql`, `)
+      await tx.execute(sql`update ${productos} set stock = v.stock, stock_total = v.total from (values ${valores}) as v(id, stock, total) where ${productos.id} = v.id`)
+    }
   })
 }
 

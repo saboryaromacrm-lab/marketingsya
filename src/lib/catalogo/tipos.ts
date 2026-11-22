@@ -52,7 +52,7 @@ export type CatalogoApi = {
 }
 
 // ---- Ya normalizado, listo para guardar ----
-// El stock no se guarda: el cliente pidió ignorarlo.
+// El stock va aparte (columnas productos.stock y stock_total): no forma parte del producto normalizado ni de su huella.
 
 export type Precio = {
   listaId: number

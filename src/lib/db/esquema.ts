@@ -86,6 +86,9 @@ export const productos = pgTable(
     imagenPropiaEn: timestamp('imagen_propia_en', { withTimezone: true }),
     // Lucas lo saca de las piezas (gaseosas, golosinas comunes): el motor de carruseles lo saltea.
     excluirDePiezas: boolean('excluir_de_piezas').notNull().default(false),
+    // Stock por sucursal (granel: el suyo más los fraccionados en kilos) y la suma de las 4. Se actualiza en cada sincronización.
+    stock: jsonb('stock').$type<Record<string, number>>().notNull().default({}),
+    stockTotal: numeric('stock_total', { precision: 14, scale: 2, mode: 'number' }).notNull().default(0),
     dadoDeBaja: boolean('dado_de_baja').notNull().default(false),
     bajaEn: timestamp('baja_en', { withTimezone: true }),
     creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),

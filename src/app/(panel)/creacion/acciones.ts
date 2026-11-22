@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { asc, eq, inArray } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import type { EstiloCarrusel, FormatosCarrusel } from '@/lib/db/esquema'
 import { leerConfig } from '@/lib/configuracion'
@@ -15,6 +15,9 @@ import { ANIMACION_INICIAL, limpiarFormatosCarrusel } from '@/lib/video/tipos'
 import { ErrorIA } from '@/lib/ia/claude'
 import * as asesor from '@/lib/ia/asesor'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
+import { listaParaPiezas } from '@/lib/catalogo/lista-piezas'
+import { leerFiltrosLista, parametrosLista, tipoDe, TOPE_POR_TIPO, type FiltrosLista } from '@/lib/catalogo/lista-piezas-reglas'
+import { marcarProductos } from '@/app/seleccion-acciones'
 
 const { carruseles, promos, promoFilas, seleccion, productos } = esquema
 
@@ -94,4 +97,25 @@ export async function sacarElegido(id: number) {
 
 export async function elegidosConFoto() {
   return db.select({ id: productos.id, nombre: productos.nombreSugerido, foto: fotoEfectiva }).from(seleccion).innerJoin(productos, eq(productos.id, seleccion.productoId)).orderBy(asc(seleccion.agregadoEn))
+}
+
+// ---------------------------------------------------------------------------
+// Lista de productos del paso «¿Qué productos?»
+// ---------------------------------------------------------------------------
+/** Una página de la lista con los filtros pedidos (se validan acá: pueden venir de la dirección de la página). */
+export async function accionListaPiezas(f: FiltrosLista) {
+  const config = await leerConfig()
+  const limpio = leerFiltrosLista(Object.fromEntries(Object.entries(parametrosLista(f, 'nutriofertas')).filter(([k]) => k !== 'tipo')), 'nutriofertas')
+  return listaParaPiezas(limpio, config.piezas.listaId)
+}
+
+/** Marcar o desmarcar un producto desde la lista, sin pasarse del tope del tipo de pieza. */
+export async function accionMarcarParaPieza(id: number, marcar: boolean, tipo: string): Promise<{ ok: true } | { error: string }> {
+  if (marcar) {
+    const tope = TOPE_POR_TIPO[tipoDe(tipo)]
+    const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(seleccion)
+    if (tope != null && n >= tope) return { error: `Ya elegiste ${tope}: es lo que entra en esta pieza. Sacá uno para sumar otro.` }
+  }
+  await marcarProductos([Number(id)], marcar)
+  return { ok: true }
 }
