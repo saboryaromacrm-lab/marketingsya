@@ -341,7 +341,8 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
 
           <button type="button" className="btn boton-izquierda" disabled={yendo} onClick={() => empezarIr(async () => {
             if (!confirm(`¿Borrar «${form.titulo}»? Los videos de «Mis videos» no se borran.`)) return
-            await accionBorrarPiezaVideo(id)
+            const r = await accionBorrarPiezaVideo(id)
+            if ('error' in r) return alert(r.error)
             router.push('/creacion/piezas')
           })}><Icono nombre="delete" />Borrar esta pieza</button>
         </div>

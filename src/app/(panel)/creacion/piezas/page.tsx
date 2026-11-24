@@ -9,6 +9,7 @@ import { ESTILOS } from '@/lib/carruseles/tipos'
 import { limpiarFormatosCarrusel } from '@/lib/video/tipos'
 import { textoVigencia } from '@/lib/promos/fechas'
 import { MenuCreacion } from '../MenuCreacion'
+import { GrillaPiezas, type TarjetaPieza } from './GrillaPiezas'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Mis piezas' }
@@ -100,33 +101,13 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
             {(Object.keys(VER) as Ver[]).map((k) => <Link key={k} href={enlace(k)} className={ver === k ? 'pestana-activa' : ''}>{VER[k]} ({conBusqueda.filter((p) => pasaVer(p, k)).length})</Link>)}
           </nav>
           {lista.length ? (
-            <div className="grilla-piezas">
-              {lista.map((p) => {
-                const img = miniatura(p)
-                const editar = p.tipo === 'carrusel' ? `/carruseles/${p.id}` : p.tipo === 'promo' ? `/promos/${p.id}` : `/creacion/videos/${p.id}`
-                return (
-                  <article key={`${p.tipo}-${p.id}`} className="tarjeta-pieza">
-                    <Link href={editar} className="tarjeta-pieza-imagen">
-                      {img ? <img src={img} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={p.tipo === 'promo' ? 'sell' : p.tipo === 'video' ? 'videocam' : 'view_carousel'} tamano={36} /></span>}
-                      {p.reel && <span className="tarjeta-pieza-video"><Icono nombre="play_arrow" tamano={14} />Reel</span>}
-                    </Link>
-                    <div className="tarjeta-pieza-cuerpo">
-                      <Link href={editar}><b>{p.titulo}</b></Link>
-                      <span className="texto-chico">{p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio'} · {p.detalle}</span>
-                      <div className="chips">{p.formatos.map((f) => <span key={f} className="chip chip-mini">{f}</span>)}</div>
-                      <div className="fila-separada">
-                        <span className={`chip ${CLASE[p.estado]}`}>{ESTADOS[p.estado].toUpperCase()}</span>
-                        <span className="texto-chico">{cuando(p.actualizado)}</span>
-                      </div>
-                      <div className="fila-chips">
-                        <Link className="btn btn-chico" href={editar}><Icono nombre="edit" tamano={16} />Editar</Link>
-                        <Link className="btn btn-chico" href={`/publicaciones/nueva?${p.tipo}=${p.id}`}><Icono nombre="send" tamano={16} />Publicar</Link>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+            <GrillaPiezas
+              piezas={lista.map((p): TarjetaPieza => ({
+                tipo: p.tipo, id: p.id, titulo: p.titulo, detalle: p.detalle, formatos: p.formatos, reel: p.reel, imagen: miniatura(p),
+                editar: p.tipo === 'carrusel' ? `/carruseles/${p.id}` : p.tipo === 'promo' ? `/promos/${p.id}` : `/creacion/videos/${p.id}`,
+                estado: ESTADOS[p.estado].toUpperCase(), claseEstado: CLASE[p.estado], publicada: p.estado === 'publicada', cuando: cuando(p.actualizado),
+              }))}
+            />
           ) : (
             <div className="vacio"><b>No hay piezas acá.</b> Armá una nueva desde <Link href="/creacion">Nueva pieza</Link>.</div>
           )}

@@ -216,7 +216,7 @@ export function EditorCarrusel({ id, inicial, infoInicial, placasIniciales, list
             </>
           )}
           <p className="texto-chico">Cada carrusel cambia solo algunos detalles (giros, hojitas). Contacto y QR de la tienda en todas las placas de cierre.</p>
-          <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar este carrusel? No se puede deshacer.')) empezarIr(() => borrarCarrusel(id)) }}>Borrar carrusel</button>
+          <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar este carrusel? No se puede deshacer.')) empezarIr(async () => { const r = await borrarCarrusel(id); if (r?.error) alert(r.error) }) }}>Borrar carrusel</button>
         </section>
 
         {/* ---------- vista previa ---------- */}

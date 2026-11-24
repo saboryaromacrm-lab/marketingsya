@@ -929,3 +929,10 @@ code { background: var(--superficie-sutil); border: 1px solid var(--borde); bord
   .lp-marca { flex: 1 1 100%; }
   .lp-marca .lp-sel { width: 100%; }
 }
+
+/* Mis piezas: casilla sobre la imagen para elegir varias y borrar de una */
+.tarjeta-pieza-arriba { position: relative; }
+.tarjeta-pieza-casilla { position: absolute; top: 8px; left: 8px; width: 36px; height: 36px; background: rgb(255 255 255 / .9); border-radius: 8px; box-shadow: 0 1px 3px rgb(0 0 0 / .15); }
+.tarjeta-pieza-elegida { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde); }
+.btn-solo-icono { padding: 0; width: 30px; margin-left: auto; }
+.avisos-borrado { display: grid; gap: 8px; margin-bottom: 12px; }

@@ -263,7 +263,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
             </select>
           </label>
           <p className="texto-chico">Contacto en todas las placas: {contacto.web} · WhatsApp {contacto.whatsapp} · {contacto.instagram} (se cambia en Configuración).</p>
-          <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar esta promo? No se puede deshacer.')) empezarIr(() => borrarPromo(id)) }}>Borrar promo</button>
+          <button className="enlace texto-chico borrar-promo" disabled={yendo} onClick={() => { if (confirm('¿Borrar esta promo? No se puede deshacer.')) empezarIr(async () => { const r = await borrarPromo(id); if (r?.error) alert(r.error) }) }}>Borrar promo</button>
         </section>
 
         {/* ---------- vista previa ---------- */}

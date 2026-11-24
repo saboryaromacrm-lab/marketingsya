@@ -1,5 +1,6 @@
 'use server'
 
+import { borrarPieza } from '@/lib/creacion/borrar'
 import { revalidatePath } from 'next/cache'
 import { eq, inArray } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
@@ -97,8 +98,10 @@ export async function accionDuplicarPiezaVideo(id: number): Promise<{ id: number
   return { id: n.id }
 }
 
-export async function accionBorrarPiezaVideo(id: number) {
-  await db.delete(piezasVideo).where(eq(piezasVideo.id, Number(id)))
+/** Borra la pieza (los videos de «Mis videos» quedan); si tiene algo programado o una pauta activa, dice por qué no. */
+export async function accionBorrarPiezaVideo(id: number): Promise<{ ok: true } | { error: string }> {
+  const r = await borrarPieza('video', Number(id))
+  if (!r.ok) return { error: r.motivo }
   revalidatePath('/creacion/piezas')
-  return { ok: true as const }
+  return { ok: true }
 }
