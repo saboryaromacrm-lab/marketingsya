@@ -84,7 +84,7 @@ export function PanelVideo({ tipo, id, animacion, alCambiar, musica, formatos, a
           <option value="">Sin música</option>
           {musica.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
         </select>
-        <span className="texto-chico">{musica.length ? 'Temas de tu biblioteca.' : 'Todavía no hay temas.'} <Link href="/configuracion/creacion">Subir música</Link></span>
+        <span className="texto-chico">{musica.length ? 'Temas de tu biblioteca.' : 'Todavía no hay temas.'} <Link prefetch={false} href="/configuracion/creacion">Subir música</Link></span>
       </label>
       <label className="campo">
         <span className="rotulo-columna">Portada del reel (segundo)</span>

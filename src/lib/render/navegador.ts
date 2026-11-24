@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Browser } from 'playwright-core'
+import { chromiumConPrioridadBaja } from './prioridad'
 
 // Un solo Chromium para toda la plataforma: se abre al primer render y se cierra
 // solo después de 3 minutos sin uso, para no ocupar memoria (el servidor se comparte con el ERP).
@@ -10,10 +11,12 @@ const global = globalThis as unknown as { navegador?: Promise<Browser>; cierre?:
 
 async function abrir(): Promise<Browser> {
   const { chromium } = await import('playwright-core')
+  // Con prioridad baja: si alguien navega la plataforma o usa el ERP mientras se arma una pieza, ellos van primero
+  const ejecutable = await chromiumConPrioridadBaja(process.env.CHROMIUM_PATH || chromium.executablePath())
   const b = await chromium.launch({
     // En Docker corre como usuario sin privilegios: el sandbox de Chromium necesita permisos que el contenedor no da.
     chromiumSandbox: false,
-    executablePath: process.env.CHROMIUM_PATH || undefined,
+    executablePath: ejecutable,
     args: ['--disable-dev-shm-usage', '--font-render-hinting=none'],
   })
   b.on('disconnected', () => { global.navegador = undefined })

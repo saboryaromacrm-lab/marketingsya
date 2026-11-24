@@ -17,7 +17,7 @@ export function Cabecera({ titulo, subtitulo, miga, acciones }: {
           {pasos.map((p, i) => (
             <span key={i} className="miga-paso">
               {i > 0 && <Icono nombre="chevron_right" />}
-              {p.href && i < pasos.length - 1 ? <Link href={p.href}>{p.texto}</Link> : <b>{p.texto}</b>}
+              {p.href && i < pasos.length - 1 ? <Link prefetch={false} href={p.href}>{p.texto}</Link> : <b>{p.texto}</b>}
             </span>
           ))}
         </nav>

@@ -16,13 +16,13 @@ export default async function Carruseles() {
         titulo="Carruseles"
         subtitulo="Carruseles de Instagram con los 3 estilos aprobados (1080×1350). Las fotos y los precios salen del catálogo."
         miga={[{ texto: 'Carruseles' }]}
-        acciones={<Link className="btn btn-pri" href="/carruseles/nuevo"><Icono nombre="add" />Nuevo carrusel</Link>}
+        acciones={<Link prefetch={false} className="btn btn-pri" href="/carruseles/nuevo"><Icono nombre="add" />Nuevo carrusel</Link>}
       />
       {lista.length === 0 ? (
         <div className="vacio">
           <Icono nombre="view_carousel" tamano={40} />
           <p><b>Todavía no armaste ningún carrusel.</b></p>
-          <p>Elegí productos con las casillas del <Link href="/catalogo">catálogo</Link> y apretá «Armar carrusel», o empezá de cero con «Nuevo carrusel».</p>
+          <p>Elegí productos con las casillas del <Link prefetch={false} href="/catalogo">catálogo</Link> y apretá «Armar carrusel», o empezá de cero con «Nuevo carrusel».</p>
         </div>
       ) : (
         <div className="tabla-marco">
@@ -34,7 +34,7 @@ export default async function Carruseles() {
                 const exportado = c.estadoExportacion === 'ok' && c.zip
                 return (
                   <tr key={c.id}>
-                    <td><Link href={`/carruseles/${c.id}`} className="fila-enlace">{c.titulo}</Link><div className="texto-chico">N.º {c.id} · {plural(idsDe(c.estilo, d).length, 'producto', 'productos')}</div></td>
+                    <td><Link prefetch={false} href={`/carruseles/${c.id}`} className="fila-enlace">{c.titulo}</Link><div className="texto-chico">N.º {c.id} · {plural(idsDe(c.estilo, d).length, 'producto', 'productos')}</div></td>
                     <td>{ESTILOS[c.estilo].nombre}</td>
                     <td className="num">{placasDe(c.estilo, d).length}</td>
                     <td><span className={`chip ${exportado ? 'chip-ok' : 'chip-en_cola'}`}>{exportado ? 'EXPORTADO' : 'BORRADOR'}</span></td>

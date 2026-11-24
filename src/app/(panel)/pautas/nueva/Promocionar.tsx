@@ -9,6 +9,7 @@ import { ConfirmarGasto } from '@/components/pautas/ConfirmarGasto'
 import { OBJETIVOS_PAUTA, UBICACIONES_PAUTA, type ObjetivoPauta, type UbicacionesPauta } from '@/lib/configuracion-tipos'
 import { diasEntre, pesos, problemasPresupuesto, sumarDias, totalPauta } from '@/lib/pautas/reglas'
 import { lanzarPauta } from '../acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Props = {
   publicacion: { id: number; titulo: string; texto: string; imagen: string | null; publicadaEn: string | null; instagram: string | null; facebook: string | null }
@@ -45,8 +46,8 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
   const sinIg = publicacion.instagram == null
 
   const chequeos: Chequeo[] = []
-  if (!metaConectada) chequeos.push({ ok: false, texto: <>Meta no está conectado: <Link href="/configuracion/meta">cargá el token</Link></> })
-  else if (!cuenta) chequeos.push({ ok: false, texto: <>Falta detectar la cuenta publicitaria: <Link href="/configuracion/pautas">Configuración › Pautas</Link></> })
+  if (!metaConectada) chequeos.push({ ok: false, texto: <>Meta no está conectado: <Link prefetch={false} href="/configuracion/meta">cargá el token</Link></> })
+  else if (!cuenta) chequeos.push({ ok: false, texto: <>Falta detectar la cuenta publicitaria: <Link prefetch={false} href="/configuracion/pautas">Configuración › Pautas</Link></> })
   else {
     chequeos.push(cuenta.moneda !== 'ARS' ? { ok: false, texto: `La cuenta publicitaria está en ${cuenta.moneda}: tiene que ser en pesos` } : !cuenta.activa ? { ok: false, texto: 'La cuenta publicitaria no está activa en Meta (revisá el medio de pago)' } : { ok: true, texto: `Cuenta publicitaria conectada (${cuenta.nombre} · ARS)` })
     if (objetivo === 'mensajes') chequeos.push(cuenta.whatsapp ? { ok: true, texto: 'WhatsApp Business vinculado a la página' } : { ok: true, aviso: true, texto: 'No se pudo confirmar el WhatsApp vinculado a la página: si no lo está, Meta va a rechazar la pauta' })
@@ -79,7 +80,7 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
       <div className="promocionar">
         <section className="tarjeta" aria-label="Lo que se pauta">
           <span className="rotulo-columna">Lo que se pauta</span>
-          {publicacion.imagen && <img className="promocionar-imagen" src={publicacion.imagen} alt={publicacion.titulo} />}
+          {publicacion.imagen && <img className="promocionar-imagen" {...imagenMini(publicacion.imagen, 380)} alt={publicacion.titulo} />}
           <div className="fila-chips">
             <span className="chip chip-ok"><Icono nombre="check_circle" tamano={14} /> Publicado{publicacion.publicadaEn ? ` el ${new Date(publicacion.publicadaEn).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Cordoba' })}` : ''}</span>
             {publicacion.instagram && <a className="enlace texto-chico" href={publicacion.instagram} target="_blank" rel="noreferrer">Ver en Instagram</a>}
@@ -112,7 +113,7 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
           </label>
           <div className="campo">
             <span className="rotulo-columna">Dónde se muestra</span>
-            <span className="texto-chico">{UBICACIONES_PAUTA[ubicaciones]} · <Link href="/configuracion/pautas">cambiar</Link></span>
+            <span className="texto-chico">{UBICACIONES_PAUTA[ubicaciones]} · <Link prefetch={false} href="/configuracion/pautas">cambiar</Link></span>
           </div>
         </section>
 

@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import type { DisponibilidadIA } from '@/lib/ia/disponibilidad'
 import { crearDesdeAsistente, elegirConIA, sacarElegido, type TipoNueva } from './acciones'
 import { ListaProductos } from './ListaProductos'
 import type { ListaPiezas, OpcionesListaPiezas } from '@/lib/catalogo/lista-piezas'
 import { TOPE_POR_TIPO, type FiltrosLista } from '@/lib/catalogo/lista-piezas-reglas'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Props = {
   elegidos: { id: number; nombre: string; foto: string | null }[]
@@ -45,8 +45,10 @@ const FORMATOS_PROMO: Formato[] = [
   { clave: 'videoFeed', nombre: 'Video de feed', detalle: 'Animado 4:5', icono: 'smart_display', ancho: 64 },
 ]
 
-export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaProductos }: Props) {
-  const router = useRouter()
+export function Asistente({ elegidos: elegidosIniciales, formatos, fecha, ia, tipoInicial, listaProductos }: Props) {
+  // Los elegidos se actualizan con lo que devuelven las acciones (sin recargar la página ni invalidar la app)
+  const [elegidos, setElegidos] = useState(elegidosIniciales)
+  useEffect(() => setElegidos(elegidosIniciales), [elegidosIniciales])
   const [tipo, setTipo] = useState<TipoNueva>(tipoInicial)
   const [fc, setFc] = useState<Record<string, boolean>>({ ...formatos })
   const [fp, setFp] = useState<Record<string, boolean>>({ historia: true, feed: true, uno: false, reel: formatos.reel, historiaVideo: formatos.historiaVideo, videoFeed: formatos.videoFeed })
@@ -63,7 +65,7 @@ export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaPro
 
   return (
     <>
-      <Link href="/creacion/videos" className="aviso aviso-verde asistente-video-propio">
+      <Link prefetch={false} href="/creacion/videos" className="aviso aviso-verde asistente-video-propio">
         <Icono nombre="videocam" />
         <span><b>¿Filmaste un video?</b> Subilo en «Mis videos» y le ponemos la marca encima: apertura, franjas con precio y cierre con QR.</span>
         <Icono nombre="chevron_right" />
@@ -100,9 +102,9 @@ export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaPro
           <div className="asistente-elegidos">
             {elegidos.map((e) => (
               <span key={e.id} className="chip chip-producto">
-                {e.foto ? <img src={e.foto} alt="" /> : <Icono nombre="image_not_supported" tamano={16} />}
+                {e.foto ? <img {...imagenMini(e.foto, 32)} alt="" /> : <Icono nombre="image_not_supported" tamano={16} />}
                 {e.nombre}
-                <button type="button" aria-label={`Sacar ${e.nombre}`} onClick={() => empezar(async () => { await sacarElegido(e.id); router.refresh() })}><Icono nombre="close" tamano={14} /></button>
+                <button type="button" aria-label={`Sacar ${e.nombre}`} onClick={() => empezar(async () => setElegidos(await sacarElegido(e.id)))}><Icono nombre="close" tamano={14} /></button>
               </span>
             ))}
           </div>
@@ -110,12 +112,12 @@ export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaPro
           <p className="texto-suave">Todavía no elegiste productos. Marcalos en la lista de abajo, en el catálogo o pedile a la IA que elija.</p>
         )}
         <div className="fila-chips">
-          <Link className="btn btn-chico" href="/catalogo"><Icono nombre="inventory_2" tamano={16} />Elegir en el catálogo</Link>
+          <Link prefetch={false} className="btn btn-chico" href="/catalogo"><Icono nombre="inventory_2" tamano={16} />Elegir en el catálogo</Link>
           <button type="button" className="btn btn-chico boton-ia" disabled={!ia.disponible || pensando} title={ia.motivo ?? ''} onClick={() => empezarIA(async () => {
             setError(null)
             const r = await elegirConIA(tipo === 'destacado' ? 1 : tipo === 'receta' ? 4 : 4)
             if ('error' in r) setError(r.error)
-            router.refresh()
+            else setElegidos(r.elegidos)
           })}>
             <Icono nombre={pensando ? 'sync' : 'auto_awesome'} tamano={16} className={pensando ? 'girando' : ''} />{pensando ? 'Pensando…' : 'Que la IA elija'}
             {!pensando && ia.disponible && <small className="costo-ia">{ia.costo}</small>}
@@ -127,12 +129,11 @@ export function Asistente({ elegidos, formatos, fecha, ia, tipoInicial, listaPro
           filtrosIniciales={listaProductos.filtros}
           inicial={listaProductos.inicial}
           opciones={listaProductos.opciones}
-          elegidos={elegidos.length}
-          elegidosClave={elegidos.map((e) => e.id).join(',')}
+          elegidosIds={elegidos.map((e) => e.id)}
           tope={TOPE_POR_TIPO[tipo]}
           listaNombre={listaProductos.listaNombre}
           avisoInicial={listaProductos.aviso}
-          alCambiar={() => router.refresh()}
+          alCambiar={setElegidos}
         />
         <button type="button" className="btn btn-pri boton-izquierda" disabled={pendiente || !marcados.length || (!elegidos.length && !esPromo)} onClick={() => empezar(async () => {
           setError(null)

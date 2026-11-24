@@ -7,6 +7,7 @@ import { ejecutarSincronizacion } from './sincronizar'
 import { ejecutarPublicacion, recuperarAlArrancar, revisarVencidas } from '@/lib/publicaciones/motor'
 import { sincronizarPautas } from '@/lib/pautas/motor'
 import { limpiarBiblioteca, procesarVideo, recuperarVideos } from '@/lib/video/propios/biblioteca'
+import { limpiarMiniaturas } from '@/lib/miniaturas-servidor'
 
 // Arranca con el servidor (ver src/instrumentation.ts) y atiende la cola de sincronización.
 export async function arrancarTrabajador() {
@@ -44,6 +45,8 @@ export async function arrancarTrabajador() {
   setInterval(() => void sincronizarPautas(false).catch((e) => console.error('[pautas] sincronización', e)), 15 * 60_000).unref()
   // Cada hora: se borran los videos sin usar de más de 90 días (y las subidas que quedaron a medias)
   setInterval(() => void limpiarBiblioteca().catch((e) => console.error('[videos] limpieza', e)), 60 * 60_000).unref()
+  // Y las miniaturas de imágenes que ya no existen
+  setInterval(() => void limpiarMiniaturas().catch((e) => console.error('[miniaturas] limpieza', e)), 60 * 60_000).unref()
   void limpiarBiblioteca().catch((e) => console.error('[videos] limpieza', e))
   console.log('[cola] atendiendo la sincronización del catálogo, el armado de piezas, las publicaciones y las pautas')
 }

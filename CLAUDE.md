@@ -410,6 +410,41 @@ Poner contador visible y corte automático al llegar al tope.
   - Se borran también sus exportaciones y los archivos (JPEG, MP4 y .zip) para liberar espacio. Los clips de «Mis videos» quedan.
   - Los botones de borrar de los editores (carrusel, promo y video propio) usan las mismas reglas (`borrarPieza` en `src/lib/creacion/borrar.ts`).
 
+- **Rendimiento, paso 1 de la auditoría (24/11/2026)** (informe con los números en el artifact «¿Por qué tarda la plataforma de marketing?»):
+  - **Pantallas de carga:** `loading.tsx` en `(panel)`, `catalogo`, `configuracion` y `creacion` con el componente `Esqueleto`. El menú precarga
+    ese esqueleto: al tocar una sección la pantalla responde en ~60–130 ms (antes quedaba quieta 230–530 ms en el celular con 4G).
+  - **Precarga:** solo el menú lateral (`Armazon`) y los submenús (`Submenu`) precargan; los demás `<Link>` llevan `prefetch={false}`
+    (filas, tarjetas, pestañas y botones: antes cada pantalla disparaba 20–29 precargas). Al sumar enlaces nuevos, ponerles `prefetch={false}`.
+  - **Acciones frecuentes sin `revalidatePath`:** en una acción, cualquier `revalidatePath` hace que todas las páginas visitadas se pidan de nuevo
+    (y se vuelvan a precargar). Marcar y sacar productos en Nueva pieza devuelven los elegidos (`elegidosVista`) y la pantalla se actualiza
+    con eso: 1 pedido y 5 consultas por casilla (antes 16 y 37). El catálogo revalida solo `/catalogo`. La lógica de marcar está en `lib/seleccion.ts`.
+  - **Publicaciones** ya no recarga la página cada 5 s: mira una firma chica del estado (`firmaPublicaciones`) cada 30 s si algo sale en el día,
+    cada 5 s si algo se publica o sale en menos de 10 min (`cadaCuantoMirar`), nunca con la pestaña oculta, y recarga solo si cambió.
+  - **Caché del navegador:** `staleTimes.dynamic: 30` (volver a una sección vista hace menos de 30 s no la pide de nuevo). Las páginas cuyos
+    datos cambian solos o desde otra pantalla llevan `export const unstable_dynamicStaleTime = 0` (Catálogo, Nueva pieza, Mis videos,
+    Publicaciones, Pautas y los tres editores).
+- **Rendimiento, paso 2: miniaturas (24/11/2026):**
+  - `/media/mini/<ancho>/<ruta>`: la misma imagen de `/media` achicada (anchos 96, 160, 320 y 640; WebP calidad 80, girada según la foto,
+    nunca agrandada). Se genera con sharp la primera vez que se pide (~20 ms una foto, ~140 ms una placa) y queda en `MEDIA_DIR/mini/`;
+    después se sirve con caché permanente (los nombres llevan versión). Pedidos simultáneos generan una sola vez. SVG, anchos no permitidos
+    y rutas fuera de la carpeta dan 404. La limpieza de cada hora borra las miniaturas cuya original ya no existe.
+  - En pantalla: `imagenMini(url, píxeles que ocupa)` (`src/lib/miniaturas.ts`) da `src` y `srcSet` (1x y 2x para el celular). Lo usan las
+    filas del catálogo, la lista de Nueva pieza, Mis piezas, Publicaciones, Pautas, los buscadores y chips de los editores. Las vistas grandes
+    (la foto del producto, la vista previa de Publicar) siguen con la original. Al sumar imágenes chicas, usar `imagenMini`.
+  - Medido: Catálogo 921 → 52 KB, Nueva pieza 807 → 81 KB, Mis piezas 6.131 → 483 KB, Publicaciones 1.053 → 9 KB.
+- **Rendimiento, paso 3: ajustes finos (24/11/2026):**
+  - **Prioridad baja para lo pesado** (`src/lib/render/prioridad.ts`): ffmpeg con `os.setPriority(pid, 10)` y Chromium lanzado por un guion
+    con `nice -n 10` (en `os.tmpdir()`). En Docker corre como usuario `node`, que no puede subirse la prioridad: comprobado que los procesos
+    de Chromium quedan en 10. Con el servidor saturado, las páginas mejoran 0–17 % (el resto es competencia por memoria).
+  - **Ajustes leídos una vez por pedido** (`src/lib/ajustes.ts`): la tabla se lee entera con `cache()` de React (una consulta en lugar de hasta 6);
+    guardar o borrar un ajuste cambia la versión y la lectura siguiente va a la base. Inicio pasó de 17 a 11 consultas y Pautas de 15 a 10.
+  - **Caché de un día** para `/marca`, `/piezas`, `/fuentes` e `/interfaz` (`headers()` en `next.config.ts`).
+  - **Catálogo:** la lista de precios por defecto es la de Configuración › Piezas (`leerFiltros(p, listaPorDefecto)`), ya no la Minorista fija.
+  - **Fuente de íconos recortada** (aprobado por Lucas, con fontTools instalado solo en el entorno de trabajo, no en el servidor):
+    `src/styles/fuentes/material-icons-sya.woff2` (~8 KB, unos 120 íconos; la completa pesaba 125 KB), cargada desde `src/styles/iconos.css`.
+    La genera `scripts/iconos/recortar.py` (busca en el código los textos que son nombres de ícono). **Al usar un ícono nuevo** la prueba
+    `src/lib/__tests__/iconos.test.ts` falla y dice cuál falta: correr `python3 -m pip install fonttools brotli` y `python3 scripts/iconos/recortar.py`.
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.

@@ -18,6 +18,8 @@ export type Filtros = {
   // Si va o no en las piezas (Lucas excluye gaseosas, golosinas comunes, etc.)
   piezas: 'si' | 'no' | null
   lista: number
+  // La de Configuración › Piezas: no se escribe en la dirección cuando es la elegida
+  listaPorDefecto: number
   orden: Orden
   pagina: number
 }
@@ -30,7 +32,8 @@ type Parametros = Record<string, string | string[] | undefined>
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() || null
 const entero = (v: string | null) => (v && /^\d+$/.test(v) ? Number(v) : null)
 
-export function leerFiltros(p: Parametros): Filtros {
+/** `listaPorDefecto`: la lista de precios de Configuración › Piezas (la que se ve si la dirección no pide otra). */
+export function leerFiltros(p: Parametros, listaPorDefecto: number = LISTA_MINORISTA): Filtros {
   const q = (uno(p.q) ?? '').slice(0, 120)
   const pestana = PESTANAS.find((x) => x === uno(p.pestana)) ?? 'todos'
   const categoria = uno(p.categoria)
@@ -50,7 +53,8 @@ export function leerFiltros(p: Parametros): Filtros {
     foto: foto === 'con' || foto === 'sin' ? foto : null,
     sinPrecio: uno(p.sinprecio) === '1',
     piezas: uno(p.piezas) === 'si' || uno(p.piezas) === 'no' ? (uno(p.piezas) as 'si' | 'no') : null,
-    lista: entero(uno(p.lista)) ?? LISTA_MINORISTA,
+    lista: entero(uno(p.lista)) ?? listaPorDefecto,
+    listaPorDefecto,
     orden,
     pagina: Math.max(1, Math.min(10_000, entero(uno(p.pagina)) ?? 1)),
   }
@@ -71,7 +75,7 @@ export function urlConFiltros(f: Filtros, cambios: Partial<Filtros> = {}, base =
   if (x.foto) q.set('foto', x.foto)
   if (x.sinPrecio) q.set('sinprecio', '1')
   if (x.piezas) q.set('piezas', x.piezas)
-  if (x.lista !== LISTA_MINORISTA) q.set('lista', String(x.lista))
+  if (x.lista !== x.listaPorDefecto) q.set('lista', String(x.lista))
   if (x.orden !== (x.q ? 'relevancia' : 'nombre')) q.set('orden', x.orden)
   if (x.pagina > 1) q.set('pagina', String(x.pagina))
   const s = q.toString()

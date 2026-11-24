@@ -1,13 +1,23 @@
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { Readable } from 'node:stream'
 import { rutaSegura, TIPO_POR_EXTENSION } from '@/lib/media'
+import { miniatura } from '@/lib/miniaturas-servidor'
 
 // Sirve los archivos de MEDIA_DIR sin pedir sesión (Meta los tiene que poder leer).
 // Los nombres llevan la versión adentro, así que se pueden cachear para siempre.
 export async function GET(req: Request, { params }: { params: Promise<{ ruta: string[] }> }) {
   const { ruta } = await params
+  // Miniaturas: /media/mini/<ancho>/<ruta>. Se generan la primera vez y después se sirven como cualquier archivo.
+  if (ruta[0] === 'mini') {
+    const hecha = await miniatura(Number(ruta[1]), ruta.slice(2).map(decodeURIComponent).join('/'))
+    if (!hecha) return new Response('No encontrado', { status: 404 })
+    const datos = await readFile(hecha)
+    return new Response(new Uint8Array(datos), {
+      headers: { 'content-type': 'image/webp', 'content-length': String(datos.length), 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' },
+    })
+  }
   const relativa = ruta.map(decodeURIComponent).join('/')
   const archivo = rutaSegura(relativa)
   const tipo = TIPO_POR_EXTENSION[path.extname(relativa).slice(1).toLowerCase()]

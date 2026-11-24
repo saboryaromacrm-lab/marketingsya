@@ -18,6 +18,7 @@ import { posteoCarrusel } from '@/lib/carruseles/posteo'
 import { datosIniciales, ESTILOS, idsDe, MAX, placasDe, type DatosCarrusel, type DatosLanzamiento, type DatosNutriofertas, type DatosRecetas, type Id } from '@/lib/carruseles/tipos'
 import { buscarParaPromo } from '../../promos/acciones'
 import { borrarCarrusel, duplicarCarrusel, exportarCarrusel, guardarCarrusel, infoProductosCarrusel, type InfoCarrusel } from '../acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Form = { titulo: string; estilo: EstiloCarrusel; listaId: number; datos: DatosCarrusel; textoPosteo: string | null; formatos: FormatosCarrusel; animacion: AnimacionPieza }
 type PlacaVista = { numero: number; nombre: string; ruta: string }
@@ -339,8 +340,8 @@ function Producto({ id, info, alElegir, listaId = 3, rotulo }: { id: Id; info: I
       {rotulo && <span className="rotulo-columna">{rotulo}</span>}
       {p ? (
         <div className={`slot-producto ${p.foto ? '' : 'slot-falta'}`}>
-          <span className="miniatura">{p.foto ? <img src={p.foto} alt="" /> : <Icono nombre="no_photography" tamano={18} />}</span>
-          <span className="resultado-nombre">{p.nombre}<small>{p.foto ? (p.precio ?? 'Sin precio en esta lista') : <>Sin foto · <Link href={`/catalogo/${p.id}`} target="_blank">subile una</Link></>}</small></span>
+          <span className="miniatura">{p.foto ? <img {...imagenMini(p.foto, 64)} alt="" /> : <Icono nombre="no_photography" tamano={18} />}</span>
+          <span className="resultado-nombre">{p.nombre}<small>{p.foto ? (p.precio ?? 'Sin precio en esta lista') : <>Sin foto · <Link prefetch={false} href={`/catalogo/${p.id}`} target="_blank">subile una</Link></>}</small></span>
           <button className="btn btn-chico" onClick={() => setBuscando(!buscando)}><Icono nombre={buscando ? 'close' : 'swap_horiz'} tamano={16} />{buscando ? 'Cerrar' : 'Cambiar'}</button>
         </div>
       ) : id != null ? <p className="texto-chico">Cargando…</p> : null}

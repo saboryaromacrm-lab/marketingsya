@@ -98,7 +98,7 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
             <button className="btn" type="submit"><Icono nombre="search" />Filtrar</button>
           </form>
           <nav className="pestanas" aria-label="Formato">
-            {(Object.keys(VER) as Ver[]).map((k) => <Link key={k} href={enlace(k)} className={ver === k ? 'pestana-activa' : ''}>{VER[k]} ({conBusqueda.filter((p) => pasaVer(p, k)).length})</Link>)}
+            {(Object.keys(VER) as Ver[]).map((k) => <Link prefetch={false} key={k} href={enlace(k)} className={ver === k ? 'pestana-activa' : ''}>{VER[k]} ({conBusqueda.filter((p) => pasaVer(p, k)).length})</Link>)}
           </nav>
           {lista.length ? (
             <GrillaPiezas
@@ -109,7 +109,7 @@ export default async function MisPiezas({ searchParams }: { searchParams: Promis
               }))}
             />
           ) : (
-            <div className="vacio"><b>No hay piezas acá.</b> Armá una nueva desde <Link href="/creacion">Nueva pieza</Link>.</div>
+            <div className="vacio"><b>No hay piezas acá.</b> Armá una nueva desde <Link prefetch={false} href="/creacion">Nueva pieza</Link>.</div>
           )}
         </div>
       </div>

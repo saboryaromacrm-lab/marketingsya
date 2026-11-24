@@ -28,7 +28,7 @@ export default async function Promos() {
       <Cabecera titulo="Promos" subtitulo="Flyers de promociones para historias, WhatsApp y el feed. Solo diseñan: no cambian precios en el ERP." miga={[{ texto: 'Promos' }]} acciones={nueva} />
 
       {elegidos === 0 && (
-        <Aviso tono="verde" dato="Para armar una promo," accion={<Link className="btn btn-chico" href="/catalogo">Ir al catálogo</Link>}>
+        <Aviso tono="verde" dato="Para armar una promo," accion={<Link prefetch={false} className="btn btn-chico" href="/catalogo">Ir al catálogo</Link>}>
           elegí los productos con las casillas del catálogo y apretá «Armar promo». Las promos cargadas en la lista Promo del ERP se suman solas.
         </Aviso>
       )}
@@ -50,7 +50,7 @@ export default async function Promos() {
                 return (
                   <tr key={p.id}>
                     <td>
-                      <Link href={`/promos/${p.id}`} className="fila-enlace">{p.titulo}</Link>
+                      <Link prefetch={false} href={`/promos/${p.id}`} className="fila-enlace">{p.titulo}</Link>
                       <div className="texto-chico">N.º {p.id} · diseño {p.diseno}</div>
                     </td>
                     <td>{textoVigencia(p.desde, p.hasta).toLowerCase()}</td>

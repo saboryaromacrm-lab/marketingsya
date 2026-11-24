@@ -20,6 +20,8 @@ import { ListaPautas, type FilaPauta } from './ListaPautas'
 import { SugerenciaIA } from './SugerenciaIA'
 
 export const dynamic = 'force-dynamic'
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 export const metadata = { title: 'Pautas' }
 
 const { pautas, publicaciones, publicacionDestinos, exportaciones } = esquema
@@ -91,19 +93,19 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<{
     <div className="contenido">
       <Cabecera titulo="Pautas" subtitulo="Lo que estás pautando en Meta, lo gastado y los resultados." miga={[{ texto: 'Pautas' }]} />
       {!meta.conectada ? (
-        <Aviso tono="ambar" dato="Meta todavía no está conectado:" accion={<Link className="btn btn-chico" href="/configuracion/meta">Conectar</Link>}>cargá el token en Configuración › Meta.</Aviso>
+        <Aviso tono="ambar" dato="Meta todavía no está conectado:" accion={<Link prefetch={false} className="btn btn-chico" href="/configuracion/meta">Conectar</Link>}>cargá el token en Configuración › Meta.</Aviso>
       ) : !publicidad ? (
-        <Aviso tono="ambar" dato="Falta la cuenta publicitaria:" accion={<Link className="btn btn-chico" href="/configuracion/pautas">Detectar</Link>}>se detecta sola en Configuración › Pautas.</Aviso>
+        <Aviso tono="ambar" dato="Falta la cuenta publicitaria:" accion={<Link prefetch={false} className="btn btn-chico" href="/configuracion/pautas">Detectar</Link>}>se detecta sola en Configuración › Pautas.</Aviso>
       ) : null}
       <div className="aviso aviso-verde">
         <div>
           <b>Este mes: {pesos(tope.comprometido)} de {pesos(tope.tope)}</b> <span className="aviso-detalle">· {pesos(tope.gastado)} gastados · {activas} {activas === 1 ? 'activa' : 'activas'}{enRevision ? ` · ${enRevision} en revisión` : ''}</span>
           <div className={`medidor medidor-aviso-ancho ${pct >= 100 ? 'medidor-lleno' : pct >= 80 ? 'medidor-aviso' : ''}`}><div style={{ width: `${pct}%` }} /></div>
         </div>
-        <div className="aviso-accion"><Link className="btn btn-chico" href="/configuracion/pautas">Ajustar el tope</Link></div>
+        <div className="aviso-accion"><Link prefetch={false} className="btn btn-chico" href="/configuracion/pautas">Ajustar el tope</Link></div>
       </div>
       {rechazadas.length > 0 && (
-        <Aviso tono="ambar" dato={`Meta rechazó o frenó ${rechazadas.length === 1 ? '1 pauta' : `${rechazadas.length} pautas`}:`} accion={<Link className="btn btn-chico" href="/pautas?ver=rechazadas">Ver</Link>}>
+        <Aviso tono="ambar" dato={`Meta rechazó o frenó ${rechazadas.length === 1 ? '1 pauta' : `${rechazadas.length} pautas`}:`} accion={<Link prefetch={false} className="btn btn-chico" href="/pautas?ver=rechazadas">Ver</Link>}>
           «{rechazadas[0].titulo}». {rechazadas[0].motivo ?? ''}
         </Aviso>
       )}
@@ -114,7 +116,7 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<{
           <h2 className="titulo-seccion">Posteos para promocionar</h2>
           {recientes.length ? (
             <ul className="lista-recientes">
-              {recientes.map((r) => <li key={r.id}><span><b>{r.titulo}</b> <span className="texto-chico">{cuando(r.creadoEn)}</span></span><Link className="btn btn-chico" href={`/pautas/nueva?publicacion=${r.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link></li>)}
+              {recientes.map((r) => <li key={r.id}><span><b>{r.titulo}</b> <span className="texto-chico">{cuando(r.creadoEn)}</span></span><Link prefetch={false} className="btn btn-chico" href={`/pautas/nueva?publicacion=${r.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link></li>)}
             </ul>
           ) : <p className="texto-suave">Todavía no hay posteos del feed publicados desde la plataforma.</p>}
         </section>
@@ -122,7 +124,7 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<{
 
       <nav className="pestanas" aria-label="Filtrar">
         {(Object.keys(PESTANAS) as Pestana[]).map((k) => (
-          <Link key={k} href={k === 'todas' ? '/pautas' : `/pautas?ver=${k}`} className={ver === k ? 'pestana-activa' : ''}>{PESTANAS[k].texto} ({cuenta(PESTANAS[k].estados)})</Link>
+          <Link prefetch={false} key={k} href={k === 'todas' ? '/pautas' : `/pautas?ver=${k}`} className={ver === k ? 'pestana-activa' : ''}>{PESTANAS[k].texto} ({cuenta(PESTANAS[k].estados)})</Link>
         ))}
       </nav>
       <ListaPautas filas={lista} nueva={Number(q.nueva) || null} sincronizado={sinc ? cuando(sinc) : null} hoy={hoyFormosa()} ajustes={{ iva: config.pautas.iva, escribirDesde: config.pautas.escribirDesde, minDiario: publicidad?.minDiario ?? null }} />

@@ -166,6 +166,8 @@ Así se hizo el 20/11/2026 (Meta cambia seguido los nombres de los menús).
 
 ## Cosas que conviene saber
 
+- **Miniaturas:** las imágenes chicas de las pantallas se generan solas la primera vez y quedan en el volumen (`/data/media/mini`).
+  Ocupan muy poco (unos 1,3 MB cada 100) y se limpian solas cuando se borra la imagen original. No hay que configurar nada.
 - **Stock:** se trae con el botón «Sincronizar» del Catálogo (no es automático). Después de publicar la versión del 22/11/2026, sincronizá
   una vez para que aparezca el stock en Creación › Nueva pieza.
 

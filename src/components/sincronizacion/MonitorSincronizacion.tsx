@@ -99,7 +99,7 @@ function AvisoFin({ s, cerrar }: { s: Estado; cerrar: () => void }) {
         {s.estado !== 'error' && fotosCopiadas > 0 && ` · ${numero(fotosCopiadas)} fotos copiadas`}
         {fotosConError > 0 && ` · ${numero(fotosConError)} fotos no se pudieron copiar`}
       </span>
-      <Link href={`/catalogo/sincronizaciones/${s.id}`} onClick={cerrar}>Ver {s.estado === 'error' ? 'detalle' : 'cambios'}</Link>
+      <Link prefetch={false} href={`/catalogo/sincronizaciones/${s.id}`} onClick={cerrar}>Ver {s.estado === 'error' ? 'detalle' : 'cambios'}</Link>
       <button onClick={cerrar} aria-label="Cerrar"><Icono nombre="close" /></button>
     </div>
   )

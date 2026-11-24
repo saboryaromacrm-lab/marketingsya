@@ -5,6 +5,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
 import { Icono } from '@/components/Icono'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type ResultadoBusqueda = { id: number; nombre: string; foto: string; precio: string | null }
 
@@ -81,7 +82,7 @@ export function Buscador({ listaId, presentes, alSumar, enfocar = false, buscar,
           {res.aproximada && res.resultados.length > 0 && <div className="texto-chico resultados-nota">No hay nada escrito así: te mostramos los parecidos.</div>}
           {res.resultados.map((r) => (
             <div key={r.id} className="resultado-promo" role="option" aria-selected={false}>
-              <span className="miniatura"><img src={r.foto} alt="" /></span>
+              <span className="miniatura"><img {...imagenMini(r.foto, 48)} alt="" /></span>
               <span className="resultado-nombre">{r.nombre}<small>{r.precio ?? 'Sin precio en esta lista'}</small></span>
               {presentes.has(r.id) ? (
                 <span className="texto-chico">Ya está</span>

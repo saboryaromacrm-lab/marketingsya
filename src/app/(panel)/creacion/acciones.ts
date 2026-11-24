@@ -17,7 +17,8 @@ import * as asesor from '@/lib/ia/asesor'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
 import { listaParaPiezas } from '@/lib/catalogo/lista-piezas'
 import { leerFiltrosLista, parametrosLista, tipoDe, TOPE_POR_TIPO, type FiltrosLista } from '@/lib/catalogo/lista-piezas-reglas'
-import { marcarProductos } from '@/app/seleccion-acciones'
+import { aplicarSeleccion } from '@/lib/seleccion'
+import { urlMedia } from '@/lib/media'
 
 const { carruseles, promos, promoFilas, seleccion, productos } = esquema
 
@@ -73,15 +74,14 @@ export async function crearDesdeAsistente(tipo: TipoNueva, formatosIn: Record<st
 }
 
 /** La IA elige productos para la pieza (sin repetir lo ya elegido) y los suma a la selección del catálogo. */
-export async function elegirConIA(cuantos: number): Promise<{ ok: true; nombres: string[] } | { error: string }> {
+export async function elegirConIA(cuantos: number): Promise<{ ok: true; nombres: string[]; elegidos: ElegidoVista[] } | { error: string }> {
   try {
     const s = await asesor.generarSugerencias()
     const ids = s.ideas.map((x) => x.id).slice(0, Math.min(6, Math.max(1, cuantos)))
     if (!ids.length) return { error: 'La IA no encontró productos para sugerir.' }
     await db.insert(seleccion).values(ids.map((productoId) => ({ productoId }))).onConflictDoNothing()
-    revalidatePath('/', 'layout')
     const filas = await db.select({ nombre: productos.nombreSugerido }).from(productos).where(inArray(productos.id, ids))
-    return { ok: true, nombres: filas.map((f) => f.nombre) }
+    return { ok: true, nombres: filas.map((f) => f.nombre), elegidos: await elegidosVista() }
   } catch (e) {
     if (e instanceof ErrorIA) return { error: e.message }
     console.error('[creacion ia]', e)
@@ -89,10 +89,16 @@ export async function elegirConIA(cuantos: number): Promise<{ ok: true; nombres:
   }
 }
 
-/** Saca un producto de la selección. */
-export async function sacarElegido(id: number) {
+/** Saca un producto de la selección y devuelve cómo quedó (la pantalla se actualiza con eso, sin recargar). */
+export async function sacarElegido(id: number): Promise<ElegidoVista[]> {
   await db.delete(seleccion).where(eq(seleccion.productoId, Number(id)))
-  revalidatePath('/', 'layout')
+  return elegidosVista()
+}
+
+export type ElegidoVista = { id: number; nombre: string; foto: string | null }
+/** Los elegidos como los muestra el asistente (foto con su dirección pública). */
+export async function elegidosVista(): Promise<ElegidoVista[]> {
+  return (await elegidosConFoto()).map((e) => ({ id: e.id, nombre: e.nombre, foto: e.foto ? urlMedia(e.foto) : null }))
 }
 
 export async function elegidosConFoto() {
@@ -110,12 +116,13 @@ export async function accionListaPiezas(f: FiltrosLista) {
 }
 
 /** Marcar o desmarcar un producto desde la lista, sin pasarse del tope del tipo de pieza. */
-export async function accionMarcarParaPieza(id: number, marcar: boolean, tipo: string): Promise<{ ok: true } | { error: string }> {
+export async function accionMarcarParaPieza(id: number, marcar: boolean, tipo: string): Promise<{ ok: true; elegidos: ElegidoVista[] } | { error: string }> {
   if (marcar) {
     const tope = TOPE_POR_TIPO[tipoDe(tipo)]
     const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(seleccion)
     if (tope != null && n >= tope) return { error: `Ya elegiste ${tope}: es lo que entra en esta pieza. Sacá uno para sumar otro.` }
   }
-  await marcarProductos([Number(id)], marcar)
-  return { ok: true }
+  // Sin revalidar: revalidar en una acción hace que todas las páginas visitadas se pidan de nuevo
+  await aplicarSeleccion([Number(id)], marcar)
+  return { ok: true, elegidos: await elegidosVista() }
 }

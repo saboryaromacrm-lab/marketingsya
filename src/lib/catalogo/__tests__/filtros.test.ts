@@ -41,3 +41,19 @@ describe('urlConFiltros', () => {
     expect(urlConFiltros(f, { pagina: 5 })).toBe('/catalogo?pagina=5')
   })
 })
+
+describe('lista de precios por defecto (la de Configuración › Piezas)', () => {
+  it('sin lista en la dirección, usa la de Configuración y no la escribe', () => {
+    const f = leerFiltros({}, 1)
+    expect(f.lista).toBe(1)
+    expect(urlConFiltros(f)).toBe('/catalogo')
+  })
+  it('si se pide otra, la escribe (aunque sea la Minorista)', () => {
+    const f = leerFiltros({ lista: '3' }, 1)
+    expect(f.lista).toBe(3)
+    expect(urlConFiltros(f)).toBe('/catalogo?lista=3')
+  })
+  it('sin Configuración, la Minorista de siempre', () => {
+    expect(leerFiltros({}).lista).toBe(3)
+  })
+})

@@ -26,7 +26,7 @@ export default async function Sincronizaciones() {
                 const href = `/catalogo/sincronizaciones/${s.id}`
                 return (
                   <tr key={s.id}>
-                    <td><Link href={href} className="fila-enlace">{fechaHora(s.creadoEn)}</Link></td>
+                    <td><Link prefetch={false} href={href} className="fila-enlace">{fechaHora(s.creadoEn)}</Link></td>
                     <td><span className={`chip chip-${s.estado}`}>{NOMBRE_ESTADO[s.estado] ?? s.estado}</span></td>
                     <td className="num">{r ? numero(r.altas) : '—'}</td>
                     <td className="num">{r ? numero(r.modificados) : '—'}</td>

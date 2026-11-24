@@ -16,7 +16,7 @@ export default async function LayoutCatalogo({ children }: { children: ReactNode
         miga={[{ texto: 'Catálogo' }]}
         acciones={
           <>
-            <Link className="btn" href="/catalogo/fotos"><Icono nombre="add_photo_alternate" />Fotos en lote</Link>
+            <Link prefetch={false} className="btn" href="/catalogo/fotos"><Icono nombre="add_photo_alternate" />Fotos en lote</Link>
             <BotonSincronizar activaInicial={!!activa} />
           </>
         }

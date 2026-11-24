@@ -83,7 +83,7 @@ export default async function DetalleProducto({ params }: { params: Promise<{ id
           {p.estado !== 'activo' && <span className="chip chip-cambio-precio">{p.estado.toUpperCase()}</span>}
           {p.dadoDeBaja && <span className="chip chip-error">DADO DE BAJA {p.bajaEn && `· ${fechaHora(p.bajaEn)}`}</span>}
           {p.excluirDePiezas && <span className="chip chip-excluido">NO VA EN PIEZAS</span>}
-          {p.etiquetas.map((e) => <Link key={e} href={`/catalogo?etiqueta=${encodeURIComponent(e)}`} className="chip chip-filtro">{e}</Link>)}
+          {p.etiquetas.map((e) => <Link prefetch={false} key={e} href={`/catalogo?etiqueta=${encodeURIComponent(e)}`} className="chip chip-filtro">{e}</Link>)}
         </div>
       </div>
 
@@ -103,11 +103,11 @@ export default async function DetalleProducto({ params }: { params: Promise<{ id
           <h3 className="titulo-tarjeta">Datos del ERP</h3>
           <dl className="datos">
             <dt>Marca</dt>
-            <dd>{p.marcaId && marca ? <Link href={`/catalogo?marca=${p.marcaId}`}>{marca}</Link> : <span className="texto-suave">Sin marca</span>}</dd>
+            <dd>{p.marcaId && marca ? <Link prefetch={false} href={`/catalogo?marca=${p.marcaId}`}>{marca}</Link> : <span className="texto-suave">Sin marca</span>}</dd>
             <dt>Categoría</dt>
             <dd>
-              {p.categoria ? <Link href={`/catalogo?categoria=${encodeURIComponent(p.categoria)}`}>{p.categoria}</Link> : <span className="texto-suave">Sin categoría</span>}
-              {p.categoria && p.subcategoria && <> › <Link href={`/catalogo?categoria=${encodeURIComponent(p.categoria)}&subcategoria=${encodeURIComponent(p.subcategoria)}`}>{p.subcategoria}</Link></>}
+              {p.categoria ? <Link prefetch={false} href={`/catalogo?categoria=${encodeURIComponent(p.categoria)}`}>{p.categoria}</Link> : <span className="texto-suave">Sin categoría</span>}
+              {p.categoria && p.subcategoria && <> › <Link prefetch={false} href={`/catalogo?categoria=${encodeURIComponent(p.categoria)}&subcategoria=${encodeURIComponent(p.subcategoria)}`}>{p.subcategoria}</Link></>}
             </dd>
             <dt>Tipo</dt>
             <dd>{p.tipo === 'granel' ? 'A granel (por kilo)' : 'Envasado'} · IVA {numero(erp.iva)}%</dd>
@@ -159,7 +159,7 @@ export default async function DetalleProducto({ params }: { params: Promise<{ id
                   const [antes, despues] = c.tipo === 'datos' ? soloDistintos(c.antes, c.despues) : [c.antes, c.despues]
                   return (
                     <tr key={c.id}>
-                      <td><Link href={`/catalogo/sincronizaciones/${c.sincronizacionId}`}>{fechaHora(fecha)}</Link></td>
+                      <td><Link prefetch={false} href={`/catalogo/sincronizaciones/${c.sincronizacionId}`}>{fechaHora(fecha)}</Link></td>
                       <td><span className={`chip chip-cambio-${c.tipo}`}>{NOMBRE_CAMBIO[c.tipo] ?? c.tipo}</span></td>
                       <td>{['alta', 'baja', 'reactivado'].includes(c.tipo) ? <span className="texto-suave">—</span> : <ValorCambio tipo={c.tipo} valor={antes} marcasPorId={marcasPorId} />}</td>
                       <td>{['baja', 'reactivado'].includes(c.tipo) ? <span className="texto-suave">—</span> : <ValorCambio tipo={c.tipo} valor={despues} marcasPorId={marcasPorId} />}</td>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import { emparejarFotos, type ResultadoEmparejado } from '@/app/(panel)/catalogo/acciones'
 import { subirFoto, TAMANO_MAXIMO } from './subirFoto'
+import { imagenMini } from '@/lib/miniaturas'
 
 const MAXIMO_ARCHIVOS = 300
 const EN_PARALELO = 2
@@ -126,7 +127,7 @@ export function FotosEnLote() {
               {subiendo ? `Subiendo ${numero(hechas)} de ${numero(elegidas.length)}…` : conError > 0 ? 'Reintentar las que fallaron' : `Subir ${numero(elegidas.length)}`}
             </button>
           ) : (
-            <Link className="btn btn-chico" href="/catalogo?foto=sin">Ver los que siguen sin foto</Link>
+            <Link prefetch={false} className="btn btn-chico" href="/catalogo?foto=sin">Ver los que siguen sin foto</Link>
           )}
           <button className="btn btn-chico" onClick={() => setFilas([])} disabled={subiendo}>Otra tanda</button>
         </div>
@@ -155,10 +156,10 @@ export function FotosEnLote() {
                     {f.producto ? (
                       <div className="producto-destino">
                         <div className={`miniatura ${f.producto.foto ? '' : 'miniatura-vacia'}`}>
-                          {f.producto.foto ? <img src={`/media/${f.producto.foto}`} alt="" /> : <Icono nombre="no_photography" />}
+                          {f.producto.foto ? <img {...imagenMini(`/media/${f.producto.foto}`, 64)} alt="" /> : <Icono nombre="no_photography" />}
                         </div>
                         <div>
-                          <Link href={`/catalogo/${f.producto.id}`} target="_blank" className="nombre-producto">{f.producto.nombre}</Link>
+                          <Link prefetch={false} href={`/catalogo/${f.producto.id}`} target="_blank" className="nombre-producto">{f.producto.nombre}</Link>
                           <div className="texto-chico">
                             ID {f.producto.id}
                             {f.producto.fotoPropia && ' · reemplaza tu foto anterior'}

@@ -2,6 +2,7 @@ import 'server-only'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { conNavegador } from './navegador'
+import { bajarPrioridad } from './prioridad'
 
 // Herramientas del motor para los videos propios: leer un video (ffprobe), correr ffmpeg con avance,
 // y sacar las capas de encima como PNG con fondo transparente.
@@ -54,6 +55,7 @@ export function puedeCorregirTono(): Promise<boolean> {
 export function correrFfmpeg(args: string[], duracion: number, alAvanzar?: (pct: number) => void): Promise<void> {
   return new Promise((resolver, rechazar) => {
     const ff = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    bajarPrioridad(ff.pid)
     let error = ''
     let resto = ''
     ff.stdout.on('data', (x: Buffer) => {

@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import type { EstadoDestino, EstadoPublicacion, RedSocial, UbicacionDestino } from '@/lib/db/esquema'
-import { ETIQUETA_ESTADO } from '@/lib/publicaciones/reglas'
-import { cancelar, reintentar } from './acciones'
+import { cadaCuantoMirar, ETIQUETA_ESTADO } from '@/lib/publicaciones/reglas'
+import { accionFirmaPublicaciones, cancelar, reintentar } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type FilaPublicacion = {
   id: number
@@ -17,6 +18,8 @@ export type FilaPublicacion = {
   miniatura: string | null
   estado: EstadoPublicacion
   cuando: string
+  /** Cuándo sale (las que están en curso), para saber cada cuánto mirar si cambió algo */
+  sale: string | null
   destinos: { red: RedSocial; ubicacion: UbicacionDestino; estado: EstadoDestino; error: string | null; enlace: string | null }[]
 }
 
@@ -37,13 +40,26 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
   const router = useRouter()
   const [pendiente, empezar] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  // Mientras algo se está publicando (o está por salir), la lista se actualiza sola
-  const enCurso = filas.some((f) => f.estado === 'publicando' || f.estado === 'reintentando' || f.destinos.some((d) => d.estado === 'publicando') || (f.estado === 'programada' && /^hoy/.test(f.cuando)))
+  // Mientras algo se publica o está por salir, se mira una firma chica del estado (no la página entera)
+  // y se recarga solo si cambió. Rápido cuando falta poco, lento si sale hoy, nada con la pestaña oculta.
+  const ritmo = cadaCuantoMirar(filas)
+  const firma = useRef<string | null>(null)
   useEffect(() => {
-    if (!enCurso) return
-    const t = setInterval(() => router.refresh(), 5000)
-    return () => clearInterval(t)
-  }, [enCurso, router])
+    if (!ritmo) return
+    let vivo = true
+    const mirar = async () => {
+      if (document.hidden) return
+      const nueva = await accionFirmaPublicaciones().catch(() => null)
+      if (!vivo || nueva == null) return
+      if (firma.current != null && nueva !== firma.current) router.refresh()
+      firma.current = nueva
+    }
+    void mirar()
+    const t = setInterval(mirar, ritmo)
+    const alVolver = () => { if (!document.hidden) void mirar() }
+    document.addEventListener('visibilitychange', alVolver)
+    return () => { vivo = false; clearInterval(t); document.removeEventListener('visibilitychange', alVolver) }
+  }, [ritmo, router])
 
   const accion = (fn: () => Promise<{ ok: true } | { error: string }>) =>
     empezar(async () => {
@@ -69,9 +85,9 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
               const enlaces = agrupar(f.destinos).filter((g) => g.enlace && g.estado === 'ok')
               return (
                 <tr key={f.id} className={nueva === f.id ? 'fila-nueva' : ''}>
-                  <td>{f.miniatura ? <img className="mini-publicacion" src={f.miniatura} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="image" /></span>}</td>
+                  <td>{f.miniatura ? <img className="mini-publicacion" {...imagenMini(f.miniatura, 48)} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="image" /></span>}</td>
                   <td>
-                    {f.pieza ? <Link href={f.pieza}><b>{f.titulo}</b></Link> : <><b>{f.titulo}</b> <span className="chip chip-mini">Pieza borrada</span></>}
+                    {f.pieza ? <Link prefetch={false} href={f.pieza}><b>{f.titulo}</b></Link> : <><b>{f.titulo}</b> <span className="chip chip-mini">Pieza borrada</span></>}
                     <div className="texto-chico">{f.detalle}</div>
                   </td>
                   <td>
@@ -101,7 +117,7 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
                         }}><Icono nombre="refresh" tamano={16} />Reintentar</button>
                       )}
                       {f.destinos.some((d) => (d.ubicacion === 'feed' || (d.ubicacion === 'reel' && d.red === 'instagram')) && d.estado === 'ok') && (
-                        <Link className="btn btn-chico" href={`/pautas/nueva?publicacion=${f.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link>
+                        <Link prefetch={false} className="btn btn-chico" href={`/pautas/nueva?publicacion=${f.id}`}><Icono nombre="campaign" tamano={16} />Promocionar</Link>
                       )}
                       {enlaces.map((g) => (
                         <a key={`${g.red}-${g.ubicacion}`} className="btn btn-chico" href={g.enlace!} target="_blank" rel="noreferrer">
