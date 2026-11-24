@@ -1,5 +1,6 @@
 'use server'
 
+import { borrarPieza } from '@/lib/creacion/borrar'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { asc, desc, eq, inArray, sql } from 'drizzle-orm'
@@ -96,9 +97,12 @@ export async function duplicarCarrusel(id: number) {
   redirect(`/carruseles/${nuevo}`)
 }
 
-export async function borrarCarrusel(id: number) {
-  await db.delete(carruseles).where(eq(carruseles.id, id))
+/** Borra el carrusel (con sus exportaciones); si tiene algo programado o una pauta activa, dice por qué no. */
+export async function borrarCarrusel(id: number): Promise<{ error: string }> {
+  const r = await borrarPieza('carrusel', Number(id))
+  if (!r.ok) return { error: r.motivo }
   revalidatePath('/carruseles')
+  revalidatePath('/creacion/piezas')
   redirect('/carruseles')
 }
 

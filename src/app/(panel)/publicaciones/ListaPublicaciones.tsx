@@ -12,7 +12,8 @@ export type FilaPublicacion = {
   id: number
   titulo: string
   detalle: string
-  pieza: string
+  /** null: la pieza se borró (queda el registro, sin enlace ni reintento) */
+  pieza: string | null
   miniatura: string | null
   estado: EstadoPublicacion
   cuando: string
@@ -69,7 +70,10 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
               return (
                 <tr key={f.id} className={nueva === f.id ? 'fila-nueva' : ''}>
                   <td>{f.miniatura ? <img className="mini-publicacion" src={f.miniatura} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="image" /></span>}</td>
-                  <td><Link href={f.pieza}><b>{f.titulo}</b></Link><div className="texto-chico">{f.detalle}</div></td>
+                  <td>
+                    {f.pieza ? <Link href={f.pieza}><b>{f.titulo}</b></Link> : <><b>{f.titulo}</b> <span className="chip chip-mini">Pieza borrada</span></>}
+                    <div className="texto-chico">{f.detalle}</div>
+                  </td>
                   <td>
                     <div className="chips">
                       {agrupar(f.destinos).map((g) => (
@@ -90,7 +94,7 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
                       {(f.estado === 'programada' || f.estado === 'reintentando') && (
                         <button className="btn btn-chico" disabled={pendiente} onClick={() => { if (confirm(`¿Cancelar «${f.titulo}»? No se va a publicar.`)) accion(() => cancelar(f.id)) }}>Cancelar</button>
                       )}
-                      {(f.estado === 'error' || f.estado === 'parcial') && (
+                      {(f.estado === 'error' || f.estado === 'parcial') && f.pieza && (
                         <button className="btn btn-chico" disabled={pendiente} onClick={() => {
                           const dudosa = errores.some((x) => x?.includes('no sabemos si salió'))
                           if (!dudosa || confirm('Alguna no sabemos si salió. Si ya está publicada, reintentar la va a publicar de nuevo. ¿Reintentar igual?')) accion(() => reintentar(f.id))

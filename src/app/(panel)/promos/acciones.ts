@@ -1,5 +1,6 @@
 'use server'
 
+import { borrarPieza } from '@/lib/creacion/borrar'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { asc, eq, inArray } from 'drizzle-orm'
@@ -135,9 +136,12 @@ export async function duplicarPromo(id: number) {
   redirect(`/promos/${nuevo}`)
 }
 
-export async function borrarPromo(id: number) {
-  await db.delete(promos).where(eq(promos.id, id))
+/** Borra la promo (con sus exportaciones); si tiene algo programado o una pauta activa, dice por qué no. */
+export async function borrarPromo(id: number): Promise<{ error: string }> {
+  const r = await borrarPieza('promo', Number(id))
+  if (!r.ok) return { error: r.motivo }
   revalidatePath('/promos')
+  revalidatePath('/creacion/piezas')
   redirect('/promos')
 }
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { piezasExistentes } from '@/lib/creacion/borrar'
 import { desc, inArray, sql } from 'drizzle-orm'
 import { Cabecera } from '@/components/Cabecera'
 import { Aviso } from '@/components/Aviso'
@@ -41,6 +42,8 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
     expIds.length ? db.select({ id: exportaciones.id, archivos: exportaciones.archivos }).from(exportaciones).where(inArray(exportaciones.id, expIds)) : [],
   ])
   const archivos = new Map(exps.map((e) => [e.id, e.archivos]))
+  // Las piezas borradas siguen en el historial, sin enlace
+  const existen = await piezasExistentes(filas.map((f) => ({ tipo: f.tipo, id: f.referenciaId })))
   const cuenta = (estados: readonly EstadoPublicacion[] | null) => conteos.filter((c) => !estados || estados.includes(c.estado)).reduce((s, c) => s + c.n, 0)
 
   // Lo que viene primero (lo más próximo arriba); después lo terminado, lo más nuevo arriba
@@ -59,7 +62,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
       detalle: p.formato !== 'imagenes'
         ? [p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio', NOMBRE_QUE[p.formato as QuePublicar] ?? 'Video'].join(' · ')
         : [p.tipo === 'carrusel' ? 'Carrusel' : p.tipo === 'promo' ? 'Promo' : 'Video propio', feed ? `${feed.placas.length} ${feed.placas.length === 1 ? 'imagen' : 'imágenes'}` : null, historias ? `${historias} ${historias === 1 ? 'historia' : 'historias'}` : null].filter(Boolean).join(' · '),
-      pieza: p.tipo === 'carrusel' ? `/carruseles/${p.referenciaId}` : p.tipo === 'promo' ? `/promos/${p.referenciaId}` : `/creacion/videos/${p.referenciaId}`,
+      pieza: !existen.has(`${p.tipo}-${p.referenciaId}`) ? null : p.tipo === 'carrusel' ? `/carruseles/${p.referenciaId}` : p.tipo === 'promo' ? `/promos/${p.referenciaId}` : `/creacion/videos/${p.referenciaId}`,
       miniatura: arch?.[primera] ? urlMedia(arch[primera]) : null,
       estado: p.estado,
       cuando: EN_CURSO.includes(p.estado) ? textoCuando(p.proximoIntento ?? p.programadaPara, ahora) : cuando(p.terminadoEn ?? p.programadaPara, ahora),

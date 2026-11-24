@@ -400,6 +400,16 @@ Poner contador visible y corte automático al llegar al tope.
   - Abajo: «hay N sin foto que no se pueden usar» con enlace al catálogo. Arriba: «Stock al … (última sincronización)».
   - Pruebas: 15 de reglas y una de punta a punta (26 de 26) con el stock real del ERP.
 
+- **Borrar piezas en Mis piezas, hecho el 24/11/2026** (pedido de Lucas):
+  - Cada tarjeta tiene su botón de borrar y una casilla; con casillas elegidas aparece la barra de abajo («Elegir las N», «Ninguna»,
+    «Borrar las N»). Antes de borrar, el cuadro de confirmación (aclara cuántas ya se publicaron: en Instagram y Facebook quedan).
+  - Reglas (`src/lib/creacion/borrar-reglas.ts`, con pruebas): **no** se borra si tiene una publicación programada, publicando o
+    reintentando (hay que cancelarla en Publicaciones), una pauta que todavía está en Meta (creando, en revisión, programada, activa,
+    pausada o con problemas) o una exportación en curso. Lo frenado vuelve con el motivo y el enlace a dónde resolverlo.
+  - Lo publicado sí se borra: el registro queda en Publicaciones como «Pieza borrada», sin enlace ni «Reintentar».
+  - Se borran también sus exportaciones y los archivos (JPEG, MP4 y .zip) para liberar espacio. Los clips de «Mis videos» quedan.
+  - Los botones de borrar de los editores (carrusel, promo y video propio) usan las mismas reglas (`borrarPieza` en `src/lib/creacion/borrar.ts`).
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
