@@ -15,6 +15,7 @@ import { CasillasFormatos, PanelVideo, type Tema } from '@/components/piezas/For
 import { FORMATOS_VIDEO, videosDe, type FormatoVideo } from '@/lib/video/tipos'
 import { textoPosteo, type ContactoTexto } from '@/lib/carruseles/textos'
 import { accionMejorarTexto } from '../../asesor/acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type PlacaVista = { formato: 'historia' | 'feed' | 'uno'; pagina: number; paginas: number; ruta: string }
 type Props = {
@@ -431,7 +432,7 @@ function TarjetaFila(p: {
       <div className="fila-promo-fotos">
         {f.productos.map((x, k) => (
           <span key={x.id} className={`miniatura ${prods[k]?.foto ? '' : 'miniatura-falta'}`} title={nombresProd[k]}>
-            {prods[k]?.foto ? <img src={prods[k].foto!} alt="" /> : <Icono nombre="no_photography" tamano={16} />}
+            {prods[k]?.foto ? <img {...imagenMini(prods[k].foto, 48)} alt="" /> : <Icono nombre="no_photography" tamano={16} />}
             {f.productos.length > 1 && (
               <button className="quitar-producto" onClick={() => p.quitarProducto(x.id)} aria-label={`Sacar ${nombresProd[k]}`}><Icono nombre="close" tamano={12} /></button>
             )}

@@ -8,6 +8,7 @@ import { NOMBRE_CAMBIO, NOMBRE_ESTADO } from '@/lib/catalogo/etiquetas-cambios'
 import { urlMedia } from '@/lib/media'
 import { duracion, fechaHora, numero } from '@/lib/formato'
 import { soloDistintos, ValorCambio as Valor } from '@/components/catalogo/ValorCambio'
+import { imagenMini } from '@/lib/miniaturas'
 
 const POR_PAGINA = 100
 const { sincronizaciones, sincronizacionCambios, productos, marcas } = esquema
@@ -97,7 +98,7 @@ export default async function DetalleSincronizacion({ params, searchParams }: {
                     <tr key={c.id}>
                       <td>
                         <div className={`miniatura ${archivo ? '' : 'miniatura-vacia'}`}>
-                          {archivo ? <img src={urlMedia(archivo)} alt="" loading="lazy" /> : <Icono nombre={c.entidad === 'marca' ? 'sell' : 'no_photography'} />}
+                          {archivo ? <img {...imagenMini(urlMedia(archivo), 48)} alt="" loading="lazy" /> : <Icono nombre={c.entidad === 'marca' ? 'sell' : 'no_photography'} />}
                         </div>
                       </td>
                       <td>

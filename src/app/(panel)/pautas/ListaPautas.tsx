@@ -7,6 +7,7 @@ import { ConfirmarGasto } from '@/components/pautas/ConfirmarGasto'
 import type { EstadoPauta } from '@/lib/db/esquema'
 import { diasEntre, ESTADO_FINAL, ETIQUETA_PAUTA, pesos, totalPauta } from '@/lib/pautas/reglas'
 import { actualizarPautas, nuevoPresupuesto, pausar, reanudar, terminar } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type FilaPauta = {
   id: number
@@ -79,7 +80,7 @@ export function ListaPautas({ filas, nueva, sincronizado, hoy, ajustes }: { fila
                 const viva = !ESTADO_FINAL(f.estado) && f.estado !== 'creando'
                 return (
                   <tr key={f.id} className={nueva === f.id ? 'fila-nueva' : ''}>
-                    <td>{f.miniatura ? <img className="mini-publicacion" src={f.miniatura} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="campaign" /></span>}</td>
+                    <td>{f.miniatura ? <img className="mini-publicacion" {...imagenMini(f.miniatura, 48)} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="campaign" /></span>}</td>
                     <td><b>{f.titulo}</b><div className="texto-chico">{f.objetivo}</div></td>
                     <td className="texto-chico">{f.publico}</td>
                     <td className="celda-cuando">{f.fechas}</td>

@@ -423,7 +423,16 @@ Poner contador visible y corte automático al llegar al tope.
   - **Caché del navegador:** `staleTimes.dynamic: 30` (volver a una sección vista hace menos de 30 s no la pide de nuevo). Las páginas cuyos
     datos cambian solos o desde otra pantalla llevan `export const unstable_dynamicStaleTime = 0` (Catálogo, Nueva pieza, Mis videos,
     Publicaciones, Pautas y los tres editores).
-  - Pendientes aprobados en el plan: miniaturas (paso 2) y ajustes finos (paso 3).
+- **Rendimiento, paso 2: miniaturas (24/11/2026):**
+  - `/media/mini/<ancho>/<ruta>`: la misma imagen de `/media` achicada (anchos 96, 160, 320 y 640; WebP calidad 80, girada según la foto,
+    nunca agrandada). Se genera con sharp la primera vez que se pide (~20 ms una foto, ~140 ms una placa) y queda en `MEDIA_DIR/mini/`;
+    después se sirve con caché permanente (los nombres llevan versión). Pedidos simultáneos generan una sola vez. SVG, anchos no permitidos
+    y rutas fuera de la carpeta dan 404. La limpieza de cada hora borra las miniaturas cuya original ya no existe.
+  - En pantalla: `imagenMini(url, píxeles que ocupa)` (`src/lib/miniaturas.ts`) da `src` y `srcSet` (1x y 2x para el celular). Lo usan las
+    filas del catálogo, la lista de Nueva pieza, Mis piezas, Publicaciones, Pautas, los buscadores y chips de los editores. Las vistas grandes
+    (la foto del producto, la vista previa de Publicar) siguen con la original. Al sumar imágenes chicas, usar `imagenMini`.
+  - Medido: Catálogo 921 → 52 KB, Nueva pieza 807 → 81 KB, Mis piezas 6.131 → 483 KB, Publicaciones 1.053 → 9 KB.
+  - Pendiente aprobado en el plan: ajustes finos (paso 3).
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 

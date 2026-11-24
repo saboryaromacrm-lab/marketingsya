@@ -13,6 +13,7 @@ import { sumarDias } from '@/lib/promos/fechas'
 import { marcarProductos } from '@/app/seleccion-acciones'
 import { crearPromoDesdeSeleccion } from '../promos/acciones'
 import { accionBorrador, accionBorrarChat, accionChat, accionReceta, accionSemana, accionSugerencias } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type Pestana = 'calendario' | 'sugerencias' | 'recetas' | 'chat'
 type Info = Record<number, { nombre: string; foto: string | null }>
@@ -86,7 +87,7 @@ function MensajeError({ texto }: { texto: string | null }) {
 }
 
 function Minis({ ids, info }: { ids: number[]; info: Info }) {
-  return <span className="minis-ia">{ids.slice(0, 6).map((id) => <span key={id} className="miniatura" title={info[id]?.nombre}>{info[id]?.foto ? <img src={info[id].foto!} alt="" /> : <Icono nombre="inventory_2" tamano={14} />}</span>)}</span>
+  return <span className="minis-ia">{ids.slice(0, 6).map((id) => <span key={id} className="miniatura" title={info[id]?.nombre}>{info[id]?.foto ? <img {...imagenMini(info[id].foto, 48)} alt="" /> : <Icono nombre="inventory_2" tamano={14} />}</span>)}</span>
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +218,7 @@ function SugerenciasIA(p: Props & Ctx) {
             return (
               <label key={x.id} className={`tarjeta sugerencia-ia ${marcada ? 'sugerencia-marcada' : ''}`}>
                 <input type="checkbox" checked={marcada} onChange={(e) => setElegidas((s) => { const n = new Set(s); if (e.target.checked) n.add(x.id); else n.delete(x.id); return n })} />
-                <span className="foto-sugerencia">{pr?.foto ? <img src={pr.foto} alt="" /> : <Icono nombre="inventory_2" />}</span>
+                <span className="foto-sugerencia">{pr?.foto ? <img {...imagenMini(pr.foto, 120)} alt="" /> : <Icono nombre="inventory_2" />}</span>
                 <b>{pr?.nombre ?? `Producto ${x.id}`}</b>
                 <span className="texto-chico">{x.motivo}</span>
               </label>

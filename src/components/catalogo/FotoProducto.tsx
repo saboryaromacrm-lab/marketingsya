@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import { subirFoto } from './subirFoto'
+import { imagenMini } from '@/lib/miniaturas'
 
 // Foto grande del producto: la propia (si hay) o la del ERP, con miniaturas para comparar.
 // Desde el celular, «Sacar foto» abre directo la cámara.
@@ -65,12 +66,12 @@ export function FotoProducto({ productoId, propia, erp, nombre }: { productoId: 
         <div className="foto-opciones">
           {propia && (
             <button className={`foto-opcion ${vista === 'propia' ? 'foto-opcion-activa' : ''}`} onClick={() => setVista('propia')}>
-              <img src={propia} alt="" /> <span>Tu foto <small>se usa en las piezas</small></span>
+              <img {...imagenMini(propia, 96)} alt="" /> <span>Tu foto <small>se usa en las piezas</small></span>
             </button>
           )}
           {erp && (
             <button className={`foto-opcion ${vista === 'erp' ? 'foto-opcion-activa' : ''}`} onClick={() => setVista('erp')}>
-              <img src={erp} alt="" /> <span>Del ERP {!propia && <small>se usa en las piezas</small>}</span>
+              <img {...imagenMini(erp, 96)} alt="" /> <span>Del ERP {!propia && <small>se usa en las piezas</small>}</span>
             </button>
           )}
         </div>

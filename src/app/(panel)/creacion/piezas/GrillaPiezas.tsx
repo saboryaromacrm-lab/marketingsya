@@ -7,6 +7,7 @@ import { Aviso } from '@/components/Aviso'
 import { Icono } from '@/components/Icono'
 import type { TipoPieza } from '@/lib/creacion/borrar-reglas'
 import { accionBorrarPiezas, type PiezaFrenada } from '../acciones-borrar'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type TarjetaPieza = {
   tipo: TipoPieza
@@ -68,7 +69,7 @@ export function GrillaPiezas({ piezas }: { piezas: TarjetaPieza[] }) {
             <article key={k} className={`tarjeta-pieza ${elegidas.has(k) ? 'tarjeta-pieza-elegida' : ''}`}>
               <div className="tarjeta-pieza-arriba">
                 <Link prefetch={false} href={p.editar} className="tarjeta-pieza-imagen">
-                  {p.imagen ? <img src={p.imagen} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={ICONO[p.tipo]} tamano={36} /></span>}
+                  {p.imagen ? <img {...imagenMini(p.imagen, 300)} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={ICONO[p.tipo]} tamano={36} /></span>}
                   {p.reel && <span className="tarjeta-pieza-video"><Icono nombre="play_arrow" tamano={14} />Reel</span>}
                 </Link>
                 <label className="casilla tarjeta-pieza-casilla" title="Elegir para borrar">

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Icono } from '@/components/Icono'
 import { emparejarFotos, type ResultadoEmparejado } from '@/app/(panel)/catalogo/acciones'
 import { subirFoto, TAMANO_MAXIMO } from './subirFoto'
+import { imagenMini } from '@/lib/miniaturas'
 
 const MAXIMO_ARCHIVOS = 300
 const EN_PARALELO = 2
@@ -155,7 +156,7 @@ export function FotosEnLote() {
                     {f.producto ? (
                       <div className="producto-destino">
                         <div className={`miniatura ${f.producto.foto ? '' : 'miniatura-vacia'}`}>
-                          {f.producto.foto ? <img src={`/media/${f.producto.foto}`} alt="" /> : <Icono nombre="no_photography" />}
+                          {f.producto.foto ? <img {...imagenMini(`/media/${f.producto.foto}`, 64)} alt="" /> : <Icono nombre="no_photography" />}
                         </div>
                         <div>
                           <Link prefetch={false} href={`/catalogo/${f.producto.id}`} target="_blank" className="nombre-producto">{f.producto.nombre}</Link>

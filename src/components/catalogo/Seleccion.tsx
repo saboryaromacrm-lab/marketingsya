@@ -4,6 +4,7 @@ import { createContext, useContext, useOptimistic, useState, useTransition, type
 import { Icono } from '@/components/Icono'
 import { marcarProductos, vaciarSeleccion } from '@/app/seleccion-acciones'
 import { crearPromoDesdeSeleccion } from '@/app/(panel)/promos/acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Elegido = { id: number; nombre: string; foto: string | null }
 type Cambio = { ids: number[]; marcar: boolean } | { vaciar: true }
@@ -92,7 +93,7 @@ function BarraSeleccion({ ids, elegidos, vaciar, cambiar, pendiente }: { ids: Se
           <ul>
             {visibles.map((e) => (
               <li key={e.id}>
-                <span className="miniatura">{e.foto && <img src={e.foto} alt="" />}</span>
+                <span className="miniatura">{e.foto && <img {...imagenMini(e.foto, 48)} alt="" />}</span>
                 <span className="seleccion-nombre">{e.nombre}</span>
                 <button className="btn btn-chico" onClick={() => cambiar([e.id], false)}>Sacar</button>
               </li>
@@ -104,7 +105,7 @@ function BarraSeleccion({ ids, elegidos, vaciar, cambiar, pendiente }: { ids: Se
         <b className="seleccion-cuenta">{n} {n === 1 ? 'elegido' : 'elegidos'}</b>
         <span className="seleccion-miniaturas" aria-hidden="true">
           {visibles.slice(0, 6).map((e) => (
-            <span key={e.id} className="miniatura">{e.foto && <img src={e.foto} alt="" />}</span>
+            <span key={e.id} className="miniatura">{e.foto && <img {...imagenMini(e.foto, 48)} alt="" />}</span>
           ))}
           {visibles.length > 6 && <span className="texto-chico">+{visibles.length - 6}</span>}
         </span>

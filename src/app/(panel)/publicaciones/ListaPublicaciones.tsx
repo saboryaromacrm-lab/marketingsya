@@ -7,6 +7,7 @@ import { Icono } from '@/components/Icono'
 import type { EstadoDestino, EstadoPublicacion, RedSocial, UbicacionDestino } from '@/lib/db/esquema'
 import { cadaCuantoMirar, ETIQUETA_ESTADO } from '@/lib/publicaciones/reglas'
 import { accionFirmaPublicaciones, cancelar, reintentar } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 export type FilaPublicacion = {
   id: number
@@ -84,7 +85,7 @@ export function ListaPublicaciones({ filas, nueva }: { filas: FilaPublicacion[];
               const enlaces = agrupar(f.destinos).filter((g) => g.enlace && g.estado === 'ok')
               return (
                 <tr key={f.id} className={nueva === f.id ? 'fila-nueva' : ''}>
-                  <td>{f.miniatura ? <img className="mini-publicacion" src={f.miniatura} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="image" /></span>}</td>
+                  <td>{f.miniatura ? <img className="mini-publicacion" {...imagenMini(f.miniatura, 48)} alt="" loading="lazy" /> : <span className="mini-publicacion mini-publicacion-vacia"><Icono nombre="image" /></span>}</td>
                   <td>
                     {f.pieza ? <Link prefetch={false} href={f.pieza}><b>{f.titulo}</b></Link> : <><b>{f.titulo}</b> <span className="chip chip-mini">Pieza borrada</span></>}
                     <div className="texto-chico">{f.detalle}</div>

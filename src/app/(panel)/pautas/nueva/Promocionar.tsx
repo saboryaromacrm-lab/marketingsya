@@ -9,6 +9,7 @@ import { ConfirmarGasto } from '@/components/pautas/ConfirmarGasto'
 import { OBJETIVOS_PAUTA, UBICACIONES_PAUTA, type ObjetivoPauta, type UbicacionesPauta } from '@/lib/configuracion-tipos'
 import { diasEntre, pesos, problemasPresupuesto, sumarDias, totalPauta } from '@/lib/pautas/reglas'
 import { lanzarPauta } from '../acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Props = {
   publicacion: { id: number; titulo: string; texto: string; imagen: string | null; publicadaEn: string | null; instagram: string | null; facebook: string | null }
@@ -79,7 +80,7 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
       <div className="promocionar">
         <section className="tarjeta" aria-label="Lo que se pauta">
           <span className="rotulo-columna">Lo que se pauta</span>
-          {publicacion.imagen && <img className="promocionar-imagen" src={publicacion.imagen} alt={publicacion.titulo} />}
+          {publicacion.imagen && <img className="promocionar-imagen" {...imagenMini(publicacion.imagen, 380)} alt={publicacion.titulo} />}
           <div className="fila-chips">
             <span className="chip chip-ok"><Icono nombre="check_circle" tamano={14} /> Publicado{publicacion.publicadaEn ? ` el ${new Date(publicacion.publicadaEn).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'America/Argentina/Cordoba' })}` : ''}</span>
             {publicacion.instagram && <a className="enlace texto-chico" href={publicacion.instagram} target="_blank" rel="noreferrer">Ver en Instagram</a>}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { imagenMini } from '@/lib/miniaturas'
 import { useRouter } from 'next/navigation'
 import { Cabecera } from '@/components/Cabecera'
 import { Icono } from '@/components/Icono'
@@ -162,7 +163,7 @@ export function Publicar({ pieza, placas, exportacion, textoInicial, altInicial,
                       return (
                         <div key={p.indice} className={`publicar-mini ${vista === p.indice ? 'publicar-mini-activa' : ''} ${si ? '' : 'publicar-mini-fuera'}`}>
                           <button type="button" className="publicar-mini-boton" onClick={() => setVista(p.indice)} aria-label={`Ver ${p.etiqueta}`}>
-                            {p.imagen ? <img src={p.imagen} alt="" loading="lazy" /> : <MiniPlaca ruta={p.ruta} formato={p.formato} />}
+                            {p.imagen ? <img {...imagenMini(p.imagen, 72)} alt="" loading="lazy" /> : <MiniPlaca ruta={p.ruta} formato={p.formato} />}
                           </button>
                           <label className="publicar-mini-pie">
                             <input type="checkbox" checked={si} onChange={() => alternar(p.indice)} aria-label={`Incluir ${p.etiqueta}`} />

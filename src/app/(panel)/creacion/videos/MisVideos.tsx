@@ -8,6 +8,7 @@ import type { VideoListado } from '@/lib/video/propios/biblioteca'
 import { mmss } from '@/lib/video/propios/reglas'
 import { buscarParaPromo } from '../../promos/acciones'
 import { accionBorrarVideo, accionCambiarVideo, accionInfoProductos, accionListarVideos, accionNuevaPiezaVideo } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Limites = { tamano: number; duracion: number; pedazo: number }
 type Subida = { clave: string; nombre: string; tamano: number; enviado: number; id: number | null; estado: 'esperando' | 'subiendo' | 'error' | 'lista'; error: string | null }
@@ -161,7 +162,7 @@ export function MisVideos({ inicial, limites }: { inicial: VideoListado[]; limit
         {visibles.filter((v) => v.estado !== 'procesando').map((v) => (
           <article key={v.id} className="tarjeta-video">
             <div className="tarjeta-video-mini">
-              {jugando === v.id && v.video ? <video src={v.video} controls autoPlay playsInline /> : v.miniatura ? <img src={v.miniatura} alt="" loading="lazy" /> : <Icono nombre={v.estado === 'error' ? 'error' : 'movie'} tamano={36} />}
+              {jugando === v.id && v.video ? <video src={v.video} controls autoPlay playsInline /> : v.miniatura ? <img {...imagenMini(v.miniatura, 300)} alt="" loading="lazy" /> : <Icono nombre={v.estado === 'error' ? 'error' : 'movie'} tamano={36} />}
               {v.estado === 'listo' && jugando !== v.id && <button type="button" className="tarjeta-video-play" aria-label={`Ver ${v.nombre}`} onClick={() => setJugando(v.id)}><Icono nombre="play_arrow" tamano={28} /></button>}
               {v.ancho && v.alto && jugando !== v.id && <span className="tarjeta-video-forma"><Icono nombre={v.alto > v.ancho ? 'stay_current_portrait' : 'stay_current_landscape'} tamano={13} />{v.alto > v.ancho ? 'Vertical' : v.alto === v.ancho ? 'Cuadrado' : 'Horizontal'}</span>}
               {v.duracion != null && jugando !== v.id && <span className="tarjeta-video-dur">{mmss(v.duracion)}</span>}
@@ -171,7 +172,7 @@ export function MisVideos({ inicial, limites }: { inicial: VideoListado[]; limit
               <span className="texto-chico">Subido el {fecha(v.creadoEn)}</span>
               {v.estado === 'error' && <span className="texto-error texto-chico">{v.error ?? 'No se pudo preparar.'}</span>}
               {v.estado === 'subiendo' && <span className="texto-chico texto-aviso">Subida sin terminar ({mb(v.recibido)} de {mb(v.tamano)}). Se borra sola mañana.</span>}
-              {v.productos.length > 0 && <div className="fila-chips">{v.productos.map((p) => <span key={p.id} className="chip-producto-mini">{p.foto && <img src={p.foto} alt="" />}{p.nombre}</span>)}</div>}
+              {v.productos.length > 0 && <div className="fila-chips">{v.productos.map((p) => <span key={p.id} className="chip-producto-mini">{p.foto && <img {...imagenMini(p.foto, 32)} alt="" />}{p.nombre}</span>)}</div>}
               {v.estado === 'listo' && (v.piezas > 0
                 ? <span className="chip chip-ok">Usado en {v.piezas} {v.piezas === 1 ? 'pieza' : 'piezas'}</span>
                 : v.conservar ? <span className="chip">Sin usar · se conserva</span>

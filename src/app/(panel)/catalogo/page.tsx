@@ -11,6 +11,7 @@ import { ultimaSincronizacionBuena } from '@/lib/catalogo/iniciar'
 import { buscarProductos, opcionesDeFiltros, type FilaProducto, type OpcionesDeFiltros } from '@/lib/catalogo/listado'
 import { urlMedia } from '@/lib/media'
 import { cuando, numero, pesos, plural } from '@/lib/formato'
+import { imagenMini } from '@/lib/miniaturas'
 
 const PESTANAS: { clave: Pestana; texto: string }[] = [
   { clave: 'todos', texto: 'Todos' },
@@ -159,7 +160,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
                   <td className="celda-casilla"><CasillaProducto id={p.id} nombre={p.nombre} motivo={motivo(p)} /></td>
                   <td className="celda-foto">
                     <div className={`miniatura ${p.foto ? '' : 'miniatura-vacia'}`}>
-                      {p.foto ? <img src={urlMedia(p.foto)} alt="" loading="lazy" /> : <Icono nombre="no_photography" />}
+                      {p.foto ? <img {...imagenMini(urlMedia(p.foto), 48)} alt="" loading="lazy" /> : <Icono nombre="no_photography" />}
                     </div>
                   </td>
                   <td className="celda-producto">

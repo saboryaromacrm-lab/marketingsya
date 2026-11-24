@@ -8,6 +8,7 @@ import { crearDesdeAsistente, elegirConIA, sacarElegido, type TipoNueva } from '
 import { ListaProductos } from './ListaProductos'
 import type { ListaPiezas, OpcionesListaPiezas } from '@/lib/catalogo/lista-piezas'
 import { TOPE_POR_TIPO, type FiltrosLista } from '@/lib/catalogo/lista-piezas-reglas'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Props = {
   elegidos: { id: number; nombre: string; foto: string | null }[]
@@ -101,7 +102,7 @@ export function Asistente({ elegidos: elegidosIniciales, formatos, fecha, ia, ti
           <div className="asistente-elegidos">
             {elegidos.map((e) => (
               <span key={e.id} className="chip chip-producto">
-                {e.foto ? <img src={e.foto} alt="" /> : <Icono nombre="image_not_supported" tamano={16} />}
+                {e.foto ? <img {...imagenMini(e.foto, 32)} alt="" /> : <Icono nombre="image_not_supported" tamano={16} />}
                 {e.nombre}
                 <button type="button" aria-label={`Sacar ${e.nombre}`} onClick={() => empezar(async () => setElegidos(await sacarElegido(e.id)))}><Icono nombre="close" tamano={14} /></button>
               </span>

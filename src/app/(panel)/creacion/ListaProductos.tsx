@@ -8,6 +8,7 @@ import {
   filtrosDeTipo, filtrosPuestos, ORDENES, paginasVisibles, parametrosLista, POR_PAGINA_LISTA, textoStock, DIAS_NUEVOS, type FiltrosLista, type OrdenLista, type TipoPieza,
 } from '@/lib/catalogo/lista-piezas-reglas'
 import { accionListaPiezas, accionMarcarParaPieza, type ElegidoVista } from './acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Props = {
   tipo: TipoPieza
@@ -163,7 +164,7 @@ export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, eleg
               <label key={p.id} className={`lp-p ${si ? 'lp-p-elegido' : ''} ${bloqueado ? 'lp-p-bloqueado' : ''}`} title={bloqueado ? `Ya elegiste ${tope}` : undefined}>
                 <input type="checkbox" checked={si} disabled={bloqueado} onChange={() => alternar(p.id, si)} aria-label={`Elegir ${p.nombre}`} />
                 {p.nuevo && <span className="lp-nuevo">NUEVO</span>}
-                {p.foto && <img src={p.foto} alt="" loading="lazy" />}
+                {p.foto && <img {...imagenMini(p.foto, 150)} alt="" loading="lazy" />}
                 <span className="lp-marca-texto">{p.marca || (p.granel ? 'A granel' : '')}</span>
                 <b>{p.nombre}</b>
                 <span className="lp-pie-producto">

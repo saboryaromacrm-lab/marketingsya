@@ -19,6 +19,7 @@ import { accionMejorarTexto, accionSugerirCampo } from '../../../asesor/acciones
 import { buscarParaPromo } from '../../../promos/acciones'
 import { accionArmarVideos, accionEstadoVideos } from '../../acciones-video'
 import { accionBorrarPiezaVideo, accionDuplicarPiezaVideo, accionGuardarPiezaVideo, type ResumenPieza } from '../acciones'
+import { imagenMini } from '@/lib/miniaturas'
 
 type Form = { titulo: string; contenido: ContenidoVideo; formatos: FormatosVideoPropio; textoPosteo: string | null }
 type Props = {
@@ -170,7 +171,7 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
               const cambiar = (cambio: Partial<typeof x>) => setC({ clips: c.clips.map((y, j) => (j === i ? { ...y, ...cambio } : y)) })
               return (
                 <div key={`${x.videoId}-${i}`} className="clip-video">
-                  <div className="clip-video-mini">{b?.miniatura ? <img src={b.miniatura} alt="" /> : <Icono nombre="movie" />}</div>
+                  <div className="clip-video-mini">{b?.miniatura ? <img {...imagenMini(b.miniatura, 72)} alt="" /> : <Icono nombre="movie" />}</div>
                   <div className="clip-video-cuerpo">
                     <div className="clip-video-fila"><b>{b?.nombre ?? 'Video que ya no está'}</b><span className="texto-chico">usás {mmss(x.desde)} → {mmss(x.hasta)} · {segundos(x.hasta - x.desde)} s de {segundos(dur)} s</span></div>
                     <div className="recorte-doble" style={{ ['--a' as string]: `${(x.desde / dur) * 100}%`, ['--b' as string]: `${(x.hasta / dur) * 100}%` }}>
@@ -198,7 +199,7 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
                 {biblioteca.length === 0 && <span className="texto-chico">No hay videos listos en «Mis videos».</span>}
                 {biblioteca.map((b) => (
                   <button key={b.id} type="button" className="elegir-clip-video" onClick={() => { setC({ clips: [...c.clips, { videoId: b.id, desde: 0, hasta: Math.min(b.duracion, 30) }] }); setEligiendoClip(false) }}>
-                    {b.miniatura ? <img src={b.miniatura} alt="" /> : <Icono nombre="movie" />}
+                    {b.miniatura ? <img {...imagenMini(b.miniatura, 120)} alt="" /> : <Icono nombre="movie" />}
                     <span>{b.nombre}</span><small>{mmss(b.duracion)}</small>
                   </button>
                 ))}
@@ -271,7 +272,7 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
               return (
                 <div key={p.id} className="franja-editor">
                   <div className="franja-editor-cabeza">
-                    {f?.foto ? <img src={f.foto} alt="" /> : <span className="franja-editor-sinfoto"><Icono nombre="inventory_2" /></span>}
+                    {f?.foto ? <img {...imagenMini(f.foto, 48)} alt="" /> : <span className="franja-editor-sinfoto"><Icono nombre="inventory_2" /></span>}
                     <div className="franja-editor-nombre"><b>{f?.nombre ?? 'Cargando…'}</b><span className="texto-chico">{f?.precio ? <>{f.precio.antes && <s>{f.precio.antes}</s>} <b className="texto-verde">{f.precio.texto}</b> {f.precio.unidad}</> : 'Sin precio en esta lista'}</span></div>
                     <button type="button" className="btn btn-chico" aria-label={`Sacar ${f?.nombre ?? 'el producto'}`} onClick={() => setC({ productos: c.productos.filter((_, j) => j !== i) })}><Icono nombre="delete" tamano={16} /></button>
                   </div>

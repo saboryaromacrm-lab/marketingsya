@@ -6,6 +6,7 @@ import { Icono } from '@/components/Icono'
 import { normalizarTexto } from '@/lib/catalogo/busqueda'
 import { urlMedia } from '@/lib/media'
 import { numero, plural } from '@/lib/formato'
+import { imagenMini } from '@/lib/miniaturas'
 
 const { marcas, productos } = esquema
 
@@ -68,7 +69,7 @@ export default async function Marcas({ searchParams }: { searchParams: Promise<{
           {visibles.map((m) => (
             <Link prefetch={false} key={m.id} href={`/catalogo?marca=${m.id}`} className="tarjeta-marca">
               <div className={`logo-marca ${m.logoArchivo ? '' : 'logo-marca-vacio'}`}>
-                {m.logoArchivo ? <img src={urlMedia(m.logoArchivo)} alt="" loading="lazy" /> : <span>{iniciales(m.nombre)}</span>}
+                {m.logoArchivo ? <img {...imagenMini(urlMedia(m.logoArchivo), 64)} alt="" loading="lazy" /> : <span>{iniciales(m.nombre)}</span>}
               </div>
               <div>
                 <div className="nombre-producto">{m.nombre}</div>
