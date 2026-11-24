@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { conNavegador } from './navegador'
+import { bajarPrioridad } from './prioridad'
 import { FPS } from '@/lib/video/tipos'
 
 // Graba un video animado: Chromium abre la página, se pausan todas las animaciones y se mueven a cada instante
@@ -47,6 +48,7 @@ export function grabarVideo(url: string, o: OpcionesGrabar): Promise<{ duracion:
         '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', ...fundido,
         '-movflags', '+faststart', '-f', 'mp4', temporal,
       ], { stdio: ['pipe', 'ignore', 'pipe'] })
+      bajarPrioridad(ff.pid)
       let error = ''
       ff.stderr.on('data', (x) => { error = (error + x).slice(-2000) })
       const termino = new Promise<number>((r) => ff.on('close', (c) => r(c ?? 1)))

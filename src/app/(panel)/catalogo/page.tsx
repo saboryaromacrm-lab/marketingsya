@@ -6,6 +6,7 @@ import { AccionMasiva } from '@/components/catalogo/AccionMasiva'
 import { CasillaPagina, CasillaProducto, SeleccionCatalogo } from '@/components/catalogo/Seleccion'
 import { productosElegidos } from '@/lib/seleccion'
 import { resumenCatalogo } from '@/lib/catalogo/consultas'
+import { leerConfig } from '@/lib/configuracion'
 import { leerFiltros, POR_PAGINA, urlConFiltros, type Filtros, type Pestana } from '@/lib/catalogo/filtros'
 import { ultimaSincronizacionBuena } from '@/lib/catalogo/iniciar'
 import { buscarProductos, opcionesDeFiltros, type FilaProducto, type OpcionesDeFiltros } from '@/lib/catalogo/listado'
@@ -82,7 +83,7 @@ function FiltrosActivos({ f, opciones }: { f: Filtros; opciones: OpcionesDeFiltr
 export const unstable_dynamicStaleTime = 0
 
 export default async function Catalogo({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const f = leerFiltros(await searchParams)
+  const f = leerFiltros(await searchParams, (await leerConfig()).piezas.listaId)
   const [r, ultima, opciones, resultado, elegidos] = await Promise.all([resumenCatalogo(), ultimaSincronizacionBuena(), opcionesDeFiltros(), buscarProductos(f), productosElegidos()])
 
   if (!ultima || r.activos + r.deBaja === 0) {

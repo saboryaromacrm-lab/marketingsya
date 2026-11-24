@@ -432,7 +432,15 @@ Poner contador visible y corte automático al llegar al tope.
     filas del catálogo, la lista de Nueva pieza, Mis piezas, Publicaciones, Pautas, los buscadores y chips de los editores. Las vistas grandes
     (la foto del producto, la vista previa de Publicar) siguen con la original. Al sumar imágenes chicas, usar `imagenMini`.
   - Medido: Catálogo 921 → 52 KB, Nueva pieza 807 → 81 KB, Mis piezas 6.131 → 483 KB, Publicaciones 1.053 → 9 KB.
-  - Pendiente aprobado en el plan: ajustes finos (paso 3).
+- **Rendimiento, paso 3: ajustes finos (24/11/2026):**
+  - **Prioridad baja para lo pesado** (`src/lib/render/prioridad.ts`): ffmpeg con `os.setPriority(pid, 10)` y Chromium lanzado por un guion
+    con `nice -n 10` (en `os.tmpdir()`). En Docker corre como usuario `node`, que no puede subirse la prioridad: comprobado que los procesos
+    de Chromium quedan en 10. Con el servidor saturado, las páginas mejoran 0–17 % (el resto es competencia por memoria).
+  - **Ajustes leídos una vez por pedido** (`src/lib/ajustes.ts`): la tabla se lee entera con `cache()` de React (una consulta en lugar de hasta 6);
+    guardar o borrar un ajuste cambia la versión y la lectura siguiente va a la base. Inicio pasó de 17 a 11 consultas y Pautas de 15 a 10.
+  - **Caché de un día** para `/marca`, `/piezas`, `/fuentes` e `/interfaz` (`headers()` en `next.config.ts`).
+  - **Catálogo:** la lista de precios por defecto es la de Configuración › Piezas (`leerFiltros(p, listaPorDefecto)`), ya no la Minorista fija.
+  - **Pendiente:** recortar la fuente de íconos (125 KB) necesita instalar una herramienta; se le preguntó a Lucas.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 

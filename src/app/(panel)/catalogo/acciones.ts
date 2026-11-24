@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { eq, sql } from 'drizzle-orm'
 import { db, esquema } from '@/lib/db'
 import { armarIndice, emparejar, type Emparejado } from '@/lib/catalogo/emparejar'
+import { leerConfig } from '@/lib/configuracion'
 import { leerFiltros } from '@/lib/catalogo/filtros'
 import { condicionFiltrados } from '@/lib/catalogo/listado'
 import { fotoEfectiva } from '@/lib/catalogo/fotos-propias'
@@ -28,7 +29,7 @@ export async function cambiarExclusion(id: number, excluir: boolean) {
 
 /** «No usar en piezas» (o volver a usar) para todos los productos del filtro actual. */
 export async function excluirFiltrados(consulta: string, excluir: boolean): Promise<{ cambiados: number }> {
-  const f = leerFiltros(Object.fromEntries(new URLSearchParams(consulta)))
+  const f = leerFiltros(Object.fromEntries(new URLSearchParams(consulta)), (await leerConfig()).piezas.listaId)
   const filas = await db.update(productos).set({ excluirDePiezas: excluir }).where(condicionFiltrados(f)).returning({ id: productos.id })
   revalidatePath('/catalogo', 'layout')
   return { cambiados: filas.length }
