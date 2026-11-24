@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Nunito_Sans } from 'next/font/google'
-import 'material-icons/iconfont/filled.css'
+import '@/styles/iconos.css'
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 import '@/styles/armazon.css'

@@ -1,0 +1,26 @@
+/* Íconos Material (los mismos que usa el ERP), recortados a los que usa la plataforma: ~8 KB en lugar de 125 KB.
+   Se regenera con scripts/iconos/recortar.py al usar un ícono nuevo (la prueba src/lib/__tests__/iconos.test.ts lo avisa). */
+@font-face {
+  font-family: "Material Icons";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("./fuentes/material-icons-sya.woff2") format("woff2");
+}
+.material-icons {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}

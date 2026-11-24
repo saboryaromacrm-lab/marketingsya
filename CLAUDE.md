@@ -440,7 +440,10 @@ Poner contador visible y corte automático al llegar al tope.
     guardar o borrar un ajuste cambia la versión y la lectura siguiente va a la base. Inicio pasó de 17 a 11 consultas y Pautas de 15 a 10.
   - **Caché de un día** para `/marca`, `/piezas`, `/fuentes` e `/interfaz` (`headers()` en `next.config.ts`).
   - **Catálogo:** la lista de precios por defecto es la de Configuración › Piezas (`leerFiltros(p, listaPorDefecto)`), ya no la Minorista fija.
-  - **Pendiente:** recortar la fuente de íconos (125 KB) necesita instalar una herramienta; se le preguntó a Lucas.
+  - **Fuente de íconos recortada** (aprobado por Lucas, con fontTools instalado solo en el entorno de trabajo, no en el servidor):
+    `src/styles/fuentes/material-icons-sya.woff2` (~8 KB, unos 120 íconos; la completa pesaba 125 KB), cargada desde `src/styles/iconos.css`.
+    La genera `scripts/iconos/recortar.py` (busca en el código los textos que son nombres de ícono). **Al usar un ícono nuevo** la prueba
+    `src/lib/__tests__/iconos.test.ts` falla y dice cuál falta: correr `python3 -m pip install fonttools brotli` y `python3 scripts/iconos/recortar.py`.
 
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
