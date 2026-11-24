@@ -45,7 +45,7 @@ export default async function Marcas({ searchParams }: { searchParams: Promise<{
         <p className="texto-suave">{plural(filas.length, 'marca', 'marcas')}. Clic en una para ver sus productos.</p>
       </div>
       {!filtroLogo && sinLogo > 0 && (
-        <Aviso tono="ambar" dato={`${plural(sinLogo, 'marca no tiene', 'marcas no tienen')} logo`} accion={<Link className="btn btn-chico" href="/catalogo/marcas?logo=sin">Ver cuáles</Link>}>
+        <Aviso tono="ambar" dato={`${plural(sinLogo, 'marca no tiene', 'marcas no tienen')} logo`} accion={<Link prefetch={false} className="btn btn-chico" href="/catalogo/marcas?logo=sin">Ver cuáles</Link>}>
           en el ERP. En las piezas se usa el nombre escrito.
         </Aviso>
       )}
@@ -66,7 +66,7 @@ export default async function Marcas({ searchParams }: { searchParams: Promise<{
       ) : (
         <div className="grilla-marcas">
           {visibles.map((m) => (
-            <Link key={m.id} href={`/catalogo?marca=${m.id}`} className="tarjeta-marca">
+            <Link prefetch={false} key={m.id} href={`/catalogo?marca=${m.id}`} className="tarjeta-marca">
               <div className={`logo-marca ${m.logoArchivo ? '' : 'logo-marca-vacio'}`}>
                 {m.logoArchivo ? <img src={urlMedia(m.logoArchivo)} alt="" loading="lazy" /> : <span>{iniciales(m.nombre)}</span>}
               </div>

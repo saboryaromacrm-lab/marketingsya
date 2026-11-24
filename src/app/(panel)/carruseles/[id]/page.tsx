@@ -12,6 +12,8 @@ import { listarMusica } from '@/lib/video/musica'
 import { ANIMACION_INICIAL, limpiarAnimacion, limpiarFormatosCarrusel } from '@/lib/video/tipos'
 
 export const metadata = { title: 'Carrusel' }
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 
 export default async function PaginaCarrusel({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id)

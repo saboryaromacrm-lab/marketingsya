@@ -65,8 +65,8 @@ function revisar(d: DatosEditor, info: Record<number, InfoProducto>, erpSinFoto:
   const avisos: ReactNode[] = []
   if (d.filas.length && !d.formatos.historia && !d.formatos.feed && !d.formatos.uno && !videosDe(d.formatos).length) bloquean.push('Elegí al menos un formato.')
   const sinFoto = d.filas.flatMap((f) => f.productos).filter((p) => info[p.id] && !info[p.id].foto)
-  for (const p of sinFoto) bloquean.push(<>«{info[p.id].nombre}» no tiene foto: sacalo de la promo o <Link href={`/catalogo/${p.id}`} target="_blank">subile una</Link>.</>)
-  for (const p of erpSinFoto) avisos.push(<>«{p.nombre}» (promo del ERP) no se sumó porque no tiene foto. <Link href={`/catalogo/${p.id}`} target="_blank">Subir foto</Link></>)
+  for (const p of sinFoto) bloquean.push(<>«{info[p.id].nombre}» no tiene foto: sacalo de la promo o <Link prefetch={false} href={`/catalogo/${p.id}`} target="_blank">subile una</Link>.</>)
+  for (const p of erpSinFoto) avisos.push(<>«{p.nombre}» (promo del ERP) no se sumó porque no tiene foto. <Link prefetch={false} href={`/catalogo/${p.id}`} target="_blank">Subir foto</Link></>)
   for (const f of d.filas) {
     const sinPrecio = f.productos.filter((p) => f.precioFijo == null && !baseDe(info, p.id, d.listaId, p.presentacion))
     for (const p of sinPrecio) avisos.push(<>«{info[p.id]?.nombre ?? 'Producto'}» no tiene precio {nombreLista}: sale «Consultar».</>)
@@ -291,7 +291,7 @@ export function EditorPromo({ id, inicial, infoInicial, placasIniciales, listas,
             {datos.filas.length ? (
               <><b>Elegí al menos un formato</b><span>Historias, feed o uno por producto, en la columna de la izquierda.</span></>
             ) : (
-              <><b>Sumá productos para armar la promo</b><span>Buscalos acá al lado o elegilos con las casillas del <Link href="/catalogo">catálogo</Link>.<br />Las promos de la lista Promo del ERP se suman solas si tienen foto.</span></>
+              <><b>Sumá productos para armar la promo</b><span>Buscalos acá al lado o elegilos con las casillas del <Link prefetch={false} href="/catalogo">catálogo</Link>.<br />Las promos de la lista Promo del ERP se suman solas si tienen foto.</span></>
             )}
           </section>
         )}

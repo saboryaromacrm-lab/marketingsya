@@ -89,3 +89,27 @@ describe('estado general', () => {
     expect(estadoGeneral(['ok', 'cancelado'])).toBe('publicada')
   })
 })
+
+describe('cada cuánto mira Publicaciones si algo cambió', () => {
+  const ahora = Date.parse('2026-11-24T12:00:00Z')
+  const fila = (estado: 'programada' | 'publicando' | 'reintentando' | 'publicada', minutos: number | null, destinos: ('pendiente' | 'publicando' | 'ok')[] = ['pendiente']) =>
+    ({ estado, sale: minutos == null ? null : new Date(ahora + minutos * 60_000).toISOString(), destinos: destinos.map((d) => ({ estado: d })) })
+  it('nada en curso: no mira', async () => {
+    const { cadaCuantoMirar } = await import('../reglas')
+    expect(cadaCuantoMirar([fila('publicada', null, ['ok'])], ahora)).toBeNull()
+    expect(cadaCuantoMirar([], ahora)).toBeNull()
+  })
+  it('publicando o reintentando: cada 5 s', async () => {
+    const { cadaCuantoMirar, MIRAR_RAPIDO } = await import('../reglas')
+    expect(cadaCuantoMirar([fila('publicando', 0)], ahora)).toBe(MIRAR_RAPIDO)
+    expect(cadaCuantoMirar([fila('reintentando', 3)], ahora)).toBe(MIRAR_RAPIDO)
+    expect(cadaCuantoMirar([fila('programada', 300, ['publicando'])], ahora)).toBe(MIRAR_RAPIDO)
+  })
+  it('programada: cada 5 s si falta poco, cada 30 s si sale en el día, nada si sale más adelante', async () => {
+    const { cadaCuantoMirar, MIRAR_RAPIDO, MIRAR_LENTO } = await import('../reglas')
+    expect(cadaCuantoMirar([fila('programada', 8)], ahora)).toBe(MIRAR_RAPIDO)
+    expect(cadaCuantoMirar([fila('programada', -2)], ahora)).toBe(MIRAR_RAPIDO)
+    expect(cadaCuantoMirar([fila('programada', 120)], ahora)).toBe(MIRAR_LENTO)
+    expect(cadaCuantoMirar([fila('programada', 3 * 24 * 60)], ahora)).toBeNull()
+  })
+})

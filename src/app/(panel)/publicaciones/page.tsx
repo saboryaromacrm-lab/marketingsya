@@ -12,6 +12,8 @@ import { NOMBRE_QUE, textoCuando, type QuePublicar } from '@/lib/publicaciones/r
 import { ListaPublicaciones, type FilaPublicacion } from './ListaPublicaciones'
 
 export const dynamic = 'force-dynamic'
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 export const metadata = { title: 'Publicaciones' }
 
 const { publicaciones, publicacionDestinos, exportaciones } = esquema
@@ -66,6 +68,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
       miniatura: arch?.[primera] ? urlMedia(arch[primera]) : null,
       estado: p.estado,
       cuando: EN_CURSO.includes(p.estado) ? textoCuando(p.proximoIntento ?? p.programadaPara, ahora) : cuando(p.terminadoEn ?? p.programadaPara, ahora),
+      sale: EN_CURSO.includes(p.estado) ? (p.proximoIntento ?? p.programadaPara).toISOString() : null,
       destinos: ds.map((d) => ({ red: d.red, ubicacion: d.ubicacion, estado: d.estado, error: d.error, enlace: d.enlace })),
     }
   })
@@ -76,18 +79,18 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
     <div className="contenido">
       <Cabecera titulo="Publicaciones" subtitulo="Lo programado, lo publicado y lo que falló en Instagram y Facebook." miga={[{ texto: 'Publicaciones' }]} />
       {!meta.conectada && (
-        <Aviso tono="ambar" dato="Meta todavía no está conectado:" accion={<Link className="btn btn-chico" href="/configuracion/meta">Conectar</Link>}>
+        <Aviso tono="ambar" dato="Meta todavía no está conectado:" accion={<Link prefetch={false} className="btn btn-chico" href="/configuracion/meta">Conectar</Link>}>
           cargá el token en Configuración › Meta para poder publicar.
         </Aviso>
       )}
       {recientesConError.length > 0 && ver !== 'error' && (
-        <Aviso tono="ambar" dato={`${recientesConError.length === 1 ? '1 publicación falló' : `${recientesConError.length} publicaciones fallaron`} en los últimos días:`} accion={tokenMal ? <Link className="btn btn-chico" href="/configuracion/meta">Revisar la conexión</Link> : <Link className="btn btn-chico" href="/publicaciones?ver=error">Ver</Link>}>
+        <Aviso tono="ambar" dato={`${recientesConError.length === 1 ? '1 publicación falló' : `${recientesConError.length} publicaciones fallaron`} en los últimos días:`} accion={tokenMal ? <Link prefetch={false} className="btn btn-chico" href="/configuracion/meta">Revisar la conexión</Link> : <Link prefetch={false} className="btn btn-chico" href="/publicaciones?ver=error">Ver</Link>}>
           «{recientesConError[0].titulo}».
         </Aviso>
       )}
       <nav className="pestanas" aria-label="Filtrar">
         {(Object.keys(PESTANAS) as Pestana[]).map((k) => (
-          <Link key={k} href={k === 'todas' ? '/publicaciones' : `/publicaciones?ver=${k}`} className={ver === k ? 'pestana-activa' : ''}>{PESTANAS[k].texto} ({cuenta(PESTANAS[k].estados)})</Link>
+          <Link prefetch={false} key={k} href={k === 'todas' ? '/publicaciones' : `/publicaciones?ver=${k}`} className={ver === k ? 'pestana-activa' : ''}>{PESTANAS[k].texto} ({cuenta(PESTANAS[k].estados)})</Link>
         ))}
       </nav>
       <ListaPublicaciones filas={lista} nueva={Number(q.nueva) || null} />

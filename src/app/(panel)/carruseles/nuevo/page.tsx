@@ -16,7 +16,7 @@ export default async function NuevoCarrusel() {
       {elegidos ? (
         <Aviso tono="verde" dato={`${plural(elegidos, 'producto elegido', 'productos elegidos')}`}>con las casillas del catálogo: se usan en el carrusel.</Aviso>
       ) : (
-        <Aviso tono="ambar" dato="No elegiste productos" accion={<Link className="btn btn-chico" href="/catalogo">Ir al catálogo</Link>}>
+        <Aviso tono="ambar" dato="No elegiste productos" accion={<Link prefetch={false} className="btn btn-chico" href="/catalogo">Ir al catálogo</Link>}>
           con las casillas del catálogo: el carrusel arranca vacío y los elegís en el editor.
         </Aviso>
       )}

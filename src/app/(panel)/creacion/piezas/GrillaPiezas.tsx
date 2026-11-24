@@ -55,7 +55,7 @@ export function GrillaPiezas({ piezas }: { piezas: TarjetaPieza[] }) {
         <div className="avisos-borrado">
           {resultado.borradas > 0 && <Aviso tono="verde" dato={resultado.borradas === 1 ? 'Se borró 1 pieza.' : `Se borraron ${resultado.borradas} piezas.`} />}
           {resultado.frenadas.map((f) => (
-            <Aviso key={clave(f)} tono="ambar" dato={`«${f.titulo}» no se borró.`} accion={f.enlace && <Link className="btn btn-chico" href={f.enlace}>Ir</Link>}>
+            <Aviso key={clave(f)} tono="ambar" dato={`«${f.titulo}» no se borró.`} accion={f.enlace && <Link prefetch={false} className="btn btn-chico" href={f.enlace}>Ir</Link>}>
               {f.motivo}
             </Aviso>
           ))}
@@ -67,7 +67,7 @@ export function GrillaPiezas({ piezas }: { piezas: TarjetaPieza[] }) {
           return (
             <article key={k} className={`tarjeta-pieza ${elegidas.has(k) ? 'tarjeta-pieza-elegida' : ''}`}>
               <div className="tarjeta-pieza-arriba">
-                <Link href={p.editar} className="tarjeta-pieza-imagen">
+                <Link prefetch={false} href={p.editar} className="tarjeta-pieza-imagen">
                   {p.imagen ? <img src={p.imagen} alt="" loading="lazy" /> : <span className="tarjeta-pieza-vacia"><Icono nombre={ICONO[p.tipo]} tamano={36} /></span>}
                   {p.reel && <span className="tarjeta-pieza-video"><Icono nombre="play_arrow" tamano={14} />Reel</span>}
                 </Link>
@@ -76,7 +76,7 @@ export function GrillaPiezas({ piezas }: { piezas: TarjetaPieza[] }) {
                 </label>
               </div>
               <div className="tarjeta-pieza-cuerpo">
-                <Link href={p.editar}><b>{p.titulo}</b></Link>
+                <Link prefetch={false} href={p.editar}><b>{p.titulo}</b></Link>
                 <span className="texto-chico">{TIPO[p.tipo]} · {p.detalle}</span>
                 <div className="chips">{p.formatos.map((f) => <span key={f} className="chip chip-mini">{f}</span>)}</div>
                 <div className="fila-separada">
@@ -84,8 +84,8 @@ export function GrillaPiezas({ piezas }: { piezas: TarjetaPieza[] }) {
                   <span className="texto-chico">{p.cuando}</span>
                 </div>
                 <div className="fila-chips">
-                  <Link className="btn btn-chico" href={p.editar}><Icono nombre="edit" tamano={16} />Editar</Link>
-                  <Link className="btn btn-chico" href={`/publicaciones/nueva?${p.tipo}=${p.id}`}><Icono nombre="send" tamano={16} />Publicar</Link>
+                  <Link prefetch={false} className="btn btn-chico" href={p.editar}><Icono nombre="edit" tamano={16} />Editar</Link>
+                  <Link prefetch={false} className="btn btn-chico" href={`/publicaciones/nueva?${p.tipo}=${p.id}`}><Icono nombre="send" tamano={16} />Publicar</Link>
                   <button className="btn btn-chico btn-solo-icono" disabled={borrando} onClick={() => borrar([p])} aria-label={`Borrar «${p.titulo}»`} title="Borrar"><Icono nombre="delete" tamano={18} /></button>
                 </div>
               </div>

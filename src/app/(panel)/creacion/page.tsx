@@ -14,6 +14,8 @@ import { DIAS_NUEVOS, leerFiltrosLista, tipoDe } from '@/lib/catalogo/lista-piez
 import { listasDisponibles } from '@/lib/promos/editor'
 
 export const dynamic = 'force-dynamic'
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 export const metadata = { title: 'Nueva pieza' }
 
 export default async function NuevaPieza({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

@@ -134,7 +134,7 @@ function Conexion({ estado }: { estado: EstadoMeta }) {
               {pruebas.map((p, i) => <li key={i} className={p.ok ? '' : 'prueba-mal'}><Icono nombre={p.ok ? 'check_circle' : 'error'} tamano={18} />{p.texto}</li>)}
             </ul>
           )}
-          <p className="texto-chico">Antes de publicar, te recomendamos un PIN de 6 a 8 dígitos: <Link href="/configuracion/seguridad">cambialo en Seguridad</Link>.</p>
+          <p className="texto-chico">Antes de publicar, te recomendamos un PIN de 6 a 8 dígitos: <Link prefetch={false} href="/configuracion/seguridad">cambialo en Seguridad</Link>.</p>
         </>
       ) : (
         <p className="texto-suave">

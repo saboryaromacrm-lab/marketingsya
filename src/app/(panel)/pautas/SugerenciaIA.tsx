@@ -35,7 +35,7 @@ export function SugerenciaIA({ ia }: { ia: DisponibilidadIA }) {
           <b>«{s.titulo}»</b>
           <span className="texto-chico">{OBJETIVOS_PAUTA[s.objetivo].nombre} · {pesos(s.porDia)} por día durante {s.dias} {s.dias === 1 ? 'día' : 'días'} (máximo {pesos(s.porDia * s.dias)})</span>
           <span>{s.motivo}</span>
-          <Link className="btn btn-pri btn-chico boton-izquierda" href={`/pautas/nueva?publicacion=${s.publicacionId}&objetivo=${s.objetivo}&porDia=${s.porDia}&dias=${s.dias}`}><Icono nombre="campaign" tamano={16} />Promocionar con esto</Link>
+          <Link prefetch={false} className="btn btn-pri btn-chico boton-izquierda" href={`/pautas/nueva?publicacion=${s.publicacionId}&objetivo=${s.objetivo}&porDia=${s.porDia}&dias=${s.dias}`}><Icono nombre="campaign" tamano={16} />Promocionar con esto</Link>
         </div>
       )}
     </section>

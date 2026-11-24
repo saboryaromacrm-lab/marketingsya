@@ -85,7 +85,7 @@ function Cuenta({ metaConectada, finToken, publicidad }: { metaConectada: boolea
     if ('error' in r) setError(r.error)
     router.refresh()
   })
-  if (!metaConectada) return <p className="texto-suave">Primero conectá Meta en <Link href="/configuracion/meta">Configuración › Meta</Link>. Las pautas usan el mismo token.</p>
+  if (!metaConectada) return <p className="texto-suave">Primero conectá Meta en <Link prefetch={false} href="/configuracion/meta">Configuración › Meta</Link>. Las pautas usan el mismo token.</p>
   return (
     <div className="campo">
       {publicidad ? (

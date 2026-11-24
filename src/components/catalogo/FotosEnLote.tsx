@@ -126,7 +126,7 @@ export function FotosEnLote() {
               {subiendo ? `Subiendo ${numero(hechas)} de ${numero(elegidas.length)}…` : conError > 0 ? 'Reintentar las que fallaron' : `Subir ${numero(elegidas.length)}`}
             </button>
           ) : (
-            <Link className="btn btn-chico" href="/catalogo?foto=sin">Ver los que siguen sin foto</Link>
+            <Link prefetch={false} className="btn btn-chico" href="/catalogo?foto=sin">Ver los que siguen sin foto</Link>
           )}
           <button className="btn btn-chico" onClick={() => setFilas([])} disabled={subiendo}>Otra tanda</button>
         </div>
@@ -158,7 +158,7 @@ export function FotosEnLote() {
                           {f.producto.foto ? <img src={`/media/${f.producto.foto}`} alt="" /> : <Icono nombre="no_photography" />}
                         </div>
                         <div>
-                          <Link href={`/catalogo/${f.producto.id}`} target="_blank" className="nombre-producto">{f.producto.nombre}</Link>
+                          <Link prefetch={false} href={`/catalogo/${f.producto.id}`} target="_blank" className="nombre-producto">{f.producto.nombre}</Link>
                           <div className="texto-chico">
                             ID {f.producto.id}
                             {f.producto.fotoPropia && ' · reemplaza tu foto anterior'}

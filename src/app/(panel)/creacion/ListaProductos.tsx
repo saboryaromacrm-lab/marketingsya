@@ -7,21 +7,20 @@ import type { ListaPiezas, OpcionesListaPiezas } from '@/lib/catalogo/lista-piez
 import {
   filtrosDeTipo, filtrosPuestos, ORDENES, paginasVisibles, parametrosLista, POR_PAGINA_LISTA, textoStock, DIAS_NUEVOS, type FiltrosLista, type OrdenLista, type TipoPieza,
 } from '@/lib/catalogo/lista-piezas-reglas'
-import { accionListaPiezas, accionMarcarParaPieza } from './acciones'
+import { accionListaPiezas, accionMarcarParaPieza, type ElegidoVista } from './acciones'
 
 type Props = {
   tipo: TipoPieza
   filtrosIniciales: FiltrosLista
   inicial: ListaPiezas
   opciones: OpcionesListaPiezas
-  elegidos: number
+  // Los elegidos de arriba: marcan las casillas (si se sacan arriba, se destildan acá sin pedir la lista de nuevo)
+  elegidosIds: number[]
   tope: number | null
   listaNombre: string
-  // Cambia cuando cambian los elegidos (también si se sacan arriba): la página se vuelve a pedir
-  elegidosClave: string
   avisoInicial: string | null
-  // Después de marcar o desmarcar (para que se actualicen los elegidos de arriba)
-  alCambiar: () => void
+  // Después de marcar o desmarcar: los elegidos como quedaron (se muestran arriba sin recargar la página)
+  alCambiar: (elegidos: ElegidoVista[]) => void
 }
 
 const pesos = (n: number) => `$ ${n.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`
@@ -50,7 +49,7 @@ function ElegirMarca({ valor, opciones, alCambiar }: { valor: FiltrosLista['marc
   )
 }
 
-export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, elegidos, tope, listaNombre, alCambiar, elegidosClave, avisoInicial }: Props) {
+export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, elegidosIds, tope, listaNombre, alCambiar, avisoInicial }: Props) {
   const [f, setF] = useState(filtrosIniciales)
   const [res, setRes] = useState(inicial)
   const [cargando, setCargando] = useState(false)
@@ -94,10 +93,11 @@ export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, eleg
       setMarcados({})
     }, 250)
     return () => { vigente = false; clearTimeout(t) }
-  }, [f, tipo, elegidosClave])
+  }, [f, tipo])
 
   const cambiar = (c: Partial<FiltrosLista>) => { if ('nuevos' in c) nuevosAutomatico.current = false; setF((x) => ({ ...x, pagina: 1, ...c })) }
-  const elegido = (id: number, base: boolean) => marcados[id] ?? base
+  const elegidos = elegidosIds.length
+  const elegido = (id: number) => marcados[id] ?? elegidosIds.includes(id)
   const lleno = tope != null && elegidos >= tope
 
   function alternar(id: number, ahora: boolean) {
@@ -106,8 +106,9 @@ export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, eleg
     setMarcados((m) => ({ ...m, [id]: !ahora }))
     empezar(async () => {
       const r = await accionMarcarParaPieza(id, !ahora, tipo)
-      if ('error' in r) { setError(r.error); setMarcados((m) => ({ ...m, [id]: ahora })) }
-      alCambiar()
+      if ('error' in r) { setError(r.error); setMarcados((m) => ({ ...m, [id]: ahora })); return }
+      alCambiar(r.elegidos)
+      setMarcados((m) => { const x = { ...m }; delete x[id]; return x })
     })
   }
 
@@ -156,7 +157,7 @@ export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, eleg
       ) : (
         <div className={`lp-grilla ${cargando ? 'lp-cargando' : ''}`}>
           {res.productos.map((p) => {
-            const si = elegido(p.id, p.elegido)
+            const si = elegido(p.id)
             const bloqueado = !si && lleno
             return (
               <label key={p.id} className={`lp-p ${si ? 'lp-p-elegido' : ''} ${bloqueado ? 'lp-p-bloqueado' : ''}`} title={bloqueado ? `Ya elegiste ${tope}` : undefined}>
@@ -179,7 +180,7 @@ export function ListaProductos({ tipo, filtrosIniciales, inicial, opciones, eleg
       <div className="lp-pie">
         <span>
           {res.total > 0 && <>Mostrando {desde}–{hasta} de {res.total.toLocaleString('es-AR')}</>}
-          {res.sinFoto > 0 && <> · hay {res.sinFoto.toLocaleString('es-AR')} sin foto que no se pueden usar: <Link href="/catalogo?foto=sin">subí la foto desde el Catálogo</Link></>}
+          {res.sinFoto > 0 && <> · hay {res.sinFoto.toLocaleString('es-AR')} sin foto que no se pueden usar: <Link prefetch={false} href="/catalogo?foto=sin">subí la foto desde el Catálogo</Link></>}
         </span>
         {res.paginas > 1 && (
           <nav className="lp-paginas" aria-label="Páginas">

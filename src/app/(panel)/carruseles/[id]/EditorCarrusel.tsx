@@ -340,7 +340,7 @@ function Producto({ id, info, alElegir, listaId = 3, rotulo }: { id: Id; info: I
       {p ? (
         <div className={`slot-producto ${p.foto ? '' : 'slot-falta'}`}>
           <span className="miniatura">{p.foto ? <img src={p.foto} alt="" /> : <Icono nombre="no_photography" tamano={18} />}</span>
-          <span className="resultado-nombre">{p.nombre}<small>{p.foto ? (p.precio ?? 'Sin precio en esta lista') : <>Sin foto · <Link href={`/catalogo/${p.id}`} target="_blank">subile una</Link></>}</small></span>
+          <span className="resultado-nombre">{p.nombre}<small>{p.foto ? (p.precio ?? 'Sin precio en esta lista') : <>Sin foto · <Link prefetch={false} href={`/catalogo/${p.id}`} target="_blank">subile una</Link></>}</small></span>
           <button className="btn btn-chico" onClick={() => setBuscando(!buscando)}><Icono nombre={buscando ? 'close' : 'swap_horiz'} tamano={16} />{buscando ? 'Cerrar' : 'Cambiar'}</button>
         </div>
       ) : id != null ? <p className="texto-chico">Cargando…</p> : null}

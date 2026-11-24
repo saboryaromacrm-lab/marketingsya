@@ -47,18 +47,18 @@ export function AsesorIA(p: Props) {
       <div className="asesor-barra">
         <nav className="pestanas" aria-label="Secciones del asesor">
           {PESTANAS.map(([k, t, i]) => (
-            <Link key={k} href={`/asesor?pestana=${k}${k === 'calendario' ? `&semana=${p.lunes}` : ''}`} className={p.pestana === k ? 'pestana-activa' : ''} scroll={false}><Icono nombre={i} tamano={16} /> {t}</Link>
+            <Link prefetch={false} key={k} href={`/asesor?pestana=${k}${k === 'calendario' ? `&semana=${p.lunes}` : ''}`} className={p.pestana === k ? 'pestana-activa' : ''} scroll={false}><Icono nombre={i} tamano={16} /> {t}</Link>
           ))}
         </nav>
         <Gasto estado={estado} />
       </div>
       {!estado.conectada && (
-        <div className="aviso aviso-ambar"><span><b>Falta conectar la IA:</b> cargá la clave de Anthropic.</span><Link className="btn btn-chico aviso-accion" href="/configuracion/asesor">Ir a Configuración</Link></div>
+        <div className="aviso aviso-ambar"><span><b>Falta conectar la IA:</b> cargá la clave de Anthropic.</span><Link prefetch={false} className="btn btn-chico aviso-accion" href="/configuracion/asesor">Ir a Configuración</Link></div>
       )}
       {estado.conectada && (estado.aviso || estado.cortada) && (
         <div className={`aviso ${estado.cortada ? 'aviso-rojo-tarjeta' : 'aviso-ambar'}`}>
           <span><b>{estado.cortada ? 'Llegaste al tope del mes.' : `Ya usaste el ${Math.round((estado.gasto / estado.tope) * 100)} % del tope del mes.`}</b> {estado.cortada ? 'La IA vuelve el día 1.' : ''}</span>
-          <Link className="btn btn-chico aviso-accion" href="/configuracion/asesor">Cambiar tope</Link>
+          <Link prefetch={false} className="btn btn-chico aviso-accion" href="/configuracion/asesor">Cambiar tope</Link>
         </div>
       )}
       {p.pestana === 'calendario' && <Calendario {...p} {...ctx} />}
@@ -123,15 +123,15 @@ function Calendario(p: Props & Ctx) {
   return (
     <>
       <div className="fila-acciones">
-        <Link className="btn" href={`/asesor?pestana=calendario&semana=${sumarDias(p.lunes, -7)}`} scroll={false}><Icono nombre="chevron_left" />Semana anterior</Link>
+        <Link prefetch={false} className="btn" href={`/asesor?pestana=calendario&semana=${sumarDias(p.lunes, -7)}`} scroll={false}><Icono nombre="chevron_left" />Semana anterior</Link>
         <b className="semana-titulo">Semana del {fechaCorta(p.lunes)} al {fechaCorta(sumarDias(p.lunes, 6))}</b>
-        <Link className="btn" href={`/asesor?pestana=calendario&semana=${sumarDias(p.lunes, 7)}`} scroll={false}>Semana siguiente<Icono nombre="chevron_right" /></Link>
+        <Link prefetch={false} className="btn" href={`/asesor?pestana=calendario&semana=${sumarDias(p.lunes, 7)}`} scroll={false}>Semana siguiente<Icono nombre="chevron_right" /></Link>
         <button className="btn btn-pri boton-ia" disabled={!!p.bloqueado || pendiente || p.calendarioVacio} title={p.bloqueado ?? ''} onClick={proponer}>
           <Icono nombre={pendiente && armando == null ? 'sync' : 'auto_awesome'} className={pendiente && armando == null ? 'girando' : ''} />
           {pendiente && armando == null ? 'Pensando la semana…' : `${semana ? 'Volver a proponer' : 'Proponer semana'} (${p.costos.semana})`}
         </button>
       </div>
-      {p.calendarioVacio && <p className="texto-suave">No hay días con publicaciones: elegilos en <Link href="/configuracion/asesor">Configuración › Asesor IA</Link>.</p>}
+      {p.calendarioVacio && <p className="texto-suave">No hay días con publicaciones: elegilos en <Link prefetch={false} href="/configuracion/asesor">Configuración › Asesor IA</Link>.</p>}
       {fechasSemana.length > 0 && <div className="fechas-ia"><Icono nombre="event" tamano={16} /><b>Se viene:</b> {fechasSemana.slice(0, 4).map((f) => `${f.nombre} (${fechaCorta(f.fecha)})`).join(' · ')}. La IA ya las tiene en cuenta.</div>}
       <MensajeError texto={error} />
       <div className="semana-ia">
@@ -148,8 +148,8 @@ function Calendario(p: Props & Ctx) {
                   {x.productos.length > 0 && <Minis ids={x.productos} info={p.info} />}
                   {x.borrador ? (
                     <span className="fila-chips">
-                      <Link className="btn btn-chico" href={x.borrador.tipo === 'promo' ? `/promos/${x.borrador.id}` : `/carruseles/${x.borrador.id}`}><Icono nombre="open_in_new" tamano={16} />Abrir borrador</Link>
-                      <Link className="btn btn-chico" href={`/publicaciones/nueva?${x.borrador.tipo}=${x.borrador.id}&fecha=${x.dia}`}><Icono nombre="send" tamano={16} />Publicar</Link>
+                      <Link prefetch={false} className="btn btn-chico" href={x.borrador.tipo === 'promo' ? `/promos/${x.borrador.id}` : `/carruseles/${x.borrador.id}`}><Icono nombre="open_in_new" tamano={16} />Abrir borrador</Link>
+                      <Link prefetch={false} className="btn btn-chico" href={`/publicaciones/nueva?${x.borrador.tipo}=${x.borrador.id}&fecha=${x.dia}`}><Icono nombre="send" tamano={16} />Publicar</Link>
                     </span>
                   ) : x.tipo !== 'historia' ? (
                     <button className="btn btn-chico" disabled={pendiente || (x.tipo === 'receta' && !!p.bloqueado)} onClick={() => armar(x.k)}>
@@ -268,7 +268,7 @@ function Recetas(p: Props & Ctx) {
       <section className="tarjeta">
         <h2 className="titulo-seccion">Últimas recetas</h2>
         {p.recetas.length ? (
-          <ul className="lista-simple">{p.recetas.map((r) => <li key={r.id}><Link href={`/carruseles/${r.id}`}>{r.titulo}</Link></li>)}</ul>
+          <ul className="lista-simple">{p.recetas.map((r) => <li key={r.id}><Link prefetch={false} href={`/carruseles/${r.id}`}>{r.titulo}</Link></li>)}</ul>
         ) : <p className="texto-suave">Todavía no hay recetas.</p>}
       </section>
     </div>

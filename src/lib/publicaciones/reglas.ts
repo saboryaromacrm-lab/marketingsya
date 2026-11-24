@@ -153,3 +153,19 @@ export function planDestinosVideo(que: Exclude<QuePublicar, 'imagenes'>, redes: 
 }
 
 export const NOMBRE_QUE: Record<QuePublicar, string> = { imagenes: 'Carrusel e historias', reel: 'Reel', historiaVideo: 'Historia en video', videoFeed: 'Video de feed' }
+
+// ---------------------------------------------------------------------------
+// Cada cuánto mira la pantalla de Publicaciones si algo cambió (null = no hace falta mirar)
+// ---------------------------------------------------------------------------
+export const MIRAR_RAPIDO = 5_000
+export const MIRAR_LENTO = 30_000
+type FilaParaMirar = { estado: EstadoPublicacion; sale: string | null; destinos: { estado: EstadoDestino }[] }
+
+/** Rápido mientras algo se publica o sale en menos de 10 minutos; lento si sale en las próximas 24 h; si no, nada. */
+export function cadaCuantoMirar(filas: FilaParaMirar[], ahora = Date.now()): number | null {
+  if (filas.some((f) => f.estado === 'publicando' || f.estado === 'reintentando' || f.destinos.some((d) => d.estado === 'publicando'))) return MIRAR_RAPIDO
+  const faltan = filas.filter((f) => f.estado === 'programada' && f.sale).map((f) => new Date(f.sale!).getTime() - ahora)
+  if (faltan.some((ms) => ms <= 10 * 60_000)) return MIRAR_RAPIDO
+  if (faltan.some((ms) => ms <= 24 * 3600_000)) return MIRAR_LENTO
+  return null
+}

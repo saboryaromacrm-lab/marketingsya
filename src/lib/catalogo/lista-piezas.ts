@@ -11,7 +11,7 @@ import { DIAS_NUEVOS, POR_PAGINA_LISTA, type FiltrosLista } from './lista-piezas
 // La lista de productos del asistente de Creación: solo los que sirven para piezas (con foto, activos y no excluidos),
 // con filtros, orden por stock y de a 20.
 
-const { productos, marcas, seleccion, sucursales, sincronizaciones, sincronizacionCambios } = esquema
+const { productos, marcas, sucursales, sincronizaciones, sincronizacionCambios } = esquema
 
 const sirven = sql`not ${productos.dadoDeBaja} and not ${productos.excluirDePiezas}`
 const conFoto = sql`${fotoEfectiva} is not null`
@@ -75,7 +75,6 @@ export async function listaParaPiezas(f: FiltrosLista, listaId: number) {
       presentacion: sql<string | null>`${productos.preciosLista} -> ${String(listaId)} ->> 'presentacion'`,
       stock: sql<number>`${stock}::float`,
       nuevo: sql<boolean>`${productos.id} in (${nuevos})`,
-      elegido: sql<boolean>`exists (select 1 from ${seleccion} where ${seleccion.productoId} = ${productos.id})`,
     })
     .from(productos)
     .leftJoin(marcas, eq(marcas.id, productos.marcaId))

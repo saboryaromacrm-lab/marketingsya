@@ -190,7 +190,7 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
             {c.clips.length < MAX_CLIPS && (
               <div className="fila-chips">
                 <button type="button" className="btn btn-chico" onClick={() => setEligiendoClip((x) => !x)}><Icono nombre="add" tamano={16} />Sumar otro clip</button>
-                <Link className="texto-chico" href="/creacion/videos">o subí uno nuevo en «Mis videos»</Link>
+                <Link prefetch={false} className="texto-chico" href="/creacion/videos">o subí uno nuevo en «Mis videos»</Link>
               </div>
             )}
             {eligiendoClip && (
@@ -229,7 +229,7 @@ export function EditorVideo({ id, inicial, resumenInicial, biblioteca, listas, m
                   <option value="">Elegí un tema</option>
                   {musica.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                 </select>
-                <span className="texto-chico">{c.sonido.modo === 'ambos' ? 'La música va bajita debajo de tu voz.' : 'Se escucha solo la música.'} {musica.length ? '' : 'Todavía no hay temas.'} <Link href="/configuracion/creacion">Subir música</Link></span>
+                <span className="texto-chico">{c.sonido.modo === 'ambos' ? 'La música va bajita debajo de tu voz.' : 'Se escucha solo la música.'} {musica.length ? '' : 'Todavía no hay temas.'} <Link prefetch={false} href="/configuracion/creacion">Subir música</Link></span>
               </label>
             )}
             {c.sonido.modo !== 'musica' && c.clips.length > 0 && !algunoConAudio && <span className="texto-chico texto-aviso">Tus clips no tienen sonido: elegí música o va en silencio.</span>}

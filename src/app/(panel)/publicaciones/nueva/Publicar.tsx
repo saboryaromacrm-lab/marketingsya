@@ -79,10 +79,10 @@ export function Publicar({ pieza, placas, exportacion, textoInicial, altInicial,
     if (feedElegidas.length) c.push({ ok: feedElegidas.length <= MAX_IMAGENES_FEED || !destinos.feed.instagram, texto: `${feedElegidas.length} ${feedElegidas.length === 1 ? 'imagen' : 'imágenes'} para el feed, de 1080×1350 (Instagram acepta hasta ${MAX_IMAGENES_FEED})` })
     if (historiasElegidas.length) c.push({ ok: true, texto: `${historiasElegidas.length} ${historiasElegidas.length === 1 ? 'historia' : 'historias'} de 1080×1920` })
     if (video) c.push({ ok: video.total > 0 && video.total <= 90, texto: `${video.nombre} de ${video.total.toLocaleString('es-AR')} s, 1080×${video.alto}, MP4` })
-    c.push(pieza.sinFoto.length ? { ok: false, texto: <>Sin foto: {pieza.sinFoto.join(', ')}. <Link href={pieza.editar}>Abrir la pieza</Link></> } : { ok: true, texto: 'Todos los productos con foto' })
+    c.push(pieza.sinFoto.length ? { ok: false, texto: <>Sin foto: {pieza.sinFoto.join(', ')}. <Link prefetch={false} href={pieza.editar}>Abrir la pieza</Link></> } : { ok: true, texto: 'Todos los productos con foto' })
     if (pieza.bajas.length) c.push({ ok: false, texto: `Dados de baja en el ERP: ${pieza.bajas.join(', ')}` })
     if (conTexto) c.push(problemasTexto.length ? { ok: false, texto: problemasTexto[0] } : { ok: true, texto: 'Texto del posteo listo' })
-    c.push(meta.conectada ? { ok: true, texto: `Meta conectado${meta.pagina ? ` (${meta.pagina})` : ''}` } : { ok: false, texto: <>Meta no está conectado: <Link href="/configuracion/meta">cargá el token</Link></> })
+    c.push(meta.conectada ? { ok: true, texto: `Meta conectado${meta.pagina ? ` (${meta.pagina})` : ''}` } : { ok: false, texto: <>Meta no está conectado: <Link prefetch={false} href="/configuracion/meta">cargá el token</Link></> })
     if (cuota) c.push({ ok: cuota.usadas < cuota.total, texto: `Hoy: ${cuota.usadas} de ${cuota.total} publicaciones permitidas en Instagram` })
     if (problemaHora) c.push({ ok: false, texto: problemaHora })
     for (const p of problemasPlan) c.push({ ok: false, texto: p })
@@ -127,11 +127,11 @@ export function Publicar({ pieza, placas, exportacion, textoInicial, altInicial,
           titulo={<>Publicar · {pieza.titulo} <span className="chip chip-titulo">{pieza.tipo === 'carrusel' ? 'CARRUSEL' : pieza.tipo === 'promo' ? 'PROMO' : 'VIDEO PROPIO'}</span></>}
           subtitulo="Revisá exactamente lo que va a salir. Nada se publica sin tu confirmación."
           miga={[{ texto: 'Publicaciones', href: '/publicaciones' }, { texto: `Publicar · ${pieza.titulo}` }]}
-          acciones={<Link className="btn" href={pieza.editar}><Icono nombre="edit" />Volver a la pieza</Link>}
+          acciones={<Link prefetch={false} className="btn" href={pieza.editar}><Icono nombre="edit" />Volver a la pieza</Link>}
         />
         {opcionesQue.length > 1 && (
           <nav className="pestanas" aria-label="Qué publicás">
-            {opcionesQue.map((o) => <Link key={o.que} href={o.href} className={o.que === que ? 'pestana-activa' : ''}>{o.nombre}</Link>)}
+            {opcionesQue.map((o) => <Link prefetch={false} key={o.que} href={o.href} className={o.que === que ? 'pestana-activa' : ''}>{o.nombre}</Link>)}
           </nav>
         )}
 

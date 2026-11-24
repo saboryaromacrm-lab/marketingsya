@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { cancelarPublicacion, crearPublicacion, reintentarPublicacion } from '@/lib/publicaciones/motor'
 import { aInstante, type DestinosElegidos, type QuePublicar } from '@/lib/publicaciones/reglas'
 import { cuotaInstagram } from '@/lib/meta/conexion'
+import { firmaPublicaciones } from '@/lib/publicaciones/resumen'
 
 type Aprobar = {
   tipo: 'carrusel' | 'promo' | 'video'
@@ -51,4 +52,9 @@ export async function reintentar(id: number) {
 
 export async function cuotaHoy() {
   return cuotaInstagram()
+}
+
+/** Firma del estado de las publicaciones: la pantalla la mira y se recarga solo si cambió. */
+export async function accionFirmaPublicaciones() {
+  return firmaPublicaciones()
 }

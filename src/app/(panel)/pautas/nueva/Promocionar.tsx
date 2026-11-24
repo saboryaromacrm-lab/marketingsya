@@ -45,8 +45,8 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
   const sinIg = publicacion.instagram == null
 
   const chequeos: Chequeo[] = []
-  if (!metaConectada) chequeos.push({ ok: false, texto: <>Meta no está conectado: <Link href="/configuracion/meta">cargá el token</Link></> })
-  else if (!cuenta) chequeos.push({ ok: false, texto: <>Falta detectar la cuenta publicitaria: <Link href="/configuracion/pautas">Configuración › Pautas</Link></> })
+  if (!metaConectada) chequeos.push({ ok: false, texto: <>Meta no está conectado: <Link prefetch={false} href="/configuracion/meta">cargá el token</Link></> })
+  else if (!cuenta) chequeos.push({ ok: false, texto: <>Falta detectar la cuenta publicitaria: <Link prefetch={false} href="/configuracion/pautas">Configuración › Pautas</Link></> })
   else {
     chequeos.push(cuenta.moneda !== 'ARS' ? { ok: false, texto: `La cuenta publicitaria está en ${cuenta.moneda}: tiene que ser en pesos` } : !cuenta.activa ? { ok: false, texto: 'La cuenta publicitaria no está activa en Meta (revisá el medio de pago)' } : { ok: true, texto: `Cuenta publicitaria conectada (${cuenta.nombre} · ARS)` })
     if (objetivo === 'mensajes') chequeos.push(cuenta.whatsapp ? { ok: true, texto: 'WhatsApp Business vinculado a la página' } : { ok: true, aviso: true, texto: 'No se pudo confirmar el WhatsApp vinculado a la página: si no lo está, Meta va a rechazar la pauta' })
@@ -112,7 +112,7 @@ export function Promocionar({ publicacion, inicial, publicos, ubicaciones, hoy, 
           </label>
           <div className="campo">
             <span className="rotulo-columna">Dónde se muestra</span>
-            <span className="texto-chico">{UBICACIONES_PAUTA[ubicaciones]} · <Link href="/configuracion/pautas">cambiar</Link></span>
+            <span className="texto-chico">{UBICACIONES_PAUTA[ubicaciones]} · <Link prefetch={false} href="/configuracion/pautas">cambiar</Link></span>
           </div>
         </section>
 

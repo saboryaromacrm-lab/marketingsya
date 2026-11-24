@@ -68,14 +68,17 @@ function FiltrosActivos({ f, opciones }: { f: Filtros; opciones: OpcionesDeFiltr
   return (
     <div className="filtros-activos">
       {chips.map((c) => (
-        <Link key={c.texto} href={urlConFiltros(f, c.sin)} className="chip chip-filtro" scroll={false}>
+        <Link prefetch={false} key={c.texto} href={urlConFiltros(f, c.sin)} className="chip chip-filtro" scroll={false}>
           {c.texto} <Icono nombre="close" tamano={14} />
         </Link>
       ))}
-      {chips.length > 1 && <Link href={urlConFiltros(f, { q: '', categoria: null, subcategoria: null, marca: null, etiqueta: null, foto: null, sinPrecio: false, piezas: null })} scroll={false}>Limpiar todo</Link>}
+      {chips.length > 1 && <Link prefetch={false} href={urlConFiltros(f, { q: '', categoria: null, subcategoria: null, marca: null, etiqueta: null, foto: null, sinPrecio: false, piezas: null })} scroll={false}>Limpiar todo</Link>}
     </div>
   )
 }
+
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 
 export default async function Catalogo({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const f = leerFiltros(await searchParams)
@@ -104,17 +107,17 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
       <div>
         <h2 className="titulo-seccion">Productos</h2>
         <p className="texto-suave">
-          {numero(r.activos)} productos · Última sincronización {cuando(ultima.terminadaEn ?? ultima.creadoEn)} · <Link href="/catalogo/sincronizaciones">Ver historial</Link>
+          {numero(r.activos)} productos · Última sincronización {cuando(ultima.terminadaEn ?? ultima.creadoEn)} · <Link prefetch={false} href="/catalogo/sincronizaciones">Ver historial</Link>
         </p>
       </div>
 
       {r.sinFoto > 0 && !f.foto && (
-        <Aviso tono="ambar" dato={`${plural(r.sinFoto, 'producto no tiene', 'productos no tienen')} foto`} accion={<Link className="btn btn-chico" href={urlConFiltros(f, { foto: 'sin', pestana: 'todos' })}>Ver {r.sinFoto === 1 ? 'cuál' : `los ${numero(r.sinFoto)}`}</Link>}>
+        <Aviso tono="ambar" dato={`${plural(r.sinFoto, 'producto no tiene', 'productos no tienen')} foto`} accion={<Link prefetch={false} className="btn btn-chico" href={urlConFiltros(f, { foto: 'sin', pestana: 'todos' })}>Ver {r.sinFoto === 1 ? 'cuál' : `los ${numero(r.sinFoto)}`}</Link>}>
           y no se pueden usar en piezas hasta que subas una (paso 4).
         </Aviso>
       )}
       {r.sinPrecio > 0 && !f.sinPrecio && (
-        <Aviso tono="verde" dato={`${plural(r.sinPrecio, 'producto no tiene', 'productos no tienen')} precio minorista`} accion={<Link className="btn btn-chico" href={urlConFiltros(f, { sinPrecio: true, lista: 3, pestana: 'todos' })}>Ver {r.sinPrecio === 1 ? 'cuál' : `los ${numero(r.sinPrecio)}`}</Link>}>
+        <Aviso tono="verde" dato={`${plural(r.sinPrecio, 'producto no tiene', 'productos no tienen')} precio minorista`} accion={<Link prefetch={false} className="btn btn-chico" href={urlConFiltros(f, { sinPrecio: true, lista: 3, pestana: 'todos' })}>Ver {r.sinPrecio === 1 ? 'cuál' : `los ${numero(r.sinPrecio)}`}</Link>}>
           en el ERP: aparecen igual, pero sin precio en las piezas.
         </Aviso>
       )}
@@ -124,7 +127,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
 
       <nav className="pestanas" aria-label="Tipo de producto">
         {PESTANAS.map((p) => (
-          <Link key={p.clave} href={urlConFiltros(f, { pestana: p.clave })} className={f.pestana === p.clave ? 'pestana-activa' : ''} scroll={false}>
+          <Link prefetch={false} key={p.clave} href={urlConFiltros(f, { pestana: p.clave })} className={f.pestana === p.clave ? 'pestana-activa' : ''} scroll={false}>
             {p.texto} ({numero(conteos[p.clave])})
           </Link>
         ))}
@@ -142,7 +145,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         <div className="vacio vacio-chico">
           <Icono nombre="search_off" tamano={32} />
           <p><b>No hay productos con estos filtros.</b></p>
-          <p><Link href="/catalogo">Ver todo el catálogo</Link></p>
+          <p><Link prefetch={false} href="/catalogo">Ver todo el catálogo</Link></p>
         </div>
       ) : (
         <div className="tabla-marco">
@@ -160,7 +163,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
                     </div>
                   </td>
                   <td className="celda-producto">
-                    <Link href={`/catalogo/${p.id}`} className="nombre-producto fila-enlace">{p.nombre}</Link>
+                    <Link prefetch={false} href={`/catalogo/${p.id}`} className="nombre-producto fila-enlace">{p.nombre}</Link>
                     <div className="chips">
                       {p.tipo === 'granel' && <span className="chip">A GRANEL</span>}
                       {p.estado !== 'activo' && <span className="chip chip-cambio-precio">{p.estado.toUpperCase()}</span>}
@@ -188,9 +191,9 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
             <span>Mostrando {numero(desde)}–{numero(hasta)} de {numero(total)}</span>
             {paginas > 1 && (
               <span className="tabla-pie-botones">
-                {pagina > 1 ? <Link className="btn btn-chico" href={urlConFiltros(f, { pagina: pagina - 1 })}>Anterior</Link> : <span className="btn btn-chico" aria-disabled="true">Anterior</span>}
+                {pagina > 1 ? <Link prefetch={false} className="btn btn-chico" href={urlConFiltros(f, { pagina: pagina - 1 })}>Anterior</Link> : <span className="btn btn-chico" aria-disabled="true">Anterior</span>}
                 <span className="pagina-actual">Página {numero(pagina)} de {numero(paginas)}</span>
-                {pagina < paginas ? <Link className="btn btn-chico" href={urlConFiltros(f, { pagina: pagina + 1 })}>Siguiente</Link> : <span className="btn btn-chico" aria-disabled="true">Siguiente</span>}
+                {pagina < paginas ? <Link prefetch={false} className="btn btn-chico" href={urlConFiltros(f, { pagina: pagina + 1 })}>Siguiente</Link> : <span className="btn btn-chico" aria-disabled="true">Siguiente</span>}
               </span>
             )}
           </div>

@@ -5,6 +5,8 @@ import { MenuCreacion } from '../MenuCreacion'
 import { MisVideos } from './MisVideos'
 
 export const dynamic = 'force-dynamic'
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 export const metadata = { title: 'Mis videos' }
 
 export default async function PaginaMisVideos() {

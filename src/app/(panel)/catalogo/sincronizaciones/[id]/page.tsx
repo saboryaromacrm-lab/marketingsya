@@ -60,7 +60,7 @@ export default async function DetalleSincronizacion({ params, searchParams }: {
   return (
     <>
       <div>
-        <Link href="/catalogo/sincronizaciones" className="volver"><Icono nombre="arrow_back" /> Sincronizaciones</Link>
+        <Link prefetch={false} href="/catalogo/sincronizaciones" className="volver"><Icono nombre="arrow_back" /> Sincronizaciones</Link>
         <h2 className="titulo-seccion">Sincronización del {fechaHora(s.creadoEn)}</h2>
         <p className="texto-suave">
           <span className={`chip chip-${s.estado}`}>{NOMBRE_ESTADO[s.estado] ?? s.estado}</span>
@@ -79,9 +79,9 @@ export default async function DetalleSincronizacion({ params, searchParams }: {
       {total > 0 && (
         <>
           <nav className="pestanas" aria-label="Tipo de cambio">
-            <Link href={enlace()} className={!tipoValido ? 'pestana-activa' : ''}>Todos ({numero(total)})</Link>
+            <Link prefetch={false} href={enlace()} className={!tipoValido ? 'pestana-activa' : ''}>Todos ({numero(total)})</Link>
             {conteos.map((c) => (
-              <Link key={c.tipo} href={enlace(c.tipo)} className={tipoValido === c.tipo ? 'pestana-activa' : ''}>
+              <Link prefetch={false} key={c.tipo} href={enlace(c.tipo)} className={tipoValido === c.tipo ? 'pestana-activa' : ''}>
                 {NOMBRE_CAMBIO[c.tipo] ?? c.tipo} ({numero(c.n)})
               </Link>
             ))}
@@ -116,8 +116,8 @@ export default async function DetalleSincronizacion({ params, searchParams }: {
               <div className="tabla-pie">
                 <span>Mostrando {numero((pagina - 1) * POR_PAGINA + 1)}–{numero(Math.min(pagina * POR_PAGINA, cantidad))} de {numero(cantidad)}</span>
                 <span className="tabla-pie-botones">
-                  {pagina > 1 ? <Link className="btn btn-chico" href={enlace(tipoValido, pagina - 1)}>Anterior</Link> : <span className="btn btn-chico" aria-disabled="true">Anterior</span>}
-                  {pagina < paginas ? <Link className="btn btn-chico" href={enlace(tipoValido, pagina + 1)}>Siguiente</Link> : <span className="btn btn-chico" aria-disabled="true">Siguiente</span>}
+                  {pagina > 1 ? <Link prefetch={false} className="btn btn-chico" href={enlace(tipoValido, pagina - 1)}>Anterior</Link> : <span className="btn btn-chico" aria-disabled="true">Anterior</span>}
+                  {pagina < paginas ? <Link prefetch={false} className="btn btn-chico" href={enlace(tipoValido, pagina + 1)}>Siguiente</Link> : <span className="btn btn-chico" aria-disabled="true">Siguiente</span>}
                 </span>
               </div>
             )}

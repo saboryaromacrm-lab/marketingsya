@@ -11,6 +11,8 @@ import { listarMusica } from '@/lib/video/musica'
 import { ANIMACION_INICIAL, limpiarAnimacion } from '@/lib/video/tipos'
 
 export const metadata = { title: 'Promo' }
+// Siempre al día al volver: lo que muestra cambia solo o desde otra pantalla (no se reusa lo visto, ver staleTimes en next.config)
+export const unstable_dynamicStaleTime = 0
 
 export default async function PaginaPromo({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id)

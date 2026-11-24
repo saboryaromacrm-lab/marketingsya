@@ -410,6 +410,21 @@ Poner contador visible y corte automático al llegar al tope.
   - Se borran también sus exportaciones y los archivos (JPEG, MP4 y .zip) para liberar espacio. Los clips de «Mis videos» quedan.
   - Los botones de borrar de los editores (carrusel, promo y video propio) usan las mismas reglas (`borrarPieza` en `src/lib/creacion/borrar.ts`).
 
+- **Rendimiento, paso 1 de la auditoría (24/11/2026)** (informe con los números en el artifact «¿Por qué tarda la plataforma de marketing?»):
+  - **Pantallas de carga:** `loading.tsx` en `(panel)`, `catalogo`, `configuracion` y `creacion` con el componente `Esqueleto`. El menú precarga
+    ese esqueleto: al tocar una sección la pantalla responde en ~60–130 ms (antes quedaba quieta 230–530 ms en el celular con 4G).
+  - **Precarga:** solo el menú lateral (`Armazon`) y los submenús (`Submenu`) precargan; los demás `<Link>` llevan `prefetch={false}`
+    (filas, tarjetas, pestañas y botones: antes cada pantalla disparaba 20–29 precargas). Al sumar enlaces nuevos, ponerles `prefetch={false}`.
+  - **Acciones frecuentes sin `revalidatePath`:** en una acción, cualquier `revalidatePath` hace que todas las páginas visitadas se pidan de nuevo
+    (y se vuelvan a precargar). Marcar y sacar productos en Nueva pieza devuelven los elegidos (`elegidosVista`) y la pantalla se actualiza
+    con eso: 1 pedido y 5 consultas por casilla (antes 16 y 37). El catálogo revalida solo `/catalogo`. La lógica de marcar está en `lib/seleccion.ts`.
+  - **Publicaciones** ya no recarga la página cada 5 s: mira una firma chica del estado (`firmaPublicaciones`) cada 30 s si algo sale en el día,
+    cada 5 s si algo se publica o sale en menos de 10 min (`cadaCuantoMirar`), nunca con la pestaña oculta, y recarga solo si cambió.
+  - **Caché del navegador:** `staleTimes.dynamic: 30` (volver a una sección vista hace menos de 30 s no la pide de nuevo). Las páginas cuyos
+    datos cambian solos o desde otra pantalla llevan `export const unstable_dynamicStaleTime = 0` (Catálogo, Nueva pieza, Mis videos,
+    Publicaciones, Pautas y los tres editores).
+  - Pendientes aprobados en el plan: miniaturas (paso 2) y ajustes finos (paso 3).
+
 ## Lo que muestra el catálogo real (relevado el 14/11/2026)
 
 - 2.184 productos, 260 marcas (77 con logo), 27 categorías; 26 productos sin categoría.
